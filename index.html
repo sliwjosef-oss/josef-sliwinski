@@ -1,17 +1,214 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Joey's Awesome Site</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Josef Sliwinski - Resume</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f0f8ff; }
-    h1 { color: #2c3e50; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #f5f7fa;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      padding: 40px 50px;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    header {
+      text-align: center;
+      padding-bottom: 25px;
+      border-bottom: 3px solid #1e40af;
+      margin-bottom: 35px;
+    }
+    h1 {
+      font-size: 2.6em;
+      color: #1e40af;
+      margin-bottom: 8px;
+    }
+    .contact-info {
+      font-size: 1.1em;
+      color: #4b5563;
+    }
+    .contact-info a {
+      color: #1e40af;
+      text-decoration: none;
+    }
+    .contact-info a:hover {
+      text-decoration: underline;
+    }
+    section {
+      margin-bottom: 40px;
+    }
+    h2 {
+      color: #1e40af;
+      font-size: 1.7em;
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 8px;
+      margin-bottom: 15px;
+    }
+    .summary {
+      font-size: 1.05em;
+      margin-bottom: 30px;
+      color: #374151;
+    }
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    ul li {
+      margin-bottom: 10px;
+      position: relative;
+      padding-left: 25px;
+    }
+    ul li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: #1e40af;
+      font-weight: bold;
+    }
+    .strong {
+      font-weight: 600;
+      color: #111827;
+    }
+    .job-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .job-title {
+      font-size: 1.25em;
+      font-weight: 600;
+      color: #111827;
+    }
+    .job-date {
+      font-style: italic;
+      color: #4b5563;
+      font-size: 0.95em;
+    }
+    .institution {
+      font-weight: 600;
+      color: #374151;
+    }
+    @media (max-width: 768px) {
+      .container {
+        padding: 30px 25px;
+      }
+      h1 {
+        font-size: 2.2em;
+      }
+      .job-header {
+        flex-direction: column;
+        gap: 4px;
+      }
+    }
+    @media print {
+      body { background: white; }
+      .container { box-shadow: none; margin: 0; padding: 20px; }
+    }
   </style>
 </head>
 <body>
-  <h1>Welcome to My GitHub-Powered Website!</h1>
-  <p>I'm Joey from Green Bay. This site is hosted for free on GitHub Pages.</p>
-  <p>Edit index.html anytime — changes go live in ~1 minute.</p>
+
+  <div class="container">
+
+    <header>
+      <h1>Josef Sliwinski</h1>
+      <div class="contact-info">
+        Green Bay, WI 54313  |  (920) 265-0581  | 
+        <a href="mailto:sliwjosef@gmail.com">sliwjosef@gmail.com</a>
+        <!-- Add these when you have profiles -->
+        <!--  |  <a href="https://github.com/yourusername">GitHub</a> -->
+        <!--  |  <a href="https://linkedin.com/in/yourprofile">LinkedIn</a> -->
+      </div>
+    </header>
+
+    <section>
+      <h2>Professional Summary</h2>
+      <p class="summary">
+        Motivated Computer Science student with a strong foundation in programming (Python, Java, C++, JavaScript), web technologies (HTML, CSS, SQL), and machine learning applications. Demonstrated problem-solving skills through personal projects, including computer vision for defect detection and full-stack application development. Seeking software engineering internship opportunities to apply technical expertise and contribute to innovative teams.
+      </p>
+    </section>
+
+    <section>
+      <h2>Skills</h2>
+      <ul>
+        <li><span class="strong">Programming Languages:</span> Python, Java, C++, JavaScript</li>
+        <li><span class="strong">Web & Database Technologies:</span> HTML, CSS, SQL</li>
+        <li><span class="strong">Tools & Libraries:</span> Detectron2 (computer vision), Microsoft Office Suite (Word, Excel, Visio), GIMP</li>
+        <li><span class="strong">Mathematics:</span> Calculus, Discrete Mathematics, Linear Algebra</li>
+        <li><span class="strong">Other:</span> Strong problem-solving, creative thinking, excellent work ethic in fast-paced or collaborative environments</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Projects</h2>
+      <div class="job-header">
+        <div class="job-title">Crack Detection System</div>
+        <div class="job-date">Python • Detectron2</div>
+      </div>
+      <ul>
+        <li>Developed a computer vision application using Detectron2 to detect and classify cracks in images, demonstrating proficiency in machine learning pipelines and image processing.</li>
+      </ul>
+
+      <div class="job-header" style="margin-top: 20px;">
+        <div class="job-title">Hangman Game Simulator</div>
+        <div class="job-date">Java</div>
+      </div>
+      <ul>
+        <li>Built an interactive console-based Hangman game with time tracking, score persistence, and high-score leaderboard functionality.</li>
+      </ul>
+
+      <div class="job-header" style="margin-top: 20px;">
+        <div class="job-title">Virtual Library Management System</div>
+        <div class="job-date">C++</div>
+      </div>
+      <ul>
+        <li>Designed and implemented a console application for managing book borrowing/lending, user authentication, item tracking, and administrative features.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Work Experience</h2>
+      <div class="job-header">
+        <div class="job-title">Team Member – Winner’s Circle & Arcade Operations</div>
+        <div class="job-date">April 2024 – Present</div>
+      </div>
+      <p class="institution">Dave & Busters • Green Bay, WI</p>
+      <ul>
+        <li>Collaborated with team to stock, organize, and maintain inventory in high-traffic prize redemption area, ensuring efficient guest service.</li>
+        <li>Performed routine troubleshooting and basic maintenance on arcade machines to minimize downtime and enhance user experience.</li>
+        <li>Provided prompt assistance to guests, resolving technical issues, processing cash/prize transactions, and delivering positive customer interactions in a fast-paced entertainment environment.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Education</h2>
+      <div class="job-header">
+        <div class="job-title">Bachelor of Science in Computer Science</div>
+        <div class="job-date">Expected May 2026</div>
+      </div>
+      <p class="institution">University of Wisconsin-Green Bay • Green Bay, WI</p>
+      <ul>
+        <li>Concentration: Software Engineering</li>
+        <li>GPA: 3.4/4.0</li>
+      </ul>
+    </section>
+
+  </div>
+
 </body>
 </html>
