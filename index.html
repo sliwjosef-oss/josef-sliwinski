@@ -25,12 +25,29 @@
       border-radius: 8px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     }
+    
+    /* UPDATED HEADER STYLES */
     header {
-      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: b;
+      gap: 30px;
       padding-bottom: 25px;
       border-bottom: 3px solid #1e40af;
       margin-bottom: 35px;
+      text-align: left; /* Changed from center */
     }
+    .header-text {
+      flex: 1;
+    }
+    .profile-img {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%; /* Makes it a circle */
+      object-fit: cover;
+      border: 3px solid #1e40af;
+    }
+    
     h1 {
       font-size: 2.6em;
       color: #1e40af;
@@ -104,6 +121,10 @@
       color: #374151;
     }
     @media (max-width: 768px) {
+      header {
+        flex-direction: column-reverse; /* Text on top, image on bottom for mobile */
+        text-align: center;
+      }
       .container {
         padding: 30px 25px;
       }
@@ -126,13 +147,16 @@
   <div class="container">
 
     <header>
-      <h1>Josef Sliwinski</h1>
-      <div class="contact-info">
-        Green Bay, WI 54313  |  (920) 265-0581  | 
-        <a href="mailto:sliwjosef@gmail.com">sliwjosef@gmail.com</a>  | 
-        <a href="https://github.com/sliwjosef-oss">GitHub</a>  | 
-        <a href="https://www.linkedin.com/in/josef-sliwinski-182415299/">LinkedIn</a>
+      <div class="header-text">
+        <h1>Josef Sliwinski</h1>
+        <div class="contact-info">
+          Green Bay, WI 54313  |  (920) 265-0581<br>
+          <a href="mailto:sliwjosef@gmail.com">sliwjosef@gmail.com</a>  |  
+          <a href="https://github.com/sliwjosef-oss">GitHub</a>  |  
+          <a href="https://www.linkedin.com/in/josef-sliwinski-182415299/">LinkedIn</a>
+        </div>
       </div>
+      <img src="profile.jpg" alt="Josef Sliwinski" class="profile-img">
     </header>
 
     <section>
