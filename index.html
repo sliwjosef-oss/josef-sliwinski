@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Josef Sliwinski - Resume</title>
+  <title>Josef Sliwinski | Software Engineer</title>
   <style>
     * {
       box-sizing: border-box;
@@ -26,16 +26,15 @@
       box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     }
     
-    /* UPDATED HEADER STYLES */
     header {
       display: flex;
       align-items: center;
-      justify-content: b;
+      justify-content: space-between;
       gap: 30px;
       padding-bottom: 25px;
       border-bottom: 3px solid #1e40af;
       margin-bottom: 35px;
-      text-align: left; /* Changed from center */
+      text-align: left;
     }
     .header-text {
       flex: 1;
@@ -43,7 +42,7 @@
     .profile-img {
       width: 150px;
       height: 150px;
-      border-radius: 50%; /* Makes it a circle */
+      border-radius: 50%;
       object-fit: cover;
       border: 3px solid #1e40af;
     }
@@ -73,11 +72,21 @@
       border-bottom: 2px solid #e5e7eb;
       padding-bottom: 8px;
       margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
     .summary {
       font-size: 1.05em;
-      margin-bottom: 30px;
+      margin-bottom: 10px;
       color: #374151;
+    }
+    .bio-highlight {
+      background: #eff6ff;
+      padding: 15px;
+      border-left: 4px solid #1e40af;
+      font-style: italic;
+      margin-bottom: 25px;
+      font-size: 0.95em;
     }
     ul {
       list-style: none;
@@ -119,10 +128,11 @@
     .institution {
       font-weight: 600;
       color: #374151;
+      margin-bottom: 5px;
     }
     @media (max-width: 768px) {
       header {
-        flex-direction: column-reverse; /* Text on top, image on bottom for mobile */
+        flex-direction: column-reverse;
         text-align: center;
       }
       .container {
@@ -136,10 +146,6 @@
         gap: 4px;
       }
     }
-    @media print {
-      body { background: white; }
-      .container { box-shadow: none; margin: 0; padding: 20px; }
-    }
   </style>
 </head>
 <body>
@@ -150,9 +156,9 @@
       <div class="header-text">
         <h1>Josef Sliwinski</h1>
         <div class="contact-info">
-          Green Bay, WI 54313  |  (920) 265-0581<br>
-          <a href="mailto:sliwjosef@gmail.com">sliwjosef@gmail.com</a>  |  
-          <a href="https://github.com/sliwjosef-oss">GitHub</a>  |  
+          Green Bay, WI 54313 | (920) 265-0581<br>
+          <a href="mailto:sliwjosef@gmail.com">sliwjosef@gmail.com</a> | 
+          <a href="https://github.com/sliwjosef-oss">GitHub</a> | 
           <a href="https://www.linkedin.com/in/josef-sliwinski-182415299/">LinkedIn</a>
         </div>
       </div>
@@ -160,61 +166,66 @@
     </header>
 
     <section>
-      <h2>Professional Summary</h2>
+      <h2>About Me</h2>
       <p class="summary">
-        Motivated Computer Science student with a strong foundation in programming (Python, Java, C++, JavaScript), web technologies (HTML, CSS, SQL), and machine learning applications. Demonstrated problem-solving skills through personal projects, including computer vision for defect detection and full-stack application development. Seeking software engineering opportunities to apply technical expertise and contribute to innovative teams.
+        I am a Software Engineering senior at the University of Wisconsin-Green Bay passionate about turning complex logic into functional, scalable software. With a 3.6 GPA and a background in advanced mathematics, I thrive in environments that require creative problem-solving and technical precision.
       </p>
+      <div class="bio-highlight">
+        "My journey into technology has been non-linear, defined by a return to education with a renewed sense of purpose. This path has equipped me with a level of resilience and maturity that I bring to every line of code and every collaborative sprint."
+      </div>
     </section>
 
     <section>
-      <h2>Skills</h2>
+      <h2>Technical Skills</h2>
       <ul>
-        <li><span class="strong">Programming Languages:</span> Python, Java, C++, JavaScript</li>
-        <li><span class="strong">Web & Database Technologies:</span> HTML, CSS, SQL </li>
-        <li><span class="strong">Tools & Libraries:</span> Detectron2 (computer vision), Microsoft Office Suite (Word, Excel, Visio), Playwright (Visual Studio Code), GIMP</li>
-        <li><span class="strong">Mathematics:</span> Calculus, Discrete Mathematics, Linear Algebra</li>
-        <li><span class="strong">Other:</span> Strong problem-solving, creative thinking, excellent work ethic in fast-paced or collaborative environments</li>
+        <li><span class="strong">Languages:</span> Python, C++, Java, JavaScript, SQL, HTML/CSS</li>
+        <li><span class="strong">Frameworks & Libraries:</span> Detectron2 (Computer Vision), Playwright</li>
+        <li><span class="strong">Mathematics:</span> Discrete Mathematics, Linear Algebra, Calculus</li>
+        <li><span class="strong">Tools:</span> Git, GitHub, VS Code, Visio, GIMP, Microsoft Excel</li>
       </ul>
     </section>
 
     <section>
-      <h2>Projects</h2>
+      <h2>Engineering Projects</h2>
+      
       <div class="job-header">
-        <div class="job-title">Crack Detection System</div>
-        <div class="job-date">Python • Detectron2</div>
+        <div class="job-title">Object Detection & Machine Learning</div>
+        <div class="job-date">Python | Detectron2</div>
       </div>
       <ul>
-        <li>Developed a computer vision application using Detectron2 to detect and classify cracks in images, demonstrating proficiency in machine learning pipelines and image processing.</li>
+        <li>Developed a specialized crack-detecting program using the Detectron2 framework to automate visual integrity inspections.</li>
+        <li>Implemented machine learning pipelines for image classification, achieving proficiency in computer vision application development.</li>
       </ul>
 
       <div class="job-header" style="margin-top: 20px;">
-        <div class="job-title">Hangman Game Simulator</div>
-        <div class="job-date">Java</div>
-      </div>
-      <ul>
-        <li>Built an interactive console-based Hangman game with time tracking, score persistence, and high-score leaderboard functionality.</li>
-      </ul>
-
-      <div class="job-header" style="margin-top: 20px;">
-        <div class="job-title">Virtual Library Management System</div>
+        <div class="job-title">Virtual Library Architecture</div>
         <div class="job-date">C++</div>
       </div>
       <ul>
-        <li>Designed and implemented a console application for managing book borrowing/lending, user authentication, item tracking, and administrative features.</li>
+        <li>Engineered a system to manage item tracking, book borrowing/lending logic, and secure user authentication.</li>
+        <li>Designed backend structures to handle data persistence and administrative user credentials.</li>
+      </ul>
+
+      <div class="job-header" style="margin-top: 20px;">
+        <div class="job-title">Interactive Game Simulator</div>
+        <div class="job-date">Java</div>
+      </div>
+      <ul>
+        <li>Built a Java-based simulator featuring real-time time tracking and persistent high-score management systems.</li>
       </ul>
     </section>
 
     <section>
       <h2>Work Experience</h2>
       <div class="job-header">
-        <div class="job-title">Team Member – Winner’s Circle & Arcade Operations</div>
+        <div class="job-title">Technical Support & Guest Operations</div>
         <div class="job-date">April 2024 – Present</div>
       </div>
       <p class="institution">Dave & Busters • Green Bay, WI</p>
       <ul>
-        <li>Collaborated with team to stock, organize, and maintain inventory in high-traffic prize redemption area, ensuring efficient guest service.</li>
-        <li>Performed routine troubleshooting and basic maintenance on arcade machines to minimize downtime and enhance user experience.</li>
-        <li>Provided prompt assistance to guests, resolving technical issues, processing cash/prize transactions, and delivering positive customer interactions in a fast-paced entertainment environment.</li>
+        <li>Diagnose and perform first-line technical repairs on electro-mechanical arcade systems to ensure maximum uptime.</li>
+        <li>Coordinate inventory management and cash/prize transactions in a high-pressure, fast-paced environment.</li>
+        <li>Collaborate with a diverse team to resolve technical guest issues and maintain operational efficiency.</li>
       </ul>
     </section>
 
@@ -227,7 +238,7 @@
       <p class="institution">University of Wisconsin-Green Bay • Green Bay, WI</p>
       <ul>
         <li>Concentration: Software Engineering</li>
-        <li>GPA: 3.6/4.0</li>
+        <li>GPA: 3.6 / 4.0</li>
       </ul>
     </section>
 
