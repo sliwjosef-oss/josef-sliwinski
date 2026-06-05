@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { getOutfitIconSrc, resolveAssetPath } from '../utils/outfits';
+import { getGameOutfits, getOutfitIconSrc, resolveAssetPath } from '../utils/outfits';
 import { countDiscoveredSkins, isSkinGuessed } from '../utils/progress';
 
 function CatalogueImage({ outfit }) {
@@ -24,7 +24,7 @@ function CatalogueImage({ outfit }) {
 export default function SkinCatalogue({ outfits, guessedSkinIds, onBack }) {
   const sortedOutfits = useMemo(
     () =>
-      [...outfits]
+      [...getGameOutfits(outfits)]
         .sort((a, b) => a.number - b.number)
         .map((outfit, index) => ({
           ...outfit,

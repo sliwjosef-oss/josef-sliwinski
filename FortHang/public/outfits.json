@@ -732,54 +732,6 @@
     "icon": "/skin-icons/61.png"
   },
   {
-    "id": "CID_NPC_Athena_Commando_M_Scrapyard",
-    "name": "Kit",
-    "added": "2019-11-20T12:48:11Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 62,
-    "icon": "/skin-icons/62.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_M_MarauderGrunt",
-    "name": "Marauder",
-    "added": "2019-11-20T12:48:11Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 63,
-    "icon": "/skin-icons/63.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_F_MarauderElite",
-    "name": "Marauder Elite",
-    "added": "2019-11-20T12:48:11Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 64,
-    "icon": "/skin-icons/64.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_M_MarauderHeavy",
-    "name": "Marauder Heavy",
-    "added": "2019-11-20T12:48:11Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 65,
-    "icon": "/skin-icons/65.png"
-  },
-  {
     "id": "CID_566_Athena_Commando_M_CrazyEight",
     "name": "8-Ball vs Scratch",
     "added": "2019-11-20T12:49:47Z",
@@ -8100,30 +8052,6 @@
     "icon": "/skin-icons/675.png"
   },
   {
-    "id": "CID_NPC_Athena_Commando_M_HenchmanGood",
-    "name": "Ghost",
-    "added": "2020-02-21T16:27:07Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 676,
-    "icon": "/skin-icons/676.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_M_PaddedArmorArctic",
-    "name": "Grotto",
-    "added": "2020-02-21T16:27:07Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 677,
-    "icon": "/skin-icons/677.png"
-  },
-  {
     "id": "CID_638_Athena_Commando_M_NeonAnimal",
     "name": "LLion",
     "added": "2020-02-21T16:27:07Z",
@@ -8184,42 +8112,6 @@
     "icon": "/skin-icons/682.png"
   },
   {
-    "id": "CID_NPC_Athena_Commando_F_RebirthDefault_Henchman",
-    "name": "Recruit",
-    "added": "2020-02-21T16:27:07Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 683,
-    "icon": "/skin-icons/683.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_M_TacticalFishermanOil",
-    "name": "Rig",
-    "added": "2020-02-21T16:27:07Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 684,
-    "icon": "/skin-icons/684.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_M_HenchmanBad",
-    "name": "Shadow",
-    "added": "2020-02-21T16:27:07Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 685,
-    "icon": "/skin-icons/685.png"
-  },
-  {
     "id": "CID_679_Athena_Commando_M_ModernMilitaryEclipse",
     "name": "Shadow Archetype",
     "added": "2020-02-21T16:27:07Z",
@@ -8230,18 +8122,6 @@
     "setName": "Archetype",
     "number": 686,
     "icon": "/skin-icons/686.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_M_HeistSummerIsland",
-    "name": "Shark",
-    "added": "2020-02-21T16:27:07Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 687,
-    "icon": "/skin-icons/687.png"
   },
   {
     "id": "CID_690_Athena_Commando_F_Photographer",
@@ -8266,42 +8146,6 @@
     "setName": null,
     "number": 689,
     "icon": "/skin-icons/689.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_F_HenchmanSpyDark",
-    "name": "TBD",
-    "added": "2020-02-21T16:27:07Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 690,
-    "icon": "/skin-icons/690.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_F_HenchmanSpyGood",
-    "name": "TBD",
-    "added": "2020-02-21T16:27:07Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 691,
-    "icon": "/skin-icons/691.png"
-  },
-  {
-    "id": "CID_TBD_Athena_Commando_M_Nutcracker_CINE",
-    "name": "TBD",
-    "added": "2020-02-21T16:27:07Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 692,
-    "icon": "/skin-icons/692.png"
   },
   {
     "id": "CID_687_Athena_Commando_M_AgentAce",
@@ -8904,18 +8748,6 @@
     "icon": "/skin-icons/742.png"
   },
   {
-    "id": "CID_Random",
-    "name": "Random",
-    "added": "2020-04-30T12:50:01Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 743,
-    "icon": "/skin-icons/743.png"
-  },
-  {
     "id": "CID_747_Athena_Commando_M_BadEgg",
     "name": "Renegade Shadow",
     "added": "2020-05-20T10:27:55Z",
@@ -9166,78 +8998,6 @@
     "setName": "Gator Force",
     "number": 764,
     "icon": "/skin-icons/764.png"
-  },
-  {
-    "id": "CID_789_Athena_Commando_M_HenchmanGoodShorts_B",
-    "name": "TBD",
-    "added": "2020-06-17T08:48:17Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 765,
-    "icon": "/skin-icons/765.png"
-  },
-  {
-    "id": "CID_790_Athena_Commando_M_HenchmanGoodShorts_C",
-    "name": "TBD",
-    "added": "2020-06-17T08:48:17Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 766,
-    "icon": "/skin-icons/766.png"
-  },
-  {
-    "id": "CID_791_Athena_Commando_M_HenchmanGoodShorts_D",
-    "name": "TBD",
-    "added": "2020-06-17T08:48:17Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 767,
-    "icon": "/skin-icons/767.png"
-  },
-  {
-    "id": "CID_792_Athena_Commando_M_HenchmanBadShorts_B",
-    "name": "TBD",
-    "added": "2020-06-17T08:48:17Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 768,
-    "icon": "/skin-icons/768.png"
-  },
-  {
-    "id": "CID_793_Athena_Commando_M_HenchmanBadShorts_C",
-    "name": "TBD",
-    "added": "2020-06-17T08:48:17Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 769,
-    "icon": "/skin-icons/769.png"
-  },
-  {
-    "id": "CID_794_Athena_Commando_M_HenchmanBadShorts_D",
-    "name": "TBD",
-    "added": "2020-06-17T08:48:17Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 770,
-    "icon": "/skin-icons/770.png"
   },
   {
     "id": "CID_773_Athena_Commando_M_Beacon",
@@ -9576,18 +9336,6 @@
     "icon": "/skin-icons/798.png"
   },
   {
-    "id": "CID_NPC_Athena_Commando_M_SpaceWanderer",
-    "name": "TBD",
-    "added": "2020-07-21T08:17:24Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 799,
-    "icon": "/skin-icons/799.png"
-  },
-  {
     "id": "CID_811_Athena_Commando_F_CandySummer",
     "name": "Tropical Punch Zoey",
     "added": "2020-07-21T08:17:24Z",
@@ -9864,18 +9612,6 @@
     "icon": "/skin-icons/822.png"
   },
   {
-    "id": "CID_NPC_Athena_Commando_M_HightowerHenchman_Date",
-    "name": "Doombot Agent",
-    "added": "2020-08-27T06:07:50Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 823,
-    "icon": "/skin-icons/823.png"
-  },
-  {
     "id": "CID_848_Athena_Commando_F_DarkNinjaPurple",
     "name": "Dread Fate",
     "added": "2020-08-27T06:07:50Z",
@@ -9934,18 +9670,6 @@
     "setName": "Mystique",
     "number": 828,
     "icon": "/skin-icons/828.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_M_HightowerHenchman",
-    "name": "Stark Auto-Defense Unit",
-    "added": "2020-08-27T06:07:50Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 829,
-    "icon": "/skin-icons/829.png"
   },
   {
     "id": "CID_839_Athena_Commando_F_HightowerSquash",
@@ -11196,18 +10920,6 @@
     "icon": "/skin-icons/933.png"
   },
   {
-    "id": "CID_NPC_Athena_Commando_M_Kyle",
-    "name": "Marauder Heavy",
-    "added": "2020-12-08T19:08:39Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 934,
-    "icon": "/skin-icons/934.png"
-  },
-  {
     "id": "CID_961_Athena_Commando_F_Shapeshifter",
     "name": "Mave",
     "added": "2020-12-08T19:08:39Z",
@@ -11448,30 +11160,6 @@
     "icon": "/skin-icons/954.png"
   },
   {
-    "id": "CID_NPC_Athena_Commando_M_CatBurglar_Ghost",
-    "name": "TBD",
-    "added": "2020-12-08T19:08:39Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 955,
-    "icon": "/skin-icons/955.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_M_Fallback",
-    "name": "TBD",
-    "added": "2020-12-08T19:08:39Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 956,
-    "icon": "/skin-icons/956.png"
-  },
-  {
     "id": "CID_922_Athena_Commando_M_ParcelPrank",
     "name": "The Joker",
     "added": "2020-12-08T19:08:39Z",
@@ -11674,66 +11362,6 @@
     "setName": "Frost Legends",
     "number": 973,
     "icon": "/skin-icons/973.png"
-  },
-  {
-    "id": "CID_NPC_Athena_HenchmanBadShorts",
-    "name": "TBD",
-    "added": "2020-12-15T11:25:12Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 974,
-    "icon": "/skin-icons/974.png"
-  },
-  {
-    "id": "CID_NPC_Athena_HenchmanGoodShorts",
-    "name": "TBD",
-    "added": "2020-12-15T11:25:12Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 975,
-    "icon": "/skin-icons/975.png"
-  },
-  {
-    "id": "CID_NPC_Athena_MadCommander",
-    "name": "TBD",
-    "added": "2020-12-15T11:25:12Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 976,
-    "icon": "/skin-icons/976.png"
-  },
-  {
-    "id": "CID_NPC_Athena_PaddedArmor",
-    "name": "TBD",
-    "added": "2020-12-15T11:25:12Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 977,
-    "icon": "/skin-icons/977.png"
-  },
-  {
-    "id": "CID_NPC_Athena_RebirthSoldier",
-    "name": "TBD",
-    "added": "2020-12-15T11:25:12Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 978,
-    "icon": "/skin-icons/978.png"
   },
   {
     "id": "CID_977_Athena_Commando_M_Wombat_R7Q8K",
@@ -12478,30 +12106,6 @@
     "setName": "Bone Punk",
     "number": 1040,
     "icon": "/skin-icons/1040.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_F_TowerSentinel",
-    "name": "TBD",
-    "added": "2021-03-17T11:14:28Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1041,
-    "icon": "/skin-icons/1041.png"
-  },
-  {
-    "id": "CID_TBD_Athena_Commando_M_Turtleneck_EVENT_NOTFORSTORE",
-    "name": "TBD",
-    "added": "2021-03-17T11:14:28Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1042,
-    "icon": "/skin-icons/1042.png"
   },
   {
     "id": "CID_A_044_Athena_Commando_F_NeonCatFashion_64JW3",
@@ -13332,18 +12936,6 @@
     "icon": "/skin-icons/1111.png"
   },
   {
-    "id": "CID_NPC_Athena_Commando_M_AlienRobot",
-    "name": "Trepasser",
-    "added": "2021-06-08T06:27:37Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1112,
-    "icon": "/skin-icons/1112.png"
-  },
-  {
     "id": "CID_A_116_Athena_Commando_M_Invader",
     "name": "Zyg",
     "added": "2021-06-08T06:27:37Z",
@@ -13426,18 +13018,6 @@
     "setName": "Undercover Summer",
     "number": 1119,
     "icon": "/skin-icons/1119.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_M_AlienSummer",
-    "name": "Human Bill",
-    "added": "2021-06-22T08:25:42Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1120,
-    "icon": "/skin-icons/1120.png"
   },
   {
     "id": "CID_A_134_Athena_Commando_F_BandageNinjaFire",
@@ -13944,18 +13524,6 @@
     "icon": "/skin-icons/1162.png"
   },
   {
-    "id": "CID_Creative_Mannequin_M_Default",
-    "name": "Recruit",
-    "added": "2021-08-03T11:17:43Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1163,
-    "icon": "/skin-icons/1163.png"
-  },
-  {
     "id": "CID_A_165_Athena_Commando_M_Stands_C",
     "name": "Reverb",
     "added": "2021-08-03T11:17:43Z",
@@ -13990,42 +13558,6 @@
     "setName": "Press Play",
     "number": 1166,
     "icon": "/skin-icons/1166.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_M_Broccoli",
-    "name": "TBD",
-    "added": "2021-08-03T11:17:43Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1167,
-    "icon": "/skin-icons/1167.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_M_CavernArmored",
-    "name": "TBD",
-    "added": "2021-08-03T11:17:43Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1168,
-    "icon": "/skin-icons/1168.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_M_EmperorSuit",
-    "name": "TBD",
-    "added": "2021-08-03T11:17:43Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1169,
-    "icon": "/skin-icons/1169.png"
   },
   {
     "id": "CID_A_162_Athena_Commando_F_Quarrel_E5D63",
@@ -14386,30 +13918,6 @@
     "setName": "Hagiri",
     "number": 1199,
     "icon": "/skin-icons/1199.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_M_Apparition_Grunt",
-    "name": "Doombot Agent",
-    "added": "2021-09-13T06:55:38Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1200,
-    "icon": "/skin-icons/1200.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_M_Apparition_Heavy",
-    "name": "Doombot Agent",
-    "added": "2021-09-13T06:55:38Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1201,
-    "icon": "/skin-icons/1201.png"
   },
   {
     "id": "CID_A_198_Athena_Commando_M_CerealBox",
@@ -15288,18 +14796,6 @@
     "icon": "/skin-icons/1274.png"
   },
   {
-    "id": "CID_NPC_Athena_Commando_F_CubeQueen",
-    "name": "TBD",
-    "added": "2021-11-16T10:03:55Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1275,
-    "icon": "/skin-icons/1275.png"
-  },
-  {
     "id": "CID_A_271_Athena_Commando_M_FNCS_Purple",
     "name": "Victor Elite",
     "added": "2021-11-16T10:03:55Z",
@@ -15396,66 +14892,6 @@
     "icon": "/skin-icons/1283.png"
   },
   {
-    "id": "CID_A_277_Athena_Commando_F_Prime_F",
-    "name": "Ballistics Tech",
-    "added": "2021-12-08T05:10:57Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1284,
-    "icon": "/skin-icons/1284.png"
-  },
-  {
-    "id": "CID_A_279_Athena_Commando_M_Prime",
-    "name": "Battalion Brawler",
-    "added": "2021-12-08T05:10:57Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1285,
-    "icon": "/skin-icons/1285.png"
-  },
-  {
-    "id": "CID_A_278_Athena_Commando_F_Prime_G",
-    "name": "Battalion Leader",
-    "added": "2021-12-08T05:10:57Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1286,
-    "icon": "/skin-icons/1286.png"
-  },
-  {
-    "id": "CID_A_284_Athena_Commando_M_Prime_F",
-    "name": "Cavalry Captain",
-    "added": "2021-12-08T05:10:57Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1287,
-    "icon": "/skin-icons/1287.png"
-  },
-  {
-    "id": "CID_A_281_Athena_Commando_M_Prime_C",
-    "name": "Field Commander",
-    "added": "2021-12-08T05:10:57Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1288,
-    "icon": "/skin-icons/1288.png"
-  },
-  {
     "id": "CID_A_289_Athena_Commando_M_Gumball",
     "name": "Gumbo",
     "added": "2021-12-08T05:10:57Z",
@@ -15490,18 +14926,6 @@
     "setName": "Kindred Spirit",
     "number": 1291,
     "icon": "/skin-icons/1291.png"
-  },
-  {
-    "id": "CID_A_275_Athena_Commando_F_Prime_D",
-    "name": "Infantry Commander",
-    "added": "2021-12-08T05:10:57Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1292,
-    "icon": "/skin-icons/1292.png"
   },
   {
     "id": "CID_883_Athena_M_3L_LOD2",
@@ -15540,30 +14964,6 @@
     "icon": "/skin-icons/1295.png"
   },
   {
-    "id": "CID_A_282_Athena_Commando_M_Prime_D",
-    "name": "Munitions Master",
-    "added": "2021-12-08T05:10:57Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1296,
-    "icon": "/skin-icons/1296.png"
-  },
-  {
-    "id": "CID_A_272_Athena_Commando_F_Prime",
-    "name": "Recon Raider",
-    "added": "2021-12-08T05:10:57Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1297,
-    "icon": "/skin-icons/1297.png"
-  },
-  {
     "id": "CID_A_287_Athena_Commando_M_LoneWolf",
     "name": "Ronin",
     "added": "2021-12-08T05:10:57Z",
@@ -15574,18 +14974,6 @@
     "setName": "Order of the Waning Moon",
     "number": 1298,
     "icon": "/skin-icons/1298.png"
-  },
-  {
-    "id": "CID_A_273_Athena_Commando_F_Prime_B",
-    "name": "Sentry Specialist",
-    "added": "2021-12-08T05:10:57Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1299,
-    "icon": "/skin-icons/1299.png"
   },
   {
     "id": "CID_A_292_Athena_Commando_F_ExoSuit",
@@ -15600,18 +14988,6 @@
     "icon": "/skin-icons/1300.png"
   },
   {
-    "id": "CID_A_283_Athena_Commando_M_Prime_E",
-    "name": "Siege Sergeant",
-    "added": "2021-12-08T05:10:57Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1301,
-    "icon": "/skin-icons/1301.png"
-  },
-  {
     "id": "CID_A_293_Athena_Commando_M_ParallelComic",
     "name": "Spider-Man",
     "added": "2021-12-08T05:10:57Z",
@@ -15624,30 +15000,6 @@
     "icon": "/skin-icons/1302.png"
   },
   {
-    "id": "CID_A_276_Athena_Commando_F_Prime_E",
-    "name": "Squad Leader",
-    "added": "2021-12-08T05:10:57Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1303,
-    "icon": "/skin-icons/1303.png"
-  },
-  {
-    "id": "CID_A_280_Athena_Commando_M_Prime_B",
-    "name": "Stealth Specialist ",
-    "added": "2021-12-08T05:10:57Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1304,
-    "icon": "/skin-icons/1304.png"
-  },
-  {
     "id": "CID_A_297_Athena_Commando_F_Network",
     "name": "Sultura",
     "added": "2021-12-08T05:10:57Z",
@@ -15658,66 +15010,6 @@
     "setName": "Brute Force",
     "number": 1305,
     "icon": "/skin-icons/1305.png"
-  },
-  {
-    "id": "CID_A_274_Athena_Commando_F_Prime_C",
-    "name": "Tactical Tracker",
-    "added": "2021-12-08T05:10:57Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1306,
-    "icon": "/skin-icons/1306.png"
-  },
-  {
-    "id": "CID_A_285_Athena_Commando_M_Prime_G",
-    "name": "Tank Gunner",
-    "added": "2021-12-08T05:10:57Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1307,
-    "icon": "/skin-icons/1307.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_F_Prime",
-    "name": "TBD",
-    "added": "2021-12-08T05:10:57Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1308,
-    "icon": "/skin-icons/1308.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_M_OrderGuardTank",
-    "name": "TBD",
-    "added": "2021-12-08T05:10:57Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1309,
-    "icon": "/skin-icons/1309.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_M_Prime",
-    "name": "TBD",
-    "added": "2021-12-08T05:10:57Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1310,
-    "icon": "/skin-icons/1310.png"
   },
   {
     "id": "CID_A_286_Athena_Commando_M_Turtleneck",
@@ -16632,42 +15924,6 @@
     "icon": "/skin-icons/1386.png"
   },
   {
-    "id": "CID_NPC_Athena_Commando_F_PrimeOrder",
-    "name": "TBD",
-    "added": "2022-03-20T14:09:41Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1387,
-    "icon": "/skin-icons/1387.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_M_Masterkey",
-    "name": "TBD",
-    "added": "2022-03-20T14:09:41Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1388,
-    "icon": "/skin-icons/1388.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_M_PrimeOrder",
-    "name": "TBD",
-    "added": "2022-03-20T14:09:41Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1389,
-    "icon": "/skin-icons/1389.png"
-  },
-  {
     "id": "CID_A_374_Athena_Commando_F_Binary",
     "name": "The Imagined",
     "added": "2022-03-20T14:09:41Z",
@@ -17388,18 +16644,6 @@
     "icon": "/skin-icons/1449.png"
   },
   {
-    "id": "CID_NPC_Athena_Commando_M_Realm",
-    "name": "TBD",
-    "added": "2022-06-21T08:49:54Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1450,
-    "icon": "/skin-icons/1450.png"
-  },
-  {
     "id": "CID_A_438_Athena_Commando_F_Gloom",
     "name": "Phaedra",
     "added": "2022-06-27T15:08:27Z",
@@ -17650,18 +16894,6 @@
     "setName": "Beary Cuddly",
     "number": 1471,
     "icon": "/skin-icons/1471.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_M_HenchmanSummer",
-    "name": "The Underwriter",
-    "added": "2022-07-18T12:38:54Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1472,
-    "icon": "/skin-icons/1472.png"
   },
   {
     "id": "CID_A_460_Athena_Commando_F_SunBeam",
@@ -18036,18 +17268,6 @@
     "icon": "/skin-icons/1503.png"
   },
   {
-    "id": "Character_TheHerald_NPC",
-    "name": "TBD",
-    "added": "2022-09-18T10:05:15Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1504,
-    "icon": "/skin-icons/1504.png"
-  },
-  {
     "id": "Character_TheHerald",
     "name": "The Herald",
     "added": "2022-09-18T10:05:15Z",
@@ -18178,18 +17398,6 @@
     "setName": null,
     "number": 1515,
     "icon": "/skin-icons/1515.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_M_PaddedArmorOrder_Masked",
-    "name": "TBD",
-    "added": "2022-10-04T09:01:34Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1516,
-    "icon": "/skin-icons/1516.png"
   },
   {
     "id": "Character_Ruins",
@@ -18334,30 +17542,6 @@
     "setName": "Music Fiend",
     "number": 1528,
     "icon": "/skin-icons/1528.png"
-  },
-  {
-    "id": "Character_ChromeDJ_NPC",
-    "name": "TBD",
-    "added": "2022-10-18T23:49:57Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1529,
-    "icon": "/skin-icons/1529.png"
-  },
-  {
-    "id": "Character_Imitator_NPC",
-    "name": "TBD",
-    "added": "2022-10-18T23:49:57Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1530,
-    "icon": "/skin-icons/1530.png"
   },
   {
     "id": "Character_Alien_Robot",
@@ -18780,66 +17964,6 @@
     "icon": "/skin-icons/1565.png"
   },
   {
-    "id": "Character_PrimeRedux",
-    "name": "Battalion Brawler",
-    "added": "2022-12-04T18:22:30Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1566,
-    "icon": "/skin-icons/1566.png"
-  },
-  {
-    "id": "Character_PrimeRedux_B",
-    "name": "Battalion Brawler",
-    "added": "2022-12-04T18:22:30Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1567,
-    "icon": "/skin-icons/1567.png"
-  },
-  {
-    "id": "Character_PrimeRedux_C",
-    "name": "Battalion Brawler",
-    "added": "2022-12-04T18:22:30Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1568,
-    "icon": "/skin-icons/1568.png"
-  },
-  {
-    "id": "Character_PrimeRedux_D",
-    "name": "Battalion Brawler",
-    "added": "2022-12-04T18:22:30Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1569,
-    "icon": "/skin-icons/1569.png"
-  },
-  {
-    "id": "Character_PrimeRedux_E",
-    "name": "Battalion Brawler",
-    "added": "2022-12-04T18:22:30Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1570,
-    "icon": "/skin-icons/1570.png"
-  },
-  {
     "id": "Character_RedPepper",
     "name": "Doom Slayer",
     "added": "2022-12-04T18:22:30Z",
@@ -18912,78 +18036,6 @@
     "icon": "/skin-icons/1576.png"
   },
   {
-    "id": "Character_TrainingGroundBot_NPC",
-    "name": "null",
-    "added": "2022-12-04T18:22:30Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1577,
-    "icon": "/skin-icons/1577.png"
-  },
-  {
-    "id": "Character_PrimeRedux_F",
-    "name": "Recon Raider",
-    "added": "2022-12-04T18:22:30Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1578,
-    "icon": "/skin-icons/1578.png"
-  },
-  {
-    "id": "Character_PrimeRedux_G",
-    "name": "Recon Raider",
-    "added": "2022-12-04T18:22:30Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1579,
-    "icon": "/skin-icons/1579.png"
-  },
-  {
-    "id": "Character_PrimeRedux_H",
-    "name": "Recon Raider",
-    "added": "2022-12-04T18:22:30Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1580,
-    "icon": "/skin-icons/1580.png"
-  },
-  {
-    "id": "Character_PrimeRedux_I",
-    "name": "Recon Raider",
-    "added": "2022-12-04T18:22:30Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1581,
-    "icon": "/skin-icons/1581.png"
-  },
-  {
-    "id": "Character_PrimeRedux_J",
-    "name": "Recon Raider",
-    "added": "2022-12-04T18:22:30Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 1582,
-    "icon": "/skin-icons/1582.png"
-  },
-  {
     "id": "Character_Sunlit",
     "name": "Selene",
     "added": "2022-12-04T18:22:30Z",
@@ -18994,30 +18046,6 @@
     "setName": "Star of the Show",
     "number": 1583,
     "icon": "/skin-icons/1583.png"
-  },
-  {
-    "id": "Character_Knight_Boss_NPC",
-    "name": "TBD",
-    "added": "2022-12-04T18:22:30Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1584,
-    "icon": "/skin-icons/1584.png"
-  },
-  {
-    "id": "CID_NPC_Athena_Commando_F_Fallback",
-    "name": "TBD",
-    "added": "2022-12-04T18:22:30Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1585,
-    "icon": "/skin-icons/1585.png"
   },
   {
     "id": "Character_Citadel",
@@ -19296,30 +18324,6 @@
     "icon": "/skin-icons/1608.png"
   },
   {
-    "id": "Character_PossessionHologram_NPC",
-    "name": "TBD",
-    "added": "2023-01-18T13:30:34Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1609,
-    "icon": "/skin-icons/1609.png"
-  },
-  {
-    "id": "Character_Robot_Hologram_NPC",
-    "name": "TBD",
-    "added": "2023-01-18T13:30:34Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1610,
-    "icon": "/skin-icons/1610.png"
-  },
-  {
     "id": "Character_CrimsonPeak",
     "name": "Isaac Clarke",
     "added": "2023-01-23T22:09:27Z",
@@ -19474,30 +18478,6 @@
     "setName": "Getaway Gang",
     "number": 1623,
     "icon": "/skin-icons/1623.png"
-  },
-  {
-    "id": "Character_BlingHearts_NPC",
-    "name": "null",
-    "added": "2023-02-14T10:24:42Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1624,
-    "icon": "/skin-icons/1624.png"
-  },
-  {
-    "id": "Character_HeistSleek_NPC",
-    "name": "null",
-    "added": "2023-02-14T10:24:42Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1625,
-    "icon": "/skin-icons/1625.png"
   },
   {
     "id": "Character_ShinyStar",
@@ -19690,18 +18670,6 @@
     "setName": "Sign of the Fox",
     "number": 1641,
     "icon": "/skin-icons/1641.png"
-  },
-  {
-    "id": "Character_Titanium_NPC",
-    "name": "TBD",
-    "added": "2023-03-12T08:46:29Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1642,
-    "icon": "/skin-icons/1642.png"
   },
   {
     "id": "Character_LocalZilla",
@@ -19932,30 +18900,6 @@
     "icon": "/skin-icons/1661.png"
   },
   {
-    "id": "Character_TigerRootFame",
-    "name": "Desert Dawn Lyric",
-    "added": "2023-04-13T10:11:24Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Coachella set.",
-    "setName": "Coachella",
-    "number": 1662,
-    "icon": "/skin-icons/1662.png"
-  },
-  {
-    "id": "Character_TigerRootHype",
-    "name": "Sunset Alto",
-    "added": "2023-04-13T10:11:24Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Coachella set.",
-    "setName": "Coachella",
-    "number": 1663,
-    "icon": "/skin-icons/1663.png"
-  },
-  {
     "id": "Character_GrandScheme_Yellow",
     "name": "212th Battalion Trooper",
     "added": "2023-05-02T08:00:00Z",
@@ -20182,18 +19126,6 @@
     "setName": "Second Drop",
     "number": 1682,
     "icon": "/skin-icons/1682.png"
-  },
-  {
-    "id": "Character_GrandScheme_NPC",
-    "name": "TBD",
-    "added": "2023-05-02T12:59:13Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1683,
-    "icon": "/skin-icons/1683.png"
   },
   {
     "id": "Character_GrandScheme_Grey",
@@ -20568,18 +19500,6 @@
     "icon": "/skin-icons/1714.png"
   },
   {
-    "id": "Character_JungleBoss_NPC",
-    "name": "TBD",
-    "added": "2023-06-12T21:47:52Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1715,
-    "icon": "/skin-icons/1715.png"
-  },
-  {
     "id": "Character_ZirconSweep",
     "name": "Trace",
     "added": "2023-06-12T21:47:52Z",
@@ -20830,18 +19750,6 @@
     "setName": "Ageless Royalty",
     "number": 1736,
     "icon": "/skin-icons/1736.png"
-  },
-  {
-    "id": "Character_MindPinch_NPC",
-    "name": "TBD",
-    "added": "2023-07-29T05:32:56Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1737,
-    "icon": "/skin-icons/1737.png"
   },
   {
     "id": "Character_PowerFarmer",
@@ -21130,78 +20038,6 @@
     "setName": "Untask'd Courier",
     "number": 1761,
     "icon": "/skin-icons/1761.png"
-  },
-  {
-    "id": "Character_LazarusLensStyle_NPC",
-    "name": "TBD",
-    "added": "2023-08-25T17:49:31Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1762,
-    "icon": "/skin-icons/1762.png"
-  },
-  {
-    "id": "Character_LazarusLensWings_NPC",
-    "name": "TBD",
-    "added": "2023-08-25T17:49:31Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1763,
-    "icon": "/skin-icons/1763.png"
-  },
-  {
-    "id": "Character_NPCHireReward",
-    "name": "TBD",
-    "added": "2023-08-25T17:49:31Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1764,
-    "icon": "/skin-icons/1764.png"
-  },
-  {
-    "id": "Character_RhombCamo_NPC",
-    "name": "TBD",
-    "added": "2023-08-25T17:49:31Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1765,
-    "icon": "/skin-icons/1765.png"
-  },
-  {
-    "id": "Character_RhombGuard_NPC",
-    "name": "TBD",
-    "added": "2023-08-25T17:49:31Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1766,
-    "icon": "/skin-icons/1766.png"
-  },
-  {
-    "id": "Character_RhombPatrol_NPC",
-    "name": "TBD",
-    "added": "2023-08-25T17:49:31Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1767,
-    "icon": "/skin-icons/1767.png"
   },
   {
     "id": "Character_Jumpsuit_Mutable",
@@ -21946,90 +20782,6 @@
     "setName": "En Garde",
     "number": 1829,
     "icon": "/skin-icons/1829.png"
-  },
-  {
-    "id": "Character_BengalBasher_NPC",
-    "name": "NPC",
-    "added": "2023-12-04T16:12:17Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1830,
-    "icon": "/skin-icons/1830.png"
-  },
-  {
-    "id": "Character_CeremonialGuard_Fencer_NPC",
-    "name": "NPC",
-    "added": "2023-12-04T16:12:17Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1831,
-    "icon": "/skin-icons/1831.png"
-  },
-  {
-    "id": "Character_DiamondHeart_NPC",
-    "name": "NPC",
-    "added": "2023-12-04T16:12:17Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1832,
-    "icon": "/skin-icons/1832.png"
-  },
-  {
-    "id": "Character_EchoAngel_NPC",
-    "name": "NPC",
-    "added": "2023-12-04T16:12:17Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1833,
-    "icon": "/skin-icons/1833.png"
-  },
-  {
-    "id": "Character_EchoNyx_NPC",
-    "name": "NPC",
-    "added": "2023-12-04T16:12:17Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1834,
-    "icon": "/skin-icons/1834.png"
-  },
-  {
-    "id": "Character_MadameMoth_NPC",
-    "name": "NPC",
-    "added": "2023-12-04T16:12:17Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1835,
-    "icon": "/skin-icons/1835.png"
-  },
-  {
-    "id": "Character_ZebraScramble_NPC",
-    "name": "NPC",
-    "added": "2023-12-04T16:12:17Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1836,
-    "icon": "/skin-icons/1836.png"
   },
   {
     "id": "Character_BengalBasher_Suit",
@@ -22884,18 +21636,6 @@
     "icon": "/skin-icons/1907.png"
   },
   {
-    "id": "Character_RankedOlympus_NPC",
-    "name": "TBD",
-    "added": "2024-02-22T11:00:40Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1908,
-    "icon": "/skin-icons/1908.png"
-  },
-  {
     "id": "Character_PaperBlaze",
     "name": "Anwar",
     "added": "2024-03-08T13:32:49Z",
@@ -23050,30 +21790,6 @@
     "setName": "Tidal King",
     "number": 1921,
     "icon": "/skin-icons/1921.png"
-  },
-  {
-    "id": "Character_ShadeAngel_NPC",
-    "name": "TBD",
-    "added": "2024-03-08T13:32:49Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1922,
-    "icon": "/skin-icons/1922.png"
-  },
-  {
-    "id": "Character_ShadeNyx_NPC",
-    "name": "TBD",
-    "added": "2024-03-08T13:32:49Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 1923,
-    "icon": "/skin-icons/1923.png"
   },
   {
     "id": "Character_StunningMountain_Armor",
@@ -24180,18 +22896,6 @@
     "icon": "/skin-icons/2015.png"
   },
   {
-    "id": "Character_KnishClamp_NPC",
-    "name": "TBD",
-    "added": "2024-06-22T08:21:26Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2016,
-    "icon": "/skin-icons/2016.png"
-  },
-  {
     "id": "Character_HydroBottle",
     "name": "Weapon X",
     "added": "2024-07-03T00:00:00Z",
@@ -24624,42 +23328,6 @@
     "icon": "/skin-icons/2052.png"
   },
   {
-    "id": "Character_GleamAngel_Lodge_NPC",
-    "name": "TBD",
-    "added": "2024-08-17T06:38:59Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2053,
-    "icon": "/skin-icons/2053.png"
-  },
-  {
-    "id": "Character_GleamNyx_Lodge_NPC",
-    "name": "TBD",
-    "added": "2024-08-17T06:38:59Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2054,
-    "icon": "/skin-icons/2054.png"
-  },
-  {
-    "id": "Character_PiperShelf_Pearl_NPC",
-    "name": "TBD",
-    "added": "2024-08-17T06:38:59Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2055,
-    "icon": "/skin-icons/2055.png"
-  },
-  {
     "id": "Character_MoosePorch_Math",
     "name": "War Machine",
     "added": "2024-08-17T06:38:59Z",
@@ -24948,18 +23616,6 @@
     "icon": "/skin-icons/2079.png"
   },
   {
-    "id": "Character_AnglePatch_Royal_NPC",
-    "name": "TBD",
-    "added": "2024-10-01T08:27:32Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2080,
-    "icon": "/skin-icons/2080.png"
-  },
-  {
     "id": "Character_PsychicAphid",
     "name": "Zain",
     "added": "2024-10-01T08:27:32Z",
@@ -25138,18 +23794,6 @@
     "setName": "Symbiotes",
     "number": 2095,
     "icon": "/skin-icons/2095.png"
-  },
-  {
-    "id": "Character_ElbowChat_NPC",
-    "name": "TBD",
-    "added": "2024-10-12T06:22:57Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2096,
-    "icon": "/skin-icons/2096.png"
   },
   {
     "id": "Character_GourdRiddance",
@@ -25380,42 +24024,6 @@
     "icon": "/skin-icons/2115.png"
   },
   {
-    "id": "Character_FirthAngelGhost_NPC",
-    "name": "TBD",
-    "added": "2024-11-02T17:09:31Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2116,
-    "icon": "/skin-icons/2116.png"
-  },
-  {
-    "id": "Character_FirthAngelShadow_NPC",
-    "name": "TBD",
-    "added": "2024-11-02T17:09:31Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2117,
-    "icon": "/skin-icons/2117.png"
-  },
-  {
-    "id": "Character_FirthNyx_NPC",
-    "name": "TBD",
-    "added": "2024-11-02T17:09:31Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2118,
-    "icon": "/skin-icons/2118.png"
-  },
-  {
     "id": "Character_DenimEquip_Stock",
     "name": "Undercover Skye",
     "added": "2024-11-02T17:09:31Z",
@@ -25572,30 +24180,6 @@
     "icon": "/skin-icons/2131.png"
   },
   {
-    "id": "Character_RobedSledge_Cross_NPC",
-    "name": "Demonic Grunt Dark",
-    "added": "2024-12-01T03:58:22Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2132,
-    "icon": "/skin-icons/2132.png"
-  },
-  {
-    "id": "Character_RobedMentor_Cross_NPC",
-    "name": "Demonic Grunt Light",
-    "added": "2024-12-01T03:58:22Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2133,
-    "icon": "/skin-icons/2133.png"
-  },
-  {
     "id": "Character_TractorFair",
     "name": "Garog",
     "added": "2024-12-01T03:58:22Z",
@@ -25630,18 +24214,6 @@
     "setName": "Big Hero 6",
     "number": 2136,
     "icon": "/skin-icons/2136.png"
-  },
-  {
-    "id": "CID_STWHero",
-    "name": "Hero Outfit",
-    "added": "2024-12-01T03:58:22Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2137,
-    "icon": "/skin-icons/2137.png"
   },
   {
     "id": "Character_PolishedJade_Mind",
@@ -25764,18 +24336,6 @@
     "icon": "/skin-icons/2147.png"
   },
   {
-    "id": "Character_UnluckySinge_Staff_NPC",
-    "name": "TBD",
-    "added": "2024-12-01T03:58:22Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2148,
-    "icon": "/skin-icons/2148.png"
-  },
-  {
     "id": "Character_RoseDepth_Seed",
     "name": "The Night Rose",
     "added": "2024-12-01T03:58:22Z",
@@ -25834,102 +24394,6 @@
     "setName": "Rivals",
     "number": 2153,
     "icon": "/skin-icons/2153.png"
-  },
-  {
-    "id": "Character_WaterfallCharm_F",
-    "name": "Ballistics Tech",
-    "added": "2024-12-10T09:33:41Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2154,
-    "icon": "/skin-icons/2154.png"
-  },
-  {
-    "id": "Character_WaterfallCharm_G",
-    "name": "Battalion Leader",
-    "added": "2024-12-10T09:33:41Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2155,
-    "icon": "/skin-icons/2155.png"
-  },
-  {
-    "id": "CID_DefaultOutfit",
-    "name": "Default",
-    "added": "2024-12-10T09:33:41Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2156,
-    "icon": "/skin-icons/2156.png"
-  },
-  {
-    "id": "Character_WaterfallCharm_D",
-    "name": "Infantry Commander",
-    "added": "2024-12-10T09:33:41Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2157,
-    "icon": "/skin-icons/2157.png"
-  },
-  {
-    "id": "Character_WaterfallCharm",
-    "name": "Recon Raider",
-    "added": "2024-12-10T09:33:41Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2158,
-    "icon": "/skin-icons/2158.png"
-  },
-  {
-    "id": "Character_WaterfallCharm_B",
-    "name": "Sentry Specialist",
-    "added": "2024-12-10T09:33:41Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2159,
-    "icon": "/skin-icons/2159.png"
-  },
-  {
-    "id": "Character_WaterfallCharm_E",
-    "name": "Squad Leader",
-    "added": "2024-12-10T09:33:41Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2160,
-    "icon": "/skin-icons/2160.png"
-  },
-  {
-    "id": "Character_WaterfallCharm_C",
-    "name": "Tactical Tracker",
-    "added": "2024-12-10T09:33:41Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2161,
-    "icon": "/skin-icons/2161.png"
   },
   {
     "id": "Character_TuckBeetle",
@@ -27000,30 +25464,6 @@
     "icon": "/skin-icons/2250.png"
   },
   {
-    "id": "Character_RobedMiner_Gold_NPC",
-    "name": "NPC",
-    "added": "2025-02-21T12:17:00Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2251,
-    "icon": "/skin-icons/2251.png"
-  },
-  {
-    "id": "Character_RobedMiner_Ruby_NPC",
-    "name": "NPC",
-    "added": "2025-02-21T12:17:00Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2252,
-    "icon": "/skin-icons/2252.png"
-  },
-  {
     "id": "Character_AuraCop_Bullet",
     "name": "Outlaw Midas",
     "added": "2025-02-21T12:17:00Z",
@@ -27144,18 +25584,6 @@
     "icon": "/skin-icons/2262.png"
   },
   {
-    "id": "Character_HabitatSecurity",
-    "name": "Battalion Brawler",
-    "added": "2025-03-11T08:32:47Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2263,
-    "icon": "/skin-icons/2263.png"
-  },
-  {
     "id": "Character_RangeGawker",
     "name": "Carmine Rosso",
     "added": "2025-03-11T08:32:47Z",
@@ -27166,18 +25594,6 @@
     "setName": null,
     "number": 2264,
     "icon": "/skin-icons/2264.png"
-  },
-  {
-    "id": "Character_HabitatSecurity_F",
-    "name": "Cavalry Captain",
-    "added": "2025-03-11T08:32:47Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2265,
-    "icon": "/skin-icons/2265.png"
   },
   {
     "id": "Character_SlyJudge",
@@ -27202,18 +25618,6 @@
     "setName": "Wayward Witch",
     "number": 2267,
     "icon": "/skin-icons/2267.png"
-  },
-  {
-    "id": "Character_HabitatSecurity_C",
-    "name": "Field Commander",
-    "added": "2025-03-11T08:32:47Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2268,
-    "icon": "/skin-icons/2268.png"
   },
   {
     "id": "Character_SharkFry",
@@ -27298,18 +25702,6 @@
     "setName": "4-Leaf",
     "number": 2275,
     "icon": "/skin-icons/2275.png"
-  },
-  {
-    "id": "Character_HabitatSecurity_D",
-    "name": "Munitions Master",
-    "added": "2025-03-11T08:32:47Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2276,
-    "icon": "/skin-icons/2276.png"
   },
   {
     "id": "Character_ShadeAngel",
@@ -27408,30 +25800,6 @@
     "icon": "/skin-icons/2284.png"
   },
   {
-    "id": "Character_HabitatSecurity_E",
-    "name": "Siege Sergeant",
-    "added": "2025-03-11T08:32:47Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2285,
-    "icon": "/skin-icons/2285.png"
-  },
-  {
-    "id": "Character_HabitatSecurity_B",
-    "name": "Stealth Specialist ",
-    "added": "2025-03-11T08:32:47Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2286,
-    "icon": "/skin-icons/2286.png"
-  },
-  {
     "id": "Character_FuryAngel",
     "name": "Tactical Elite Wastelander",
     "added": "2025-03-11T08:32:47Z",
@@ -27454,18 +25822,6 @@
     "setName": "Legion Security Elite",
     "number": 2288,
     "icon": "/skin-icons/2288.png"
-  },
-  {
-    "id": "Character_HabitatSecurity_G",
-    "name": "Tank Gunner",
-    "added": "2025-03-11T08:32:47Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2289,
-    "icon": "/skin-icons/2289.png"
   },
   {
     "id": "Character_Hacker",
@@ -28716,42 +27072,6 @@
     "icon": "/skin-icons/2393.png"
   },
   {
-    "id": "Character_TraitHoldEye",
-    "name": "TBD",
-    "added": "2025-05-29T10:14:16Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2394,
-    "icon": "/skin-icons/2394.png"
-  },
-  {
-    "id": "Character_TraitHoldLaw",
-    "name": "TBD",
-    "added": "2025-05-29T10:14:16Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2395,
-    "icon": "/skin-icons/2395.png"
-  },
-  {
-    "id": "Character_TraitHoldTri",
-    "name": "TBD",
-    "added": "2025-05-29T10:14:16Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2396,
-    "icon": "/skin-icons/2396.png"
-  },
-  {
     "id": "Character_ForwardLake_Dire",
     "name": "Apprentice Rey",
     "added": "2025-05-29T14:27:40Z",
@@ -28966,54 +27286,6 @@
     "setName": "Heroic Harmonizer",
     "number": 2414,
     "icon": "/skin-icons/2414.png"
-  },
-  {
-    "id": "Character_MistRaven_NPC",
-    "name": "TBD",
-    "added": "2025-06-07T19:01:48Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2415,
-    "icon": "/skin-icons/2415.png"
-  },
-  {
-    "id": "Character_SkiffEye",
-    "name": "TBD",
-    "added": "2025-06-07T19:01:48Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2416,
-    "icon": "/skin-icons/2416.png"
-  },
-  {
-    "id": "Character_SkiffToil",
-    "name": "TBD",
-    "added": "2025-06-07T19:01:48Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2417,
-    "icon": "/skin-icons/2417.png"
-  },
-  {
-    "id": "Character_SolidMist_Boss",
-    "name": "TBD",
-    "added": "2025-06-07T19:01:48Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2418,
-    "icon": "/skin-icons/2418.png"
   },
   {
     "id": "Character_SynthContact",
@@ -30852,18 +29124,6 @@
     "icon": "/skin-icons/2571.png"
   },
   {
-    "id": "Character_NanaEternal_NPC",
-    "name": "TBD",
-    "added": "2025-10-02T12:10:53Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2572,
-    "icon": "/skin-icons/2572.png"
-  },
-  {
     "id": "Character_GrimHound",
     "name": "War Wolf Dire",
     "added": "2025-10-02T12:10:53Z",
@@ -31392,66 +29652,6 @@
     "icon": "/skin-icons/2616.png"
   },
   {
-    "id": "Character_FloorMist_NPC",
-    "name": "TBD",
-    "added": "2025-11-02T20:05:32Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2617,
-    "icon": "/skin-icons/2617.png"
-  },
-  {
-    "id": "Character_F_Placeholder_F",
-    "name": "Ballistics Tech",
-    "added": "2025-11-11T09:37:13Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2618,
-    "icon": "/skin-icons/2618.png"
-  },
-  {
-    "id": "Character_M_Placeholder",
-    "name": "Battalion Brawler",
-    "added": "2025-11-11T09:37:13Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2619,
-    "icon": "/skin-icons/2619.png"
-  },
-  {
-    "id": "Character_F_Placeholder_G",
-    "name": "Battalion Leader",
-    "added": "2025-11-11T09:37:13Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2620,
-    "icon": "/skin-icons/2620.png"
-  },
-  {
-    "id": "Character_M_Placeholder_F",
-    "name": "Cavalry Captain",
-    "added": "2025-11-11T09:37:13Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2621,
-    "icon": "/skin-icons/2621.png"
-  },
-  {
     "id": "Character_ThinGlaze",
     "name": "Constable Sprinkle",
     "added": "2025-11-11T09:37:13Z",
@@ -31476,18 +29676,6 @@
     "icon": "/skin-icons/2623.png"
   },
   {
-    "id": "Character_M_Placeholder_C",
-    "name": "Field Commander",
-    "added": "2025-11-11T09:37:13Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2624,
-    "icon": "/skin-icons/2624.png"
-  },
-  {
     "id": "Character_LethalSwipe",
     "name": "Flick Fusion",
     "added": "2025-11-11T09:37:13Z",
@@ -31510,18 +29698,6 @@
     "setName": null,
     "number": 2626,
     "icon": "/skin-icons/2626.png"
-  },
-  {
-    "id": "Character_F_Placeholder_D",
-    "name": "Infantry Commander",
-    "added": "2025-11-11T09:37:13Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2627,
-    "icon": "/skin-icons/2627.png"
   },
   {
     "id": "Character_SwiftKestrel",
@@ -31584,30 +29760,6 @@
     "icon": "/skin-icons/2632.png"
   },
   {
-    "id": "Character_M_Placeholder_D",
-    "name": "Munitions Master",
-    "added": "2025-11-11T09:37:13Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2633,
-    "icon": "/skin-icons/2633.png"
-  },
-  {
-    "id": "Character_F_Placeholder",
-    "name": "Recon Raider",
-    "added": "2025-11-11T09:37:13Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2634,
-    "icon": "/skin-icons/2634.png"
-  },
-  {
     "id": "Character_TroopFactor",
     "name": "Scratchy",
     "added": "2025-11-11T09:37:13Z",
@@ -31618,78 +29770,6 @@
     "setName": "The Simpsons",
     "number": 2635,
     "icon": "/skin-icons/2635.png"
-  },
-  {
-    "id": "Character_F_Placeholder_B",
-    "name": "Sentry Specialist",
-    "added": "2025-11-11T09:37:13Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2636,
-    "icon": "/skin-icons/2636.png"
-  },
-  {
-    "id": "Character_M_Placeholder_E",
-    "name": "Siege Sergeant",
-    "added": "2025-11-11T09:37:13Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2637,
-    "icon": "/skin-icons/2637.png"
-  },
-  {
-    "id": "Character_F_Placeholder_E",
-    "name": "Squad Leader",
-    "added": "2025-11-11T09:37:13Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2638,
-    "icon": "/skin-icons/2638.png"
-  },
-  {
-    "id": "Character_M_Placeholder_B",
-    "name": "Stealth Specialist ",
-    "added": "2025-11-11T09:37:13Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2639,
-    "icon": "/skin-icons/2639.png"
-  },
-  {
-    "id": "Character_F_Placeholder_C",
-    "name": "Tactical Tracker",
-    "added": "2025-11-11T09:37:13Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2640,
-    "icon": "/skin-icons/2640.png"
-  },
-  {
-    "id": "Character_M_Placeholder_G",
-    "name": "Tank Gunner",
-    "added": "2025-11-11T09:37:13Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Island Originals  set.",
-    "setName": "Island Originals ",
-    "number": 2641,
-    "icon": "/skin-icons/2641.png"
   },
   {
     "id": "Character_WiseBarn",
@@ -32052,18 +30132,6 @@
     "icon": "/skin-icons/2671.png"
   },
   {
-    "id": "Character_RowLiaison_DrySquash",
-    "name": "Leading Laddy",
-    "added": "2025-11-29T20:57:37Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2672,
-    "icon": "/skin-icons/2672.png"
-  },
-  {
     "id": "Character_CreamSkull_Dove",
     "name": "Marty McFly",
     "added": "2025-11-29T20:57:37Z",
@@ -32086,18 +30154,6 @@
     "setName": "Man of Action",
     "number": 2674,
     "icon": "/skin-icons/2674.png"
-  },
-  {
-    "id": "Character_NPC_UmbraMolt",
-    "name": "NPC UmbraMolt",
-    "added": "2025-11-29T20:57:37Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2675,
-    "icon": "/skin-icons/2675.png"
   },
   {
     "id": "Character_BlueMonday",
@@ -32148,18 +30204,6 @@
     "icon": "/skin-icons/2679.png"
   },
   {
-    "id": "Character_SpacePlunge_Hologram",
-    "name": "TBD",
-    "added": "2025-11-29T20:57:37Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2680,
-    "icon": "/skin-icons/2680.png"
-  },
-  {
     "id": "Character_SurgeRaven_Pack",
     "name": "The Bride",
     "added": "2025-11-29T20:57:37Z",
@@ -32170,18 +30214,6 @@
     "setName": "The Bride's Revenge",
     "number": 2681,
     "icon": "/skin-icons/2681.png"
-  },
-  {
-    "id": "Character_SurgeRaven_DrySquash",
-    "name": "The Bride Yellow Jacket",
-    "added": "2025-11-29T20:57:37Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2682,
-    "icon": "/skin-icons/2682.png"
   },
   {
     "id": "Character_GlamClaws",
@@ -34152,18 +32184,6 @@
     "icon": "/skin-icons/2846.png"
   },
   {
-    "id": "CID_Empty",
-    "name": "null",
-    "added": "2026-04-30T09:17:44Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2847,
-    "icon": "/skin-icons/2847.png"
-  },
-  {
     "id": "Character_MasalaRail",
     "name": "Ahsoka Tano (Clone Wars)",
     "added": "2026-04-30T13:00:51Z",
@@ -34198,18 +32218,6 @@
     "setName": "Bob's Burgers",
     "number": 2850,
     "icon": "/skin-icons/2850.png"
-  },
-  {
-    "id": "Character_StairGummy",
-    "name": "Lois Griffin",
-    "added": "2026-05-07T13:01:12Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": "Part of the Family Guy set.",
-    "setName": "Family Guy",
-    "number": 2851,
-    "icon": "/skin-icons/2851.png"
   },
   {
     "id": "Character_PrizeTray",
@@ -34306,18 +32314,6 @@
     "setName": "Hospital Emergency",
     "number": 2859,
     "icon": "/skin-icons/2859.png"
-  },
-  {
-    "id": "Character_VoyagerCuboid",
-    "name": "TBD",
-    "added": "2026-05-14T10:11:56Z",
-    "chapter": null,
-    "season": null,
-    "introductionText": null,
-    "setText": null,
-    "setName": null,
-    "number": 2860,
-    "icon": "/skin-icons/2860.png"
   },
   {
     "id": "Character_BombaToon",

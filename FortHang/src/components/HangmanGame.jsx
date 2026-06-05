@@ -20,25 +20,35 @@ const GAME_STATES = {
   LOST: 'lost',
 };
 
+function renderWordChar(char, key, guessedLetters) {
+  if (!isLetter(char)) {
+    return (
+      <span key={key} className="word-char symbol">
+        {char}
+      </span>
+    );
+  }
+
+  const revealed = guessedLetters.has(char.toUpperCase());
+  return (
+    <span key={key} className={`word-char ${revealed ? 'revealed' : 'hidden'}`}>
+      {revealed ? char.toUpperCase() : '_'}
+    </span>
+  );
+}
+
 function WordDisplay({ word, guessedLetters }) {
+  const words = word.split(' ');
+
   return (
     <div className="word-display" aria-label="Guessed word">
-      {word.split('').map((char, index) => {
-        if (!isLetter(char)) {
-          return (
-            <span key={`${index}-${char}`} className="word-char symbol">
-              {char}
-            </span>
-          );
-        }
-
-        const revealed = guessedLetters.has(char.toUpperCase());
-        return (
-          <span key={`${index}-${char}`} className={`word-char ${revealed ? 'revealed' : 'hidden'}`}>
-            {revealed ? char.toUpperCase() : '_'}
-          </span>
-        );
-      })}
+      {words.map((segment, wordIndex) => (
+        <span key={`word-${wordIndex}`} className="word-group">
+          {segment.split('').map((char, charIndex) =>
+            renderWordChar(char, `${wordIndex}-${charIndex}-${char}`, guessedLetters)
+          )}
+        </span>
+      ))}
     </div>
   );
 }

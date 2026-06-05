@@ -110,18 +110,25 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0.35rem 0.5rem;
+  align-items: center;
+  gap: 0.5rem 1.5rem;
   padding: 0.5rem;
+}
+
+.word-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.08rem;
 }
 
 .word-char {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.4rem;
+  min-width: 1.1rem;
   font-size: clamp(1.2rem, 3vw, 1.8rem);
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
 }
 
 .word-char.hidden {
