@@ -1,7 +1,9 @@
+import { resolveAssetPath } from './outfits';
+
 export const MAX_WRONG_GUESSES = 6;
 export const HANGMAN_IMAGES = Array.from(
   { length: MAX_WRONG_GUESSES + 1 },
-  (_, i) => `/hangman/hangman_${i}.png`
+  (_, i) => resolveAssetPath(`hangman/hangman_${i}.png`)
 );
 
 export function isLetter(char) {

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { getOutfitIconSrc } from '../utils/outfits';
+import { getOutfitIconSrc, resolveAssetPath } from '../utils/outfits';
 import { countDiscoveredSkins, isSkinGuessed } from '../utils/progress';
 
 function CatalogueImage({ outfit }) {
@@ -12,7 +12,7 @@ function CatalogueImage({ outfit }) {
       className="catalogue-image"
       loading="lazy"
       onError={(event) => {
-        const fallback = `/skin-icons/${outfit.number}.png`;
+        const fallback = resolveAssetPath(`skin-icons/${outfit.number}.png`);
         if (event.currentTarget.src !== fallback) {
           event.currentTarget.src = fallback;
         }

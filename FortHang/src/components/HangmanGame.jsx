@@ -8,7 +8,7 @@ import {
   isWordComplete,
   MAX_WRONG_GUESSES,
 } from '../utils/hangman';
-import { getOutfitIconSrc } from '../utils/outfits';
+import { getOutfitIconSrc, resolveAssetPath } from '../utils/outfits';
 import { countDiscoveredSkins } from '../utils/progress';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -139,7 +139,7 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
                 alt={currentOutfit.name}
                 className="skin-reveal-image"
                 onError={(event) => {
-                  const fallback = `/skin-icons/${currentOutfit.number}.png`;
+                  const fallback = resolveAssetPath(`skin-icons/${currentOutfit.number}.png`);
                   if (event.currentTarget.src !== fallback) {
                     event.currentTarget.src = fallback;
                   }
