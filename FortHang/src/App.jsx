@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import HangmanGame from './components/HangmanGame';
 import SkinCatalogue from './components/SkinCatalogue';
+import { getGameOutfits } from './utils/outfits';
 import {
   addGuessedSkinId,
   loadGuessedSkinIds,
@@ -28,9 +29,10 @@ function App() {
         return res.json();
       })
       .then((data) => {
-        setOutfits(data);
+        const gameOutfits = getGameOutfits(data);
+        setOutfits(gameOutfits);
         setGuessedSkinIds((current) => {
-          const normalized = normalizeGuessedSkinIds(current, data);
+          const normalized = normalizeGuessedSkinIds(current, gameOutfits);
           if (normalized.length !== current.length || normalized.some((id, i) => id !== current[i])) {
             saveGuessedSkinIds(normalized);
           }

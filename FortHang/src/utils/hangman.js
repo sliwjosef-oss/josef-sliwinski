@@ -1,4 +1,5 @@
-import { resolveAssetPath } from './outfits';
+import { hasValidSeason, resolveAssetPath } from './outfits';
+import { isSkinGuessed } from './progress';
 
 export const MAX_WRONG_GUESSES = 6;
 export const HANGMAN_IMAGES = Array.from(
@@ -38,25 +39,26 @@ export function shuffleArray(items) {
   return shuffled;
 }
 
-export function getPlayableOutfits(outfits) {
-  return outfits.filter((outfit) => getLettersInWord(outfit.name).size > 0);
+export function getPlayableOutfits(outfits, guessedSkinIds = []) {
+  return outfits
+    .filter(hasValidSeason)
+    .filter((outfit) => getLettersInWord(outfit.name).size > 0)
+    .filter((outfit) => !isSkinGuessed(guessedSkinIds, outfit));
 }
 
 export function createOutfitQueue(outfits) {
-  let queue = shuffleArray(getPlayableOutfits(outfits));
+  const queue = shuffleArray(outfits);
 
   return {
     next() {
-      if (queue.length === 0) {
-        queue = shuffleArray(getPlayableOutfits(outfits));
-      }
+      if (queue.length === 0) return null;
       return queue.pop();
     },
     remaining() {
       return queue.length;
     },
     total() {
-      return getPlayableOutfits(outfits).length;
+      return outfits.length;
     },
   };
 }

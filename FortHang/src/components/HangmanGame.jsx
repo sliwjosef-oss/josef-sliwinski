@@ -3,6 +3,7 @@ import {
   createOutfitQueue,
   formatHint,
   getLettersInWord,
+  getPlayableOutfits,
   HANGMAN_IMAGES,
   isLetter,
   isWordComplete,
@@ -49,9 +50,10 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
   const [wrongGuesses, setWrongGuesses] = useState(0);
   const outfitQueueRef = useRef(null);
 
-  if (!outfitQueueRef.current && outfits.length > 0) {
-    outfitQueueRef.current = createOutfitQueue(outfits);
-  }
+  const remainingOutfits = useMemo(
+    () => getPlayableOutfits(outfits, guessedSkinIds),
+    [outfits, guessedSkinIds]
+  );
 
   const hintLines = useMemo(
     () => (currentOutfit ? formatHint(currentOutfit) : []),
@@ -61,14 +63,18 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
   const discoveredCount = countDiscoveredSkins(outfits, guessedSkinIds);
 
   const startGame = useCallback(() => {
-    if (!outfitQueueRef.current) return;
+    const playableOutfits = getPlayableOutfits(outfits, guessedSkinIds);
+    if (playableOutfits.length === 0) return;
 
+    outfitQueueRef.current = createOutfitQueue(playableOutfits);
     const outfit = outfitQueueRef.current.next();
+    if (!outfit) return;
+
     setCurrentOutfit(outfit);
     setGuessedLetters(new Set());
     setWrongGuesses(0);
     setGameState(GAME_STATES.PLAYING);
-  }, []);
+  }, [outfits, guessedSkinIds]);
 
   const handleGuess = useCallback(
     (letter) => {
@@ -167,10 +173,17 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
 
       {gameState === GAME_STATES.IDLE && (
         <div className="action-panel">
-          <p className="prompt">Ready to guess a Fortnite outfit?</p>
-          <button type="button" className="primary-button" onClick={startGame}>
-            Start Game
-          </button>
+          {remainingOutfits.length > 0 ? (
+            <>
+              <p className="prompt">Ready to guess a Fortnite outfit?</p>
+              <p className="hint-line muted">{remainingOutfits.length} outfits remaining</p>
+              <button type="button" className="primary-button" onClick={startGame}>
+                Start Game
+              </button>
+            </>
+          ) : (
+            <p className="prompt">You have discovered every outfit in the catalogue. Great job!</p>
+          )}
         </div>
       )}
 
@@ -213,10 +226,16 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
               Game over! The outfit was {currentOutfit.name}.
             </p>
           )}
-          <p className="play-again-prompt">Would you like to play again?</p>
-          <button type="button" className="primary-button" onClick={startGame}>
-            Play Again
-          </button>
+          {remainingOutfits.length > 0 ? (
+            <>
+              <p className="play-again-prompt">Would you like to play again?</p>
+              <button type="button" className="primary-button" onClick={startGame}>
+                Play Again
+              </button>
+            </>
+          ) : (
+            <p className="play-again-prompt">You have discovered every outfit in the catalogue!</p>
+          )}
         </div>
       )}
     </div>

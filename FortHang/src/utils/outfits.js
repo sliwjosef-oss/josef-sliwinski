@@ -1,3 +1,18 @@
+export function hasValidSeason(outfit) {
+  const season = outfit.season;
+  if (season == null) return false;
+
+  const normalized = String(season).trim();
+  if (!normalized) return false;
+  if (normalized.toUpperCase() === 'TBD') return false;
+
+  return true;
+}
+
+export function getGameOutfits(outfits) {
+  return outfits.filter(hasValidSeason);
+}
+
 export function resolveAssetPath(path) {
   if (!path) return path;
   if (/^https?:\/\//i.test(path)) return path;

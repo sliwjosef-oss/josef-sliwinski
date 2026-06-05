@@ -17,9 +17,18 @@ if (json.status !== 200) {
   process.exit(1);
 }
 
+function hasValidSeason(season) {
+  if (season == null) return false;
+  const normalized = String(season).trim();
+  if (!normalized) return false;
+  if (normalized.toUpperCase() === 'TBD') return false;
+  return true;
+}
+
 const playable = json.data
   .filter((item) => item.type?.value === 'outfit' && item.name?.trim())
   .filter((item) => /[a-zA-Z]/.test(item.name))
+  .filter((item) => hasValidSeason(item.introduction?.season ?? null))
   .map((item) => ({
     id: item.id,
     name: item.name,
