@@ -60,6 +60,7 @@ if (json.status !== 200) {
 const playable = json.data
   .filter((item) => item.type?.value === 'outfit' && item.name?.trim())
   .filter((item) => item.name !== 'Recruit')
+  .filter((item) => item.name !== 'TBD')
   .filter((item) => /[a-zA-Z]/.test(item.name))
   .filter((item) => hasValidSeason(item.introduction?.season ?? null))
   .map(mapApiOutfit)
