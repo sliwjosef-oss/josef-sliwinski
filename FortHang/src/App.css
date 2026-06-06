@@ -61,15 +61,19 @@
 .hangman-board {
   position: relative;
   width: min(360px, 90vw);
+  padding: 1rem;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #eef2fb 0%, #d8e0f2 100%);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
 .hangman-image {
   display: block;
   width: 100%;
   height: auto;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: #f8faff;
 }
 
 .skin-reveal-panel {

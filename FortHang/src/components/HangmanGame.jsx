@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   createOutfitQueue,
   formatHint,
@@ -115,6 +115,23 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
     },
     [gameState, currentOutfit, guessedLetters, wrongGuesses, onSkinWon]
   );
+
+  useEffect(() => {
+    if (gameState !== GAME_STATES.PLAYING) return;
+
+    const handleKeyDown = (event) => {
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+
+      const letter = event.key.toUpperCase();
+      if (!/^[A-Z]$/.test(letter)) return;
+
+      event.preventDefault();
+      handleGuess(letter);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameState, handleGuess]);
 
   return (
     <div className="hangman-game">
