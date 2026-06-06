@@ -23,7 +23,7 @@ function App() {
   const [guessedSkinIds, setGuessedSkinIds] = useState(loadGuessedSkinIds);
 
   useEffect(() => {
-    fetch(`${import.meta.env.BASE_URL}outfits.json?v=2700`, { cache: 'no-store' })
+    fetch(`${import.meta.env.BASE_URL}outfits.json?v=2674`, { cache: 'no-store' })
       .then((res) => {
         if (!res.ok) throw new Error('Failed to load outfit data');
         return res.json();
