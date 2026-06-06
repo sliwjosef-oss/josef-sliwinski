@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { dedupeByName, EXCLUDED_NAMES, hasValidSeason } from './outfit-filters.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = join(__dirname, '..', 'public');
@@ -11,14 +12,6 @@ const CONCURRENCY = 20;
 
 mkdirSync(ICON_DIR, { recursive: true });
 mkdirSync(DEPLOY_ICON_DIR, { recursive: true });
-
-function hasValidSeason(season) {
-  if (season == null) return false;
-  const normalized = String(season).trim();
-  if (!normalized) return false;
-  if (normalized.toUpperCase() === 'TBD') return false;
-  return true;
-}
 
 function getIconFileNumber(iconPath) {
   const match = iconPath?.match(/(\d+)\.png$/);
@@ -57,19 +50,20 @@ if (json.status !== 200) {
   process.exit(1);
 }
 
-const playable = json.data
-  .filter((item) => item.type?.value === 'outfit' && item.name?.trim())
-  .filter((item) => item.name !== 'Recruit')
-  .filter((item) => item.name !== 'TBD')
-  .filter((item) => /[a-zA-Z]/.test(item.name))
-  .filter((item) => hasValidSeason(item.introduction?.season ?? null))
-  .map(mapApiOutfit)
-  .sort((a, b) => {
-    const aTime = a.added ? Date.parse(a.added) : Number.MAX_SAFE_INTEGER;
-    const bTime = b.added ? Date.parse(b.added) : Number.MAX_SAFE_INTEGER;
-    if (aTime !== bTime) return aTime - bTime;
-    return a.name.localeCompare(b.name);
-  });
+const playable = dedupeByName(
+  json.data
+    .filter((item) => item.type?.value === 'outfit' && item.name?.trim())
+    .filter((item) => !EXCLUDED_NAMES.has(item.name))
+    .filter((item) => /[a-zA-Z]/.test(item.name))
+    .filter((item) => hasValidSeason(item.introduction?.season ?? null))
+    .map(mapApiOutfit)
+    .sort((a, b) => {
+      const aTime = a.added ? Date.parse(a.added) : Number.MAX_SAFE_INTEGER;
+      const bTime = b.added ? Date.parse(b.added) : Number.MAX_SAFE_INTEGER;
+      if (aTime !== bTime) return aTime - bTime;
+      return a.name.localeCompare(b.name);
+    })
+);
 
 async function resolveIcon(outfit) {
   const existing = existingById.get(outfit.id);

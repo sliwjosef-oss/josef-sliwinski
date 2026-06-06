@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { dedupeByName, EXCLUDED_NAMES, hasValidSeason } from './outfit-filters.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT_PATH = join(__dirname, '..', 'public', 'outfits.json');
@@ -17,18 +18,9 @@ if (json.status !== 200) {
   process.exit(1);
 }
 
-function hasValidSeason(season) {
-  if (season == null) return false;
-  const normalized = String(season).trim();
-  if (!normalized) return false;
-  if (normalized.toUpperCase() === 'TBD') return false;
-  return true;
-}
-
-const playable = json.data
+const playable = dedupeByName(json.data
   .filter((item) => item.type?.value === 'outfit' && item.name?.trim())
-  .filter((item) => item.name !== 'Recruit')
-  .filter((item) => item.name !== 'TBD')
+  .filter((item) => !EXCLUDED_NAMES.has(item.name))
   .filter((item) => /[a-zA-Z]/.test(item.name))
   .filter((item) => hasValidSeason(item.introduction?.season ?? null))
   .map((item) => ({
@@ -47,7 +39,7 @@ const playable = json.data
     const bTime = b.added ? Date.parse(b.added) : Number.MAX_SAFE_INTEGER;
     if (aTime !== bTime) return aTime - bTime;
     return a.name.localeCompare(b.name);
-  })
+  }))
   .map((item, index) => ({
     ...item,
     number: index + 1,
