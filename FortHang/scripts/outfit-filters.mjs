@@ -1,3 +1,34 @@
+/** API entries missing introduction metadata — patched to match their release batch. */
+export const INTRODUCTION_PATCHES = {
+  Character_StairGummy: {
+    chapter: '7',
+    season: '2',
+    introductionText: 'Introduced in Chapter 7, Season 2.',
+  },
+  Character_TigerRootFame: {
+    chapter: '4',
+    season: '2',
+    introductionText: 'Introduced in Chapter 4, Season 2.',
+  },
+  Character_TigerRootHype: {
+    chapter: '4',
+    season: '2',
+    introductionText: 'Introduced in Chapter 4, Season 2.',
+  },
+};
+
+export function getIntroductionFields(item) {
+  const patch = INTRODUCTION_PATCHES[item.id];
+  const chapter = patch?.chapter ?? item.introduction?.chapter ?? null;
+  const season = patch?.season ?? item.introduction?.season ?? null;
+  const introductionText =
+    patch?.introductionText ??
+    item.introduction?.text ??
+    (chapter && season ? `Introduced in Chapter ${chapter}, Season ${season}.` : null);
+
+  return { chapter, season, introductionText };
+}
+
 export const EXCLUDED_NAMES = new Set([
   'Recruit',
   'TBD',

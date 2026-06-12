@@ -1,7 +1,12 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { dedupeByName, EXCLUDED_NAMES, hasValidSeason } from './outfit-filters.mjs';
+import {
+  dedupeByName,
+  EXCLUDED_NAMES,
+  getIntroductionFields,
+  hasValidSeason,
+} from './outfit-filters.mjs';
 import { createSilhouette } from './silhouette.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -24,15 +29,17 @@ function getIconFileNumber(iconPath) {
 }
 
 function mapApiOutfit(item) {
+  const { chapter, season, introductionText } = getIntroductionFields(item);
+
   return {
     id: item.id,
     name: item.name,
     description: item.description ?? null,
     added: item.added ?? null,
     remoteIcon: item.images?.smallIcon ?? item.images?.icon ?? null,
-    chapter: item.introduction?.chapter ?? null,
-    season: item.introduction?.season ?? null,
-    introductionText: item.introduction?.text ?? null,
+    chapter,
+    season,
+    introductionText,
     setText: item.set?.text ?? null,
     setName: item.set?.value ?? null,
   };
@@ -61,7 +68,7 @@ const playable = dedupeByName(
     .filter((item) => item.type?.value === 'outfit' && item.name?.trim())
     .filter((item) => !EXCLUDED_NAMES.has(item.name))
     .filter((item) => /[a-zA-Z]/.test(item.name))
-    .filter((item) => hasValidSeason(item.introduction?.season ?? null))
+    .filter((item) => hasValidSeason(getIntroductionFields(item).season))
     .map(mapApiOutfit)
     .sort((a, b) => {
       const aTime = a.added ? Date.parse(a.added) : Number.MAX_SAFE_INTEGER;
