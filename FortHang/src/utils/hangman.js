@@ -1,11 +1,17 @@
-import { hasValidSeason, resolveAssetPath } from './outfits';
+import { hasValidSeason } from './outfits';
 import { isSkinGuessed } from './progress';
 
 export const MAX_WRONG_GUESSES = 6;
+
 export const HANGMAN_IMAGES = Array.from(
   { length: MAX_WRONG_GUESSES + 1 },
-  (_, i) => resolveAssetPath(`hangman/hangman_${i}.png`)
+  (_, i) => new URL(`../assets/hangman/hangman_${i}.png`, import.meta.url).href
 );
+
+export const TITLE_IMAGE = new URL(
+  '../assets/fortnite-hangman-title.png',
+  import.meta.url
+).href;
 
 export function isLetter(char) {
   return /[a-zA-Z]/.test(char);

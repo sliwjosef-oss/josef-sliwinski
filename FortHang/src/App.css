@@ -25,6 +25,15 @@
   letter-spacing: 0.02em;
 }
 
+.game-title-image {
+  display: block;
+  width: min(420px, 92vw);
+  height: auto;
+  margin: 0 auto;
+  border-radius: 14px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.4);
+}
+
 .subtitle {
   margin: 0.35rem 0 0;
   color: #b8c4e6;
@@ -62,22 +71,124 @@
   gap: 0.5rem;
 }
 
-.hangman-board {
-  position: relative;
-  width: min(360px, 90vw);
-  padding: 1rem;
-  border-radius: 12px;
-  background: linear-gradient(180deg, #eef2fb 0%, #d8e0f2 100%);
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+.hangman-stage-layout {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0.85rem;
+  width: min(520px, 100%);
 }
 
-.hangman-image {
+.hangman-stage-layout.idle {
+  width: min(360px, 90vw);
+}
+
+.peely-panel {
+  flex: 0 0 min(132px, 30vw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.peely-label {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffd84d;
+}
+
+.peely-image {
   display: block;
   width: 100%;
   height: auto;
-  border-radius: 8px;
-  background: #f8faff;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.outfit-guess-board {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.outfit-guess-board.playing {
+  min-height: 200px;
+}
+
+.outfit-silhouette-frame {
+  padding: 2px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #5865f2 0%, #a855f7 50%, #ec4899 100%);
+  box-shadow: 0 0 20px rgba(88, 101, 242, 0.35);
+}
+
+.outfit-silhouette-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem 1.5rem;
+  border-radius: 16px;
+  background: rgba(11, 16, 32, 0.92);
+}
+
+.outfit-guess-silhouette,
+.outfit-guess-image,
+.outfit-guess-silhouette-fallback {
+  display: block;
+  width: min(190px, 100%);
+  height: auto;
+  max-height: 210px;
+  object-fit: contain;
+}
+
+.outfit-guess-silhouette {
+  filter: drop-shadow(0 0 8px rgba(147, 197, 253, 0.25));
+}
+
+.outfit-guess-image {
+  border-radius: 10px;
+}
+
+.outfit-guess-silhouette-fallback {
+  filter: brightness(0) drop-shadow(0 0 8px rgba(147, 197, 253, 0.25));
+}
+
+.outfit-guess-board.idle {
+  width: min(320px, 90vw);
+}
+
+.hangman-idle-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+.outfit-guess-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(180px, 70%);
+  aspect-ratio: 1;
+  font-size: 4rem;
+  font-weight: 700;
+  color: #7f8fbf;
 }
 
 .skin-reveal-panel {
@@ -86,11 +197,10 @@
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  padding: 1.25rem;
-  border-radius: 12px;
-  background: rgba(46, 204, 113, 0.12);
-  border: 2px solid rgba(46, 204, 113, 0.7);
+  width: 100%;
+  padding: 0.5rem;
 }
+
 
 .skin-reveal-number {
   font-size: 1.1rem;
@@ -101,11 +211,16 @@
   border-radius: 8px;
 }
 
-.skin-reveal-image {
-  width: min(200px, 70%);
-  height: auto;
-  border-radius: 10px;
+.skin-reveal-panel .outfit-guess-image {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.skin-reveal-panel:not(.lost) {
+  border-radius: 16px;
+  background: rgba(46, 204, 113, 0.1);
+  border: 2px solid rgba(46, 204, 113, 0.55);
+  padding: 1.25rem;
+  box-shadow: 0 0 24px rgba(46, 204, 113, 0.15);
 }
 
 .wrong-count {
@@ -454,6 +569,32 @@
 }
 
 @media (max-width: 520px) {
+  .hangman-stage-layout:not(.idle) {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hangman-stage-layout.idle {
+    width: min(320px, 92vw);
+  }
+
+  .peely-panel {
+    flex: 0 0 auto;
+    flex-direction: row;
+    justify-content: center;
+    width: min(280px, 100%);
+    padding: 0;
+  }
+
+  .peely-image {
+    width: min(88px, 24vw);
+  }
+
+  .outfit-guess-board {
+    width: 100%;
+    min-height: 200px;
+  }
+
   .keyboard {
     grid-template-columns: repeat(7, 1fr);
   }

@@ -8,8 +8,13 @@ import {
   isLetter,
   isWordComplete,
   MAX_WRONG_GUESSES,
+  TITLE_IMAGE,
 } from '../utils/hangman';
-import { getOutfitIconFallbackSrc, getOutfitIconSrc } from '../utils/outfits';
+import {
+  getOutfitIconFallbackSrc,
+  getOutfitIconSrc,
+  getOutfitSilhouetteSrc,
+} from '../utils/outfits';
 import { countDiscoveredSkins } from '../utils/progress';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -34,6 +39,50 @@ function renderWordChar(char, key, guessedLetters) {
     <span key={key} className={`word-char ${revealed ? 'revealed' : 'hidden'}`}>
       {revealed ? char.toUpperCase() : '_'}
     </span>
+  );
+}
+
+function OutfitGuessImage({ outfit, reveal = false }) {
+  const src = reveal ? getOutfitIconSrc(outfit) : getOutfitSilhouetteSrc(outfit);
+
+  if (!src) {
+    return (
+      <span className="outfit-guess-placeholder" aria-hidden="true">
+        ?
+      </span>
+    );
+  }
+
+  const image = (
+    <img
+      src={src}
+      alt={reveal ? outfit.name : ''}
+      className={reveal ? 'outfit-guess-image' : 'outfit-guess-silhouette'}
+      aria-hidden={reveal ? undefined : true}
+      onError={(event) => {
+        if (reveal) {
+          const fallback = getOutfitIconFallbackSrc(outfit);
+          if (fallback && event.currentTarget.src !== fallback) {
+            event.currentTarget.src = fallback;
+          }
+          return;
+        }
+
+        const fallback = getOutfitIconSrc(outfit);
+        if (fallback && event.currentTarget.src !== fallback) {
+          event.currentTarget.src = fallback;
+          event.currentTarget.className = 'outfit-guess-image outfit-guess-silhouette-fallback';
+        }
+      }}
+    />
+  );
+
+  if (reveal) return image;
+
+  return (
+    <div className="outfit-silhouette-frame">
+      <div className="outfit-silhouette-inner">{image}</div>
+    </div>
   );
 }
 
@@ -71,6 +120,8 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
   );
 
   const discoveredCount = countDiscoveredSkins(outfits, guessedSkinIds);
+
+  const peelyStage = gameState === GAME_STATES.WON ? 0 : wrongGuesses;
 
   const startGame = useCallback(() => {
     const playableOutfits = getPlayableOutfits(outfits, guessedSkinIds);
@@ -136,16 +187,28 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
   return (
     <div className="hangman-game">
       <header className="game-header">
-        <h1>Fortnite Hangman</h1>
-        <p className="subtitle">Guess the outfit name before the hangman is complete!</p>
-        <p className="discovery-count">
-          Catalogue: {discoveredCount} / {outfits.length} skins discovered
-        </p>
-        <div className="header-actions">
-          <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
-            Skin Catalogue
-          </button>
-        </div>
+        {gameState === GAME_STATES.IDLE ? (
+          <img
+            src={TITLE_IMAGE}
+            alt="Fortnite Hangman"
+            className="game-title-image"
+          />
+        ) : (
+          <h1>Fortnite Hangman</h1>
+        )}
+        <p className="subtitle">Guess the outfit name before Peely gets bananated!</p>
+        {gameState !== GAME_STATES.IDLE && (
+          <p className="discovery-count">
+            Catalogue: {discoveredCount} / {outfits.length} skins discovered
+          </p>
+        )}
+        {gameState !== GAME_STATES.IDLE && (
+          <div className="header-actions">
+            <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
+              Skin Catalogue
+            </button>
+          </div>
+        )}
       </header>
 
       {gameState === GAME_STATES.PLAYING && currentOutfit && (
@@ -161,37 +224,41 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
         </section>
       )}
 
+      {gameState !== GAME_STATES.IDLE && (
       <section className="hangman-stage">
-        <div className="hangman-board">
-          {gameState === GAME_STATES.WON && currentOutfit ? (
-            <div className="skin-reveal-panel">
-              <span className="skin-reveal-number">#{currentOutfit.number}</span>
-              <img
-                src={getOutfitIconSrc(currentOutfit)}
-                alt={currentOutfit.name}
-                className="skin-reveal-image"
-                onError={(event) => {
-                  const fallback = getOutfitIconFallbackSrc(currentOutfit);
-                  if (fallback && event.currentTarget.src !== fallback) {
-                    event.currentTarget.src = fallback;
-                  }
-                }}
-              />
-            </div>
-          ) : (
+        <div className="hangman-stage-layout">
+          <div className="peely-panel">
+            <p className="peely-label">Peely</p>
             <img
-              src={HANGMAN_IMAGES[wrongGuesses]}
-              alt={`Hangman stage ${wrongGuesses} of ${MAX_WRONG_GUESSES}`}
-              className="hangman-image"
+              src={HANGMAN_IMAGES[peelyStage]}
+              alt={`Peely damage stage ${peelyStage} of ${MAX_WRONG_GUESSES}`}
+              className="peely-image"
             />
-          )}
+          </div>
+
+          <div
+            className={`outfit-guess-board ${
+              gameState === GAME_STATES.PLAYING ? 'playing' : ''
+            }`}
+          >
+            {gameState === GAME_STATES.WON && currentOutfit ? (
+              <div className="skin-reveal-panel">
+                <span className="skin-reveal-number">#{currentOutfit.number}</span>
+                <OutfitGuessImage outfit={currentOutfit} reveal />
+              </div>
+            ) : (gameState === GAME_STATES.PLAYING || gameState === GAME_STATES.LOST) &&
+              currentOutfit ? (
+              <OutfitGuessImage outfit={currentOutfit} />
+            ) : null}
+          </div>
         </div>
-        {gameState !== GAME_STATES.WON && (
+        {gameState === GAME_STATES.PLAYING && (
           <p className="wrong-count">
             Wrong guesses: {wrongGuesses} / {MAX_WRONG_GUESSES}
           </p>
         )}
       </section>
+      )}
 
       {currentOutfit && gameState !== GAME_STATES.IDLE && (
         <WordDisplay word={currentOutfit.name} guessedLetters={guessedLetters} />
@@ -202,13 +269,26 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
           {remainingOutfits.length > 0 ? (
             <>
               <p className="prompt">Ready to guess a Fortnite outfit?</p>
-              <p className="hint-line muted">{remainingOutfits.length} outfits remaining</p>
               <button type="button" className="primary-button" onClick={startGame}>
                 Start Game
               </button>
+              <p className="discovery-count">
+                Catalogue: {discoveredCount} / {outfits.length} skins discovered
+              </p>
+              <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
+                Skin Catalogue
+              </button>
             </>
           ) : (
-            <p className="prompt">You have discovered every outfit in the catalogue. Great job!</p>
+            <>
+              <p className="prompt">You have discovered every outfit in the catalogue. Great job!</p>
+              <p className="discovery-count">
+                Catalogue: {discoveredCount} / {outfits.length} skins discovered
+              </p>
+              <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
+                Skin Catalogue
+              </button>
+            </>
           )}
         </div>
       )}

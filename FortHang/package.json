@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "fetch-outfits": "node scripts/fetch-outfits.mjs",
     "update-outfits": "node scripts/update-outfits.mjs",
-    "generate-silhouettes": "node scripts/generate-silhouettes.mjs"
+    "generate-silhouettes": "node scripts/generate-silhouettes.mjs",
+    "generate-hangman": "node scripts/generate-hangman.mjs"
   },
   "dependencies": {
     "react": "^19.2.6",
