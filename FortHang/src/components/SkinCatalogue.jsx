@@ -5,7 +5,7 @@ import {
   getOutfitIconSrc,
   getOutfitSilhouetteSrc,
 } from '../utils/outfits';
-import { countDiscoveredSkins, isSkinGuessed } from '../utils/progress';
+import { countDiscoveredSkins, isSeasonComplete, isSkinGuessed } from '../utils/progress';
 import { groupOutfitsBySeason, sortOutfitsByNumber } from '../utils/seasonSort';
 
 const SORT_MODES = {
@@ -112,9 +112,12 @@ export default function SkinCatalogue({ outfits, guessedSkinIds, onBack }) {
         </div>
       ) : (
         <div className="catalogue-season-sections">
-          {seasonSections.map((section) => (
+          {seasonSections.map((section) => {
+            const seasonComplete = isSeasonComplete(section.outfits, guessedSkinIds);
+
+            return (
             <section key={section.key} className="catalogue-season-section">
-              <h2 className="catalogue-season-heading">
+              <h2 className={`catalogue-season-heading ${seasonComplete ? 'complete' : ''}`}>
                 <span className="catalogue-season-label">{section.label}</span>
                 <span className="catalogue-season-underline" aria-hidden="true" />
               </h2>
@@ -124,7 +127,8 @@ export default function SkinCatalogue({ outfits, guessedSkinIds, onBack }) {
                 ))}
               </div>
             </section>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

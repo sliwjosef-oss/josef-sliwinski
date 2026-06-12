@@ -47,3 +47,7 @@ export function isSkinGuessed(guessedIds, outfit) {
 export function countDiscoveredSkins(outfits, guessedIds) {
   return outfits.filter((outfit) => isSkinGuessed(guessedIds, outfit)).length;
 }
+
+export function isSeasonComplete(outfits, guessedIds) {
+  return outfits.length > 0 && outfits.every((outfit) => isSkinGuessed(guessedIds, outfit));
+}
