@@ -609,6 +609,25 @@
   }
 
   .catalogue-grid {
-    grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.6rem;
+  }
+
+  .catalogue-card {
+    padding: 0.5rem 0.35rem 0.6rem;
+  }
+
+  .catalogue-image-wrap {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+  }
+
+  .catalogue-name {
+    font-size: 0.68rem;
+  }
+
+  .catalogue-number {
+    font-size: 0.7rem;
   }
 }
