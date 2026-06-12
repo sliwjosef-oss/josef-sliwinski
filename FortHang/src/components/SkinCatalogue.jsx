@@ -6,11 +6,18 @@ import {
   getOutfitSilhouetteSrc,
 } from '../utils/outfits';
 import { countDiscoveredSkins, isSeasonComplete, isSkinGuessed } from '../utils/progress';
-import { groupOutfitsBySeason, sortOutfitsByNumber } from '../utils/seasonSort';
+import {
+  groupOutfitsBySeason,
+  sortOutfitsAlphabetically,
+  sortOutfitsByNumber,
+} from '../utils/seasonSort';
+import { groupOutfitsBySeries } from '../utils/seriesSort';
 
 const SORT_MODES = {
   NUMBER: 'number',
   SEASON: 'season',
+  ALPHABETICAL: 'alphabetical',
+  SERIES: 'series',
 };
 
 function CatalogueImage({ outfit, silhouette = false }) {
@@ -57,6 +64,36 @@ function CatalogueCard({ outfit, guessedSkinIds }) {
   );
 }
 
+function CatalogueGrid({ outfits, guessedSkinIds }) {
+  return (
+    <div className="catalogue-grid">
+      {outfits.map((outfit) => (
+        <CatalogueCard key={outfit.id} outfit={outfit} guessedSkinIds={guessedSkinIds} />
+      ))}
+    </div>
+  );
+}
+
+function CatalogueSections({ sections, guessedSkinIds }) {
+  return (
+    <div className="catalogue-season-sections">
+      {sections.map((section) => {
+        const sectionComplete = isSeasonComplete(section.outfits, guessedSkinIds);
+
+        return (
+          <section key={section.key} className="catalogue-season-section">
+            <h2 className={`catalogue-season-heading ${sectionComplete ? 'complete' : ''}`}>
+              <span className="catalogue-season-label">{section.label}</span>
+              <span className="catalogue-season-underline" aria-hidden="true" />
+            </h2>
+            <CatalogueGrid outfits={section.outfits} guessedSkinIds={guessedSkinIds} />
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function SkinCatalogue({ outfits, guessedSkinIds, onBack }) {
   const [sortMode, setSortMode] = useState(SORT_MODES.NUMBER);
 
@@ -69,8 +106,18 @@ export default function SkinCatalogue({ outfits, guessedSkinIds, onBack }) {
     [outfits]
   );
 
+  const alphabeticalOutfits = useMemo(
+    () => sortOutfitsAlphabetically(catalogueOutfits),
+    [catalogueOutfits]
+  );
+
   const seasonSections = useMemo(
     () => groupOutfitsBySeason(catalogueOutfits),
+    [catalogueOutfits]
+  );
+
+  const seriesSections = useMemo(
+    () => groupOutfitsBySeries(catalogueOutfits),
     [catalogueOutfits]
   );
 
@@ -98,38 +145,40 @@ export default function SkinCatalogue({ outfits, guessedSkinIds, onBack }) {
           >
             Sort by Season
           </button>
+          <button
+            type="button"
+            className={`catalogue-sort-button ${sortMode === SORT_MODES.ALPHABETICAL ? 'active' : ''}`}
+            onClick={() => setSortMode(SORT_MODES.ALPHABETICAL)}
+          >
+            Sort Alphabetically
+          </button>
+          <button
+            type="button"
+            className={`catalogue-sort-button ${sortMode === SORT_MODES.SERIES ? 'active' : ''}`}
+            onClick={() => setSortMode(SORT_MODES.SERIES)}
+          >
+            Sort by Series
+          </button>
         </div>
         <button type="button" className="secondary-button" onClick={onBack}>
           Return to Hangman Game
         </button>
       </header>
 
-      {sortMode === SORT_MODES.NUMBER ? (
-        <div className="catalogue-grid">
-          {catalogueOutfits.map((outfit) => (
-            <CatalogueCard key={outfit.id} outfit={outfit} guessedSkinIds={guessedSkinIds} />
-          ))}
-        </div>
-      ) : (
-        <div className="catalogue-season-sections">
-          {seasonSections.map((section) => {
-            const seasonComplete = isSeasonComplete(section.outfits, guessedSkinIds);
+      {sortMode === SORT_MODES.NUMBER && (
+        <CatalogueGrid outfits={catalogueOutfits} guessedSkinIds={guessedSkinIds} />
+      )}
 
-            return (
-            <section key={section.key} className="catalogue-season-section">
-              <h2 className={`catalogue-season-heading ${seasonComplete ? 'complete' : ''}`}>
-                <span className="catalogue-season-label">{section.label}</span>
-                <span className="catalogue-season-underline" aria-hidden="true" />
-              </h2>
-              <div className="catalogue-grid">
-                {section.outfits.map((outfit) => (
-                  <CatalogueCard key={outfit.id} outfit={outfit} guessedSkinIds={guessedSkinIds} />
-                ))}
-              </div>
-            </section>
-            );
-          })}
-        </div>
+      {sortMode === SORT_MODES.ALPHABETICAL && (
+        <CatalogueGrid outfits={alphabeticalOutfits} guessedSkinIds={guessedSkinIds} />
+      )}
+
+      {sortMode === SORT_MODES.SEASON && (
+        <CatalogueSections sections={seasonSections} guessedSkinIds={guessedSkinIds} />
+      )}
+
+      {sortMode === SORT_MODES.SERIES && (
+        <CatalogueSections sections={seriesSections} guessedSkinIds={guessedSkinIds} />
       )}
     </div>
   );

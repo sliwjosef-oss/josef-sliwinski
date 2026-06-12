@@ -42,6 +42,7 @@ const playable = dedupeByName(json.data
       introductionText,
       setText: item.set?.text ?? null,
       setName: item.set?.value ?? null,
+      series: item.series?.value ?? null,
     };
   })
   .sort((a, b) => {

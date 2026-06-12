@@ -107,6 +107,14 @@ export function sortOutfitsByNumber(outfits) {
   return [...outfits].sort((a, b) => a.number - b.number);
 }
 
+export function sortOutfitsAlphabetically(outfits) {
+  return [...outfits].sort((a, b) => {
+    const nameDiff = a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+    if (nameDiff !== 0) return nameDiff;
+    return a.number - b.number;
+  });
+}
+
 export function groupOutfitsBySeason(outfits) {
   const groups = new Map();
 

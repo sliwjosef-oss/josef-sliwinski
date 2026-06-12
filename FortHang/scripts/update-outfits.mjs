@@ -42,6 +42,7 @@ function mapApiOutfit(item) {
     introductionText,
     setText: item.set?.text ?? null,
     setName: item.set?.value ?? null,
+    series: item.series?.value ?? null,
   };
 }
 
