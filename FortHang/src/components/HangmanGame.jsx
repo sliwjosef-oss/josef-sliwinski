@@ -9,7 +9,7 @@ import {
   isWordComplete,
   MAX_WRONG_GUESSES,
 } from '../utils/hangman';
-import { getOutfitIconSrc, resolveAssetPath } from '../utils/outfits';
+import { getOutfitIconFallbackSrc, getOutfitIconSrc } from '../utils/outfits';
 import { countDiscoveredSkins } from '../utils/progress';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -65,8 +65,8 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
     [outfits, guessedSkinIds]
   );
 
-  const hintLines = useMemo(
-    () => (currentOutfit ? formatHint(currentOutfit) : []),
+  const hint = useMemo(
+    () => (currentOutfit ? formatHint(currentOutfit) : null),
     [currentOutfit]
   );
 
@@ -150,14 +150,13 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
 
       {gameState === GAME_STATES.PLAYING && currentOutfit && (
         <section className="hint-panel">
-          {hintLines.length > 0 ? (
-            hintLines.map((line) => (
-              <p key={line} className="hint-line">
-                {line}
-              </p>
-            ))
+          {hint?.seasonLine || hint?.flavorLine ? (
+            <>
+              {hint.seasonLine ? <p className="hint-line">{hint.seasonLine}</p> : null}
+              {hint.flavorLine ? <p className="hint-line flavor">{hint.flavorLine}</p> : null}
+            </>
           ) : (
-            <p className="hint-line muted">No season or set info available for this skin.</p>
+            <p className="hint-line muted">No season or flavor text available for this skin.</p>
           )}
         </section>
       )}
@@ -172,8 +171,8 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
                 alt={currentOutfit.name}
                 className="skin-reveal-image"
                 onError={(event) => {
-                  const fallback = resolveAssetPath(`skin-icons/${currentOutfit.number}.png`);
-                  if (event.currentTarget.src !== fallback) {
+                  const fallback = getOutfitIconFallbackSrc(currentOutfit);
+                  if (fallback && event.currentTarget.src !== fallback) {
                     event.currentTarget.src = fallback;
                   }
                 }}

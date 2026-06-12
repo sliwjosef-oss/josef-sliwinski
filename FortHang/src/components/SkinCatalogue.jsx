@@ -1,5 +1,10 @@
 import { useMemo, useState } from 'react';
-import { getGameOutfits, getOutfitIconSrc, resolveAssetPath } from '../utils/outfits';
+import {
+  getGameOutfits,
+  getOutfitIconFallbackSrc,
+  getOutfitIconSrc,
+  getOutfitSilhouetteSrc,
+} from '../utils/outfits';
 import { countDiscoveredSkins, isSkinGuessed } from '../utils/progress';
 import { groupOutfitsBySeason, sortOutfitsByNumber } from '../utils/seasonSort';
 
@@ -8,18 +13,29 @@ const SORT_MODES = {
   SEASON: 'season',
 };
 
-function CatalogueImage({ outfit }) {
-  const iconSrc = getOutfitIconSrc(outfit);
+function CatalogueImage({ outfit, silhouette = false }) {
+  const iconSrc = silhouette ? getOutfitSilhouetteSrc(outfit) : getOutfitIconSrc(outfit);
+
+  if (!iconSrc) {
+    return (
+      <span className="catalogue-placeholder" aria-hidden="true">
+        ?
+      </span>
+    );
+  }
 
   return (
     <img
       src={iconSrc}
-      alt={outfit.name}
-      className="catalogue-image"
+      alt={silhouette ? '' : outfit.name}
+      className={silhouette ? 'catalogue-silhouette' : 'catalogue-image'}
       loading="lazy"
+      aria-hidden={silhouette || undefined}
       onError={(event) => {
-        const fallback = resolveAssetPath(`skin-icons/${outfit.number}.png`);
-        if (event.currentTarget.src !== fallback) {
+        if (silhouette) return;
+
+        const fallback = getOutfitIconFallbackSrc(outfit);
+        if (fallback && event.currentTarget.src !== fallback) {
           event.currentTarget.src = fallback;
         }
       }}
@@ -34,13 +50,7 @@ function CatalogueCard({ outfit, guessedSkinIds }) {
     <article key={outfit.id} className={`catalogue-card ${isRevealed ? 'revealed' : 'hidden'}`}>
       <span className="catalogue-number">{outfit.number}.</span>
       <div className="catalogue-image-wrap">
-        {isRevealed ? (
-          <CatalogueImage outfit={outfit} />
-        ) : (
-          <span className="catalogue-placeholder" aria-hidden="true">
-            ?
-          </span>
-        )}
+        <CatalogueImage outfit={outfit} silhouette={!isRevealed} />
       </div>
       <p className="catalogue-name">{isRevealed ? outfit.name : '?'}</p>
     </article>

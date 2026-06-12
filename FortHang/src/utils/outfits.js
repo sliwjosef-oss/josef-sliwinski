@@ -85,3 +85,21 @@ export function getOutfitIconSrc(outfit) {
   if (outfit.icon) return resolveAssetPath(outfit.icon);
   return resolveAssetPath(`skin-icons/${outfit.number}.png`);
 }
+
+export function getOutfitIconFallbackSrc(outfit) {
+  if (outfit.icon) return null;
+  if (outfit.number == null) return null;
+  return resolveAssetPath(`skin-icons/${outfit.number}.png`);
+}
+
+function getOutfitIconFileName(outfit) {
+  const iconPath = outfit.icon ?? `/skin-icons/${outfit.number}.png`;
+  const match = String(iconPath).match(/(\d+)\.png$/);
+  return match ? `${match[1]}.png` : null;
+}
+
+export function getOutfitSilhouetteSrc(outfit) {
+  const fileName = getOutfitIconFileName(outfit);
+  if (!fileName) return null;
+  return resolveAssetPath(`skin-icons-silhouette/${fileName}`);
+}

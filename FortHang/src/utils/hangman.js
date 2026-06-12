@@ -64,17 +64,15 @@ export function createOutfitQueue(outfits) {
 }
 
 export function formatHint(outfit) {
-  const parts = [];
+  let seasonLine = null;
 
   if (outfit.introductionText) {
-    parts.push(outfit.introductionText);
+    seasonLine = outfit.introductionText;
   } else if (outfit.chapter && outfit.season) {
-    parts.push(`Introduced in Chapter ${outfit.chapter}, Season ${outfit.season}.`);
+    seasonLine = `Introduced in Chapter ${outfit.chapter}, Season ${outfit.season}.`;
   }
 
-  if (outfit.setText) {
-    parts.push(outfit.setText);
-  }
+  const flavorLine = outfit.description?.trim() || null;
 
-  return parts;
+  return { seasonLine, flavorLine };
 }

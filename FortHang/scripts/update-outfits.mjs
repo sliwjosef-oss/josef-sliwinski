@@ -2,16 +2,21 @@ import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { dedupeByName, EXCLUDED_NAMES, hasValidSeason } from './outfit-filters.mjs';
+import { createSilhouette } from './silhouette.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = join(__dirname, '..', 'public');
 const OUT_PATH = join(PUBLIC_DIR, 'outfits.json');
 const ICON_DIR = join(PUBLIC_DIR, 'skin-icons');
 const DEPLOY_ICON_DIR = join(__dirname, '..', '..', 'fort-hang', 'skin-icons');
+const SILHOUETTE_DIR = join(PUBLIC_DIR, 'skin-icons-silhouette');
+const DEPLOY_SILHOUETTE_DIR = join(__dirname, '..', '..', 'fort-hang', 'skin-icons-silhouette');
 const CONCURRENCY = 20;
 
 mkdirSync(ICON_DIR, { recursive: true });
 mkdirSync(DEPLOY_ICON_DIR, { recursive: true });
+mkdirSync(SILHOUETTE_DIR, { recursive: true });
+mkdirSync(DEPLOY_SILHOUETTE_DIR, { recursive: true });
 
 function getIconFileNumber(iconPath) {
   const match = iconPath?.match(/(\d+)\.png$/);
@@ -22,8 +27,9 @@ function mapApiOutfit(item) {
   return {
     id: item.id,
     name: item.name,
+    description: item.description ?? null,
     added: item.added ?? null,
-    remoteIcon: item.images?.icon ?? item.images?.smallIcon ?? null,
+    remoteIcon: item.images?.smallIcon ?? item.images?.icon ?? null,
     chapter: item.introduction?.chapter ?? null,
     season: item.introduction?.season ?? null,
     introductionText: item.introduction?.text ?? null,
@@ -91,6 +97,12 @@ async function resolveIcon(outfit) {
     const buffer = Buffer.from(await iconRes.arrayBuffer());
     writeFileSync(publicFilePath, buffer);
     writeFileSync(deployFilePath, buffer);
+
+    await Promise.all([
+      createSilhouette(publicFilePath, join(SILHOUETTE_DIR, `${iconNumber}.png`)),
+      createSilhouette(deployFilePath, join(DEPLOY_SILHOUETTE_DIR, `${iconNumber}.png`)),
+    ]);
+
     return localPath;
   } catch {
     return outfit.remoteIcon;
