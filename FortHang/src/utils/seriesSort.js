@@ -9,14 +9,19 @@ export const SERIES_GROUPS = [
   { key: 'cartoon', label: 'Cartoon Legends' },
   { key: 'anime-legends', label: 'Anime Legends' },
   { key: 'tv-legends', label: 'TV Legends' },
+  { key: 'wwe-legends', label: 'WWE Legends' },
   { key: 'other-collab-skins', label: 'Other Collab Skins' },
+  { key: 'general-collaborations', label: 'General Collaborations' },
+  { key: 'nfl', label: 'NFL' },
   { key: 'nanners', label: 'Nanners' },
   { key: 'joneseys', label: 'Joneseys' },
-  { key: 'wwe-legends', label: 'WWE Legends' },
+  { key: 'briters-and-bombers', label: 'Briters and Bombers' },
   { key: 'fishies', label: 'Fishies' },
   { key: 'kitties', label: 'Kitties' },
   { key: 'team-leaders', label: 'Team Leaders' },
   { key: 'knights', label: 'Knights' },
+  { key: 'space-voyagers', label: 'Space Voyagers' },
+  { key: 'the-seven', label: 'The Seven' },
   { key: 'high-stakes-club', label: 'High Stakes Club' },
   { key: 'other', label: 'Other' },
 ];
@@ -265,6 +270,8 @@ const TV_OUTFIT_NAMES = new Set([
   'Michonne',
   'El Chapulín Colorado',
   'Predator',
+  'Chief Hopper',
+  'Demogorgon',
 ]);
 
 const OTHER_COLLAB_SKINS_OUTFIT_NAMES = new Set([
@@ -275,6 +282,141 @@ const OTHER_COLLAB_SKINS_OUTFIT_NAMES = new Set([
   'Guggimon',
   'Janky',
   'Kelsier',
+]);
+
+const GENERAL_COLLABORATIONS_OUTFIT_NAMES = new Set([
+  'Spirit Sniper',
+  'Curse Buster',
+  'Phantom Commando',
+  'Specter Inspector',
+  'Aura Analyzer',
+  'Paranormal Guide',
+  'Haunt Officer',
+  'Ecto Expert',
+  'Containment Specialist',
+  'P.K.E. Ranger',
+  'Rumblestrip',
+  'Torque',
+  'Marshal',
+  'Powertrain',
+  'RPM',
+  'Camber',
+  'Chicane',
+  'Downforce',
+  'Kickdown',
+  'Circuit',
+  'Guerrero Colorado',
+  'Amazona Colorada',
+  'Héroe Colorado',
+  'Guerrera Colorada',
+  'Agente Colorado',
+  'Defensora Colorada',
+  'Soldado Colorado',
+  'Heroína Colorada',
+  'Defensor Colorado',
+  'Capitana Colorada',
+  'Creature Caretaker',
+  'Mischief Maker',
+  'Knowledge Keeper',
+  'Hallway Hero',
+  'Fearless Friend',
+  'Story Seeker',
+  'Prank Prodigy',
+  'Radiant Rebel',
+  'Audacious Adventurer',
+  'Dynamic Dreamer',
+  'Gong-gi Great',
+  'Flying Stone Fighter',
+  'Jegi Juggler',
+  'Pentathlon Perfector',
+  'Glass Bridge Survivor',
+  'Tug of War Titan',
+  'Dalgona Destroyer',
+  'Marble Maven',
+  'Green Light Guardian',
+  'Ddakji Defender',
+  'Assist Maven',
+  'Shot Caller',
+  'Post Patroller',
+  'Court Commander',
+  'Layup Legend',
+  'Rebound Warrior',
+  'Trey Specialist',
+  'Finesse Forward',
+  'Board Crasher',
+  'Court Controller',
+  'Shuto Striker',
+  'Mat Master',
+  'Kumite Clasher',
+  'Keri Commander',
+  'Kata Captain',
+  'Karateka Jones',
+  'Heron Stance Hero',
+  'Gi Guardian',
+  'Dojo Defender',
+  'Black Belt Brawler',
+  'Splash Specialist',
+  'Rebound Raider',
+  'Rain Maker',
+  'Half-Court Hero',
+  'Fast Break',
+  'Fadeaway',
+  'Dynamo Dribbler',
+  'Crossover Champion',
+  'Buzzer Beater',
+  'Upload',
+  'Proxy',
+  'Packet',
+  'Io',
+  'Firewall',
+  'Datapath',
+  'Cypher',
+  'Commandline',
+  'Bitstream',
+  'Bandwidth',
+]);
+
+const NFL_OUTFIT_NAMES = new Set([
+  'Tiki Tackler',
+  'Striker Specialist',
+  'Shot Stopper',
+  'Sgt. Sweeper',
+  'Power Poacher',
+  'Pitch Patroller',
+  'Midfield Master',
+  'Galactico',
+  'Derby Dominator',
+  'Breakaway',
+  'Pass Rush Ranger',
+  'Scrimmage Scrapper',
+  'Blitz Brigade',
+  'Red Zone Renegade',
+  'TD Titan',
+  'Formation Fighter',
+  'Punt Paragon',
+  'Crossbar Crusher',
+  'Snap Squad',
+  'Trench Runner',
+  'Fair Play',
+  'Offside Officer',
+  'Time-Out',
+  'Elite Linesman',
+  'Huddle Hero',
+  'End Zone Expert',
+  'Offense Overseer',
+  'Replay Ranger',
+  'Spiral Specialist',
+  'Sideline Commander',
+  'End Zone',
+  'Gridiron',
+  'Spike',
+  'Blitz',
+  'Rush',
+  'Interceptor',
+  'Juke',
+  'Strong Guard',
+  'Whistle Warrior',
+  'Striped Soldier',
 ]);
 
 const WWE_OUTFIT_NAMES = new Set([
@@ -312,7 +454,6 @@ const JONESEYS_OUTFIT_NAMES = new Set([
   'Championship Jonesy',
   'Jones Unchained',
   'Jonesy the Secondst',
-  'Karateka Jones',
   'Cozy Knit Jonesy',
   'Agent Jones',
   'Cozy Jonesy',
@@ -326,6 +467,23 @@ const JONESEYS_OUTFIT_NAMES = new Set([
   'Guernsey',
   'Codename E.L.F.',
   'Lt. Evergreen',
+]);
+
+const BRITERS_AND_BOMBERS_OUTFIT_NAMES = new Set([
+  'Brite Bomber',
+  'Brite Gunner',
+  'Brite Blaster',
+  'Beach Bomber',
+  'Brilliant Bomber',
+  'Minty Bomber',
+  'Britestorm Bomber',
+  'Blizzard Bomber',
+  'Froststorm Bomber',
+  'Toon Bomber',
+  'Brite Agent',
+  'Brite Hunter',
+  'BriteStar',
+  'Brite Raider',
 ]);
 
 const FISHIES_OUTFIT_NAMES = new Set([
@@ -409,6 +567,36 @@ const KNIGHTS_OUTFIT_NAMES = new Set([
   'The Dark Maw',
 ]);
 
+const SPACE_VOYAGERS_OUTFIT_NAMES = new Set([
+  'Voyager Unleashed',
+  'Dark Voyager (Reality Redacted)',
+  'Dark Voyager',
+  'Eternal Voyager',
+  'Deo',
+  'Siona',
+  'Corrupted Voyager',
+  'Eternal Wanderer',
+  'Moonwalker',
+  'Mission Specialist',
+  'Leviathan',
+  'Slurp Leviathan ',
+]);
+
+const THE_SEVEN_OUTFIT_NAMES = new Set([
+  'The Imagined',
+  'The Order',
+  'The Guardian',
+  'The Order (Reforged)',
+  'The Foundation',
+  'The Foundation (Reforged)',
+  'The Visitor',
+  'The Visitor (Reality Unknown)',
+  'Paradigm (Reality-659)',
+  'The Paradigm',
+  'The Origin',
+  'The Scientist',
+]);
+
 const HIGH_STAKES_CLUB_OUTFIT_NAMES = new Set([
   'Joni the Red',
   'Helsie',
@@ -425,14 +613,21 @@ export function getCatalogueSeriesKey(outfit) {
   if (ANIME_OUTFIT_NAMES.has(outfit.name)) return 'anime-legends';
   if (CARTOON_OUTFIT_NAMES.has(outfit.name)) return 'cartoon';
   if (TV_OUTFIT_NAMES.has(outfit.name)) return 'tv-legends';
+  if (WWE_OUTFIT_NAMES.has(outfit.name)) return 'wwe-legends';
   if (OTHER_COLLAB_SKINS_OUTFIT_NAMES.has(outfit.name)) return 'other-collab-skins';
+  if (GENERAL_COLLABORATIONS_OUTFIT_NAMES.has(outfit.name) || outfit.name.includes('NBA 75')) {
+    return 'general-collaborations';
+  }
+  if (NFL_OUTFIT_NAMES.has(outfit.name)) return 'nfl';
   if (NANNERS_OUTFIT_NAMES.has(outfit.name)) return 'nanners';
   if (JONESEYS_OUTFIT_NAMES.has(outfit.name)) return 'joneseys';
-  if (WWE_OUTFIT_NAMES.has(outfit.name)) return 'wwe-legends';
+  if (BRITERS_AND_BOMBERS_OUTFIT_NAMES.has(outfit.name)) return 'briters-and-bombers';
   if (FISHIES_OUTFIT_NAMES.has(outfit.name)) return 'fishies';
   if (KITTIES_OUTFIT_NAMES.has(outfit.name)) return 'kitties';
   if (TEAM_LEADERS_OUTFIT_NAMES.has(outfit.name)) return 'team-leaders';
   if (KNIGHTS_OUTFIT_NAMES.has(outfit.name)) return 'knights';
+  if (SPACE_VOYAGERS_OUTFIT_NAMES.has(outfit.name)) return 'space-voyagers';
+  if (THE_SEVEN_OUTFIT_NAMES.has(outfit.name)) return 'the-seven';
   if (HIGH_STAKES_CLUB_OUTFIT_NAMES.has(outfit.name)) return 'high-stakes-club';
 
   const raw = String(outfit.series ?? '').trim().toLowerCase();
