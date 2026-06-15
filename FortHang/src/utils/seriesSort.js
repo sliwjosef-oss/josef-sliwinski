@@ -373,9 +373,6 @@ const GENERAL_COLLABORATIONS_OUTFIT_NAMES = new Set([
   'Commandline',
   'Bitstream',
   'Bandwidth',
-]);
-
-const NFL_OUTFIT_NAMES = new Set([
   'Tiki Tackler',
   'Striker Specialist',
   'Shot Stopper',
@@ -386,6 +383,9 @@ const NFL_OUTFIT_NAMES = new Set([
   'Galactico',
   'Derby Dominator',
   'Breakaway',
+]);
+
+const NFL_OUTFIT_NAMES = new Set([
   'Pass Rush Ranger',
   'Scrimmage Scrapper',
   'Blitz Brigade',
