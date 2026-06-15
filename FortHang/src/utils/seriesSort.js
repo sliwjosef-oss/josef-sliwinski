@@ -336,7 +336,6 @@ const GENERAL_COLLABORATIONS_OUTFIT_NAMES = new Set([
   'Green Light Guardian',
   'Ddakji Defender',
   'Assist Maven',
-  'Shot Caller',
   'Post Patroller',
   'Court Commander',
   'Layup Legend',
