@@ -9,12 +9,14 @@ export const SERIES_GROUPS = [
   { key: 'cartoon', label: 'Cartoon Legends' },
   { key: 'anime-legends', label: 'Anime Legends' },
   { key: 'tv-legends', label: 'TV Legends' },
+  { key: 'other-collab-skins', label: 'Other Collab Skins' },
   { key: 'nanners', label: 'Nanners' },
   { key: 'joneseys', label: 'Joneseys' },
   { key: 'wwe-legends', label: 'WWE Legends' },
   { key: 'fishies', label: 'Fishies' },
   { key: 'kitties', label: 'Kitties' },
   { key: 'team-leaders', label: 'Team Leaders' },
+  { key: 'knights', label: 'Knights' },
   { key: 'high-stakes-club', label: 'High Stakes Club' },
   { key: 'other', label: 'Other' },
 ];
@@ -265,6 +267,16 @@ const TV_OUTFIT_NAMES = new Set([
   'Predator',
 ]);
 
+const OTHER_COLLAB_SKINS_OUTFIT_NAMES = new Set([
+  'Tung Tung Tung Sahur',
+  'Ballerina Cappuccina',
+  'Plungerman',
+  'Gildedguy',
+  'Guggimon',
+  'Janky',
+  'Kelsier',
+]);
+
 const WWE_OUTFIT_NAMES = new Set([
   'Liv Morgan',
   'Stone Cold Steve Austin',
@@ -372,6 +384,29 @@ const TEAM_LEADERS_OUTFIT_NAMES = new Set([
   'Ragsy',
   'Mecha Cuddle Master',
   'Mecha Team Shadow',
+  'Cuddlepool',
+]);
+
+const KNIGHTS_OUTFIT_NAMES = new Set([
+  'Royale Knight',
+  'Blue Squire',
+  'Black Knight',
+  'Red Knight',
+  'Spider Knight',
+  'Frozen Red Knight',
+  'Ultima Knight',
+  'Dark Red Knight ',
+  'Rogue Spider Knight',
+  'Eternal Knight',
+  'Omega Knight',
+  'Swamp Knight',
+  'Core Knight Talus',
+  'Spectra Knight',
+  'Knightmare',
+  'Ultima Carver',
+  'Knight Conqueror',
+  'Blitz Knight',
+  'The Dark Maw',
 ]);
 
 const HIGH_STAKES_CLUB_OUTFIT_NAMES = new Set([
@@ -390,12 +425,14 @@ export function getCatalogueSeriesKey(outfit) {
   if (ANIME_OUTFIT_NAMES.has(outfit.name)) return 'anime-legends';
   if (CARTOON_OUTFIT_NAMES.has(outfit.name)) return 'cartoon';
   if (TV_OUTFIT_NAMES.has(outfit.name)) return 'tv-legends';
+  if (OTHER_COLLAB_SKINS_OUTFIT_NAMES.has(outfit.name)) return 'other-collab-skins';
   if (NANNERS_OUTFIT_NAMES.has(outfit.name)) return 'nanners';
   if (JONESEYS_OUTFIT_NAMES.has(outfit.name)) return 'joneseys';
   if (WWE_OUTFIT_NAMES.has(outfit.name)) return 'wwe-legends';
   if (FISHIES_OUTFIT_NAMES.has(outfit.name)) return 'fishies';
   if (KITTIES_OUTFIT_NAMES.has(outfit.name)) return 'kitties';
   if (TEAM_LEADERS_OUTFIT_NAMES.has(outfit.name)) return 'team-leaders';
+  if (KNIGHTS_OUTFIT_NAMES.has(outfit.name)) return 'knights';
   if (HIGH_STAKES_CLUB_OUTFIT_NAMES.has(outfit.name)) return 'high-stakes-club';
 
   const raw = String(outfit.series ?? '').trim().toLowerCase();
