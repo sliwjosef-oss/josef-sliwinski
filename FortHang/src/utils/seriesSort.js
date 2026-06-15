@@ -22,6 +22,8 @@ export const SERIES_GROUPS = [
   { key: 'knights', label: 'Knights' },
   { key: 'space-voyagers', label: 'Space Voyagers' },
   { key: 'the-seven', label: 'The Seven' },
+  { key: 'fox-clan', label: 'Fox Clan' },
+  { key: 'midas-family', label: 'Midas Family' },
   { key: 'high-stakes-club', label: 'High Stakes Club' },
   { key: 'other', label: 'Other' },
 ];
@@ -544,6 +546,7 @@ const TEAM_LEADERS_OUTFIT_NAMES = new Set([
   'Mecha Team Shadow',
   'Cuddlepool',
   'Skull Squad Leader',
+  'Bundles',
 ]);
 
 const KNIGHTS_OUTFIT_NAMES = new Set([
@@ -598,6 +601,50 @@ const THE_SEVEN_OUTFIT_NAMES = new Set([
   'The Scientist',
 ]);
 
+const FOX_CLAN_OUTFIT_NAMES = new Set([
+  'Drift',
+  'Vi',
+  'Kimiko Five-Tails',
+  'Catalyst',
+  'Vox Hunter',
+  'Stray',
+  'Serge',
+  'Rift Strider Drift',
+  'Skulldrifter',
+  'Summer Drift',
+  'Snow Drift',
+  'Driftwalker',
+  'Riftreaver Drift',
+]);
+
+const MIDAS_FAMILY_OUTFIT_NAMES = new Set([
+  'Midas',
+  'Oro',
+  'Midas Rex',
+  'Orelia',
+  'Midsummer Midas',
+  'Shadow Midas',
+  'Icebound Midas',
+  'Golden Gear Midas',
+  'Ascendant Midas',
+  'Outlaw Midas',
+  'Jules',
+  'Scrapknight Jules',
+  'Beach Jules',
+  'Combat Tech Jules',
+  'Elite Jules',
+  'Lady Marigold',
+  'Marigold',
+  'Rebel Oro',
+  'Skellemint Oro',
+  'Brutus',
+  'Beach Brutus',
+  'Skye',
+  'Summer Skye',
+  'Winter Wonder Skye',
+  'Undercover Skye',
+]);
+
 const HIGH_STAKES_CLUB_OUTFIT_NAMES = new Set([
   'Joni the Red',
   'Helsie',
@@ -629,6 +676,8 @@ export function getCatalogueSeriesKey(outfit) {
   if (KNIGHTS_OUTFIT_NAMES.has(outfit.name)) return 'knights';
   if (SPACE_VOYAGERS_OUTFIT_NAMES.has(outfit.name)) return 'space-voyagers';
   if (THE_SEVEN_OUTFIT_NAMES.has(outfit.name)) return 'the-seven';
+  if (FOX_CLAN_OUTFIT_NAMES.has(outfit.name)) return 'fox-clan';
+  if (MIDAS_FAMILY_OUTFIT_NAMES.has(outfit.name)) return 'midas-family';
   if (HIGH_STAKES_CLUB_OUTFIT_NAMES.has(outfit.name)) return 'high-stakes-club';
 
   const raw = String(outfit.series ?? '').trim().toLowerCase();
