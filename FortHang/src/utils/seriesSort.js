@@ -383,6 +383,7 @@ const GENERAL_COLLABORATIONS_OUTFIT_NAMES = new Set([
   'Galactico',
   'Derby Dominator',
   'Breakaway',
+  'Triple-Double',
 ]);
 
 const NFL_OUTFIT_NAMES = new Set([
@@ -542,6 +543,7 @@ const TEAM_LEADERS_OUTFIT_NAMES = new Set([
   'Mecha Cuddle Master',
   'Mecha Team Shadow',
   'Cuddlepool',
+  'Skull Squad Leader',
 ]);
 
 const KNIGHTS_OUTFIT_NAMES = new Set([
