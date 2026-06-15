@@ -21,10 +21,12 @@ export const SERIES_GROUPS = [
   { key: 'team-leaders', label: 'Team Leaders' },
   { key: 'knights', label: 'Knights' },
   { key: 'space-voyagers', label: 'Space Voyagers' },
+  { key: 'food', label: 'Food' },
   { key: 'the-seven', label: 'The Seven' },
   { key: 'fox-clan', label: 'Fox Clan' },
   { key: 'midas-family', label: 'Midas Family' },
   { key: 'high-stakes-club', label: 'High Stakes Club' },
+  { key: 'greek-gods', label: 'Greek Gods' },
   { key: 'other', label: 'Other' },
 ];
 
@@ -447,6 +449,7 @@ const NANNERS_OUTFIT_NAMES = new Set([
   'Potassius Peels',
   'Agent Peely',
   'Peely Bone',
+  'P-1000',
 ]);
 
 const JONESEYS_OUTFIT_NAMES = new Set([
@@ -584,6 +587,40 @@ const SPACE_VOYAGERS_OUTFIT_NAMES = new Set([
   'Mission Specialist',
   'Leviathan',
   'Slurp Leviathan ',
+  'Dark Vanguard',
+]);
+
+const FOOD_OUTFIT_NAMES = new Set([
+  'Lil Whip',
+  'Doughberman',
+  'Peabody',
+  'Mad Mochi',
+  'Mancake',
+  'Major Mancake',
+  'Cobb',
+  'Mincemeat',
+  'Tart Tycoon',
+  'Crustina',
+  'Lada',
+  'Beef Boss',
+  'Jellie',
+  'Color Splash Jellie',
+  'Lumi Jellie',
+  'Zzaria The Cruel',
+  'Surrr Burger',
+  'Pico de Gallant',
+  'Pineapple Pete',
+  'Brock',
+  'Durrr Taisho',
+  'Sizzle',
+  'Ghost Ri-Durrr',
+  'Onesie',
+  'Wonder Onesie',
+  'Sizzle Sgt. ',
+  'Grill Sergeant',
+  'Guaco',
+  'Gumbo',
+  'The Brat',
 ]);
 
 const THE_SEVEN_OUTFIT_NAMES = new Set([
@@ -657,6 +694,20 @@ const HIGH_STAKES_CLUB_OUTFIT_NAMES = new Set([
   'Lycan West',
 ]);
 
+const GREEK_GODS_OUTFIT_NAMES = new Set([
+  'Zeus',
+  'Ares',
+  'Hades',
+  'Aphrodite',
+  'Artemis',
+  'Polus',
+  'Poseidon',
+  'Cerberus',
+  'Medusa',
+  'Apollo',
+  'Heartseeker Aphrodite',
+]);
+
 export function getCatalogueSeriesKey(outfit) {
   if (ANIME_OUTFIT_NAMES.has(outfit.name)) return 'anime-legends';
   if (CARTOON_OUTFIT_NAMES.has(outfit.name)) return 'cartoon';
@@ -675,10 +726,12 @@ export function getCatalogueSeriesKey(outfit) {
   if (TEAM_LEADERS_OUTFIT_NAMES.has(outfit.name)) return 'team-leaders';
   if (KNIGHTS_OUTFIT_NAMES.has(outfit.name)) return 'knights';
   if (SPACE_VOYAGERS_OUTFIT_NAMES.has(outfit.name)) return 'space-voyagers';
+  if (FOOD_OUTFIT_NAMES.has(outfit.name)) return 'food';
   if (THE_SEVEN_OUTFIT_NAMES.has(outfit.name)) return 'the-seven';
   if (FOX_CLAN_OUTFIT_NAMES.has(outfit.name)) return 'fox-clan';
   if (MIDAS_FAMILY_OUTFIT_NAMES.has(outfit.name)) return 'midas-family';
   if (HIGH_STAKES_CLUB_OUTFIT_NAMES.has(outfit.name)) return 'high-stakes-club';
+  if (GREEK_GODS_OUTFIT_NAMES.has(outfit.name)) return 'greek-gods';
 
   const raw = String(outfit.series ?? '').trim().toLowerCase();
   if (!raw) return 'other';
