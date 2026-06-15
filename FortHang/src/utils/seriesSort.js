@@ -13,6 +13,8 @@ export const SERIES_GROUPS = [
   { key: 'nanners', label: 'Nanners' },
   { key: 'fishies', label: 'Fishies' },
   { key: 'kitties', label: 'Kitties' },
+  { key: 'team-leaders', label: 'Team Leaders' },
+  { key: 'high-stakes-club', label: 'High Stakes Club' },
   { key: 'other', label: 'Other' },
 ];
 
@@ -117,6 +119,9 @@ const CARTOON_OUTFIT_NAMES = new Set([
   'Pomni',
   'Jax',
   'Tom Lizard',
+  'Cruella de Vil',
+  'Captain Hook',
+  'Maleficent',
 ]);
 
 const ANIME_OUTFIT_NAMES = new Set([
@@ -213,6 +218,8 @@ const TV_OUTFIT_NAMES = new Set([
   'Blue Ranger',
   'Green Ranger',
   'Front Man',
+  'Games Guard',
+  'Games Manager',
   'Negan',
   'Neytiri',
   'Jake Sully',
@@ -243,6 +250,9 @@ const TV_OUTFIT_NAMES = new Set([
   'Dude',
   'Mike Lowrey',
   'Xenomorph',
+  'Godzilla Evolved',
+  'Kong',
+  'Mechagodzilla',
   'Ellen Ripley',
   'Snake Eyes',
   'T-800',
@@ -250,6 +260,8 @@ const TV_OUTFIT_NAMES = new Set([
   'Terminator',
   'Daryl Dixon',
   'Michonne',
+  'El Chapulín Colorado',
+  'Predator',
 ]);
 
 const WWE_OUTFIT_NAMES = new Set([
@@ -295,6 +307,7 @@ const FISHIES_OUTFIT_NAMES = new Set([
   'Fishpool',
   'Robo-Fishstick',
   'Blinky Fishstick',
+  'Contract Giller',
 ]);
 
 const KITTIES_OUTFIT_NAMES = new Set([
@@ -318,6 +331,37 @@ const KITTIES_OUTFIT_NAMES = new Set([
   'Void Walker Lynx',
 ]);
 
+const TEAM_LEADERS_OUTFIT_NAMES = new Set([
+  'Cuddle Team Rider',
+  'Wookiee Team Leader',
+  'Cuddle Team Specialist',
+  'Gummi Team Leader',
+  'Raven Team Leader',
+  'Metal Team Leader',
+  'Quackling',
+  'Clover Team Leader',
+  'Mecha Team Leader',
+  'Spooky Team Leader',
+  'P.A.N.D.A Team Leader',
+  'Fireworks Team Leader',
+  'Cuddle Team Leader',
+  'Ragsy',
+  'Mecha Cuddle Master',
+  'Mecha Team Shadow',
+]);
+
+const HIGH_STAKES_CLUB_OUTFIT_NAMES = new Set([
+  'Joni the Red',
+  'Helsie',
+  'Lucien West',
+  'Joni the Scarlet',
+  'Huntress Helsie',
+  'Formal Lucien West',
+  'Helsie Midnight',
+  'Red Ruin Joni',
+  'Lycan West',
+]);
+
 export function getCatalogueSeriesKey(outfit) {
   if (ANIME_OUTFIT_NAMES.has(outfit.name)) return 'anime-legends';
   if (CARTOON_OUTFIT_NAMES.has(outfit.name)) return 'cartoon';
@@ -326,6 +370,8 @@ export function getCatalogueSeriesKey(outfit) {
   if (NANNERS_OUTFIT_NAMES.has(outfit.name)) return 'nanners';
   if (FISHIES_OUTFIT_NAMES.has(outfit.name)) return 'fishies';
   if (KITTIES_OUTFIT_NAMES.has(outfit.name)) return 'kitties';
+  if (TEAM_LEADERS_OUTFIT_NAMES.has(outfit.name)) return 'team-leaders';
+  if (HIGH_STAKES_CLUB_OUTFIT_NAMES.has(outfit.name)) return 'high-stakes-club';
 
   const raw = String(outfit.series ?? '').trim().toLowerCase();
   if (!raw) return 'other';
