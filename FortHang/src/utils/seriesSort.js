@@ -9,8 +9,9 @@ export const SERIES_GROUPS = [
   { key: 'cartoon', label: 'Cartoon Legends' },
   { key: 'anime-legends', label: 'Anime Legends' },
   { key: 'tv-legends', label: 'TV Legends' },
-  { key: 'wwe-legends', label: 'WWE Legends' },
   { key: 'nanners', label: 'Nanners' },
+  { key: 'joneseys', label: 'Joneseys' },
+  { key: 'wwe-legends', label: 'WWE Legends' },
   { key: 'fishies', label: 'Fishies' },
   { key: 'kitties', label: 'Kitties' },
   { key: 'team-leaders', label: 'Team Leaders' },
@@ -292,6 +293,29 @@ const NANNERS_OUTFIT_NAMES = new Set([
   'Peely Bone',
 ]);
 
+const JONESEYS_OUTFIT_NAMES = new Set([
+  'Ranger',
+  'Captain Jones',
+  'Vengeance Jones',
+  'Championship Jonesy',
+  'Jones Unchained',
+  'Jonesy the Secondst',
+  'Karateka Jones',
+  'Cozy Knit Jonesy',
+  'Agent Jones',
+  'Cozy Jonesy',
+  'Jonesy The First',
+  'Castaway Jonesy',
+  'Relaxed Fit Jonesy',
+  'Scuba Jonesy',
+  'Slurp Jonesy',
+  'Dark Jonesy',
+  'Bunker Jonesy',
+  'Guernsey',
+  'Codename E.L.F.',
+  'Lt. Evergreen',
+]);
+
 const FISHIES_OUTFIT_NAMES = new Set([
   'Fishstick',
   'Triggerfish',
@@ -366,8 +390,9 @@ export function getCatalogueSeriesKey(outfit) {
   if (ANIME_OUTFIT_NAMES.has(outfit.name)) return 'anime-legends';
   if (CARTOON_OUTFIT_NAMES.has(outfit.name)) return 'cartoon';
   if (TV_OUTFIT_NAMES.has(outfit.name)) return 'tv-legends';
-  if (WWE_OUTFIT_NAMES.has(outfit.name)) return 'wwe-legends';
   if (NANNERS_OUTFIT_NAMES.has(outfit.name)) return 'nanners';
+  if (JONESEYS_OUTFIT_NAMES.has(outfit.name)) return 'joneseys';
+  if (WWE_OUTFIT_NAMES.has(outfit.name)) return 'wwe-legends';
   if (FISHIES_OUTFIT_NAMES.has(outfit.name)) return 'fishies';
   if (KITTIES_OUTFIT_NAMES.has(outfit.name)) return 'kitties';
   if (TEAM_LEADERS_OUTFIT_NAMES.has(outfit.name)) return 'team-leaders';
