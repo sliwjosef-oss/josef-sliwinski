@@ -280,6 +280,7 @@ const TV_OUTFIT_NAMES = new Set([
   'Predator',
   'Chief Hopper',
   'Demogorgon',
+  'Sofia',
 ]);
 
 const OTHER_COLLAB_SKINS_OUTFIT_NAMES = new Set([
@@ -292,6 +293,29 @@ const OTHER_COLLAB_SKINS_OUTFIT_NAMES = new Set([
   'Kelsier',
   'Yeddy',
   'Swooshman',
+  'Maxxed Out Max',
+  'Airphorian',
+  'Eclipse',
+  'Nike Goddess',
+  'Maranello Racer',
+  'Modena Icon',
+  'Fashion Banshee',
+  'Unchained Ramirez',
+  'Game Knight',
+  'Swish',
+  'Hangtime',
+  'Lyric',
+  'Wilder',
+  'Alto',
+  'Sunset Alto',
+  'Desert Dawn Lyric',
+  'Throwback BG',
+  'THE GOAT',
+  'Goal Getter',
+  'Poet',
+  'Shady Doggo',
+  'Clutch',
+  'Grind',
 ]);
 
 const GENERAL_COLLABORATIONS_OUTFIT_NAMES = new Set([
@@ -600,6 +624,7 @@ const TEAM_LEADERS_OUTFIT_NAMES = new Set([
   'Skull Squad Leader',
   'Bundles',
   'Snuggs',
+  'Curdle Scream Leader',
 ]);
 
 const KNIGHTS_OUTFIT_NAMES = new Set([
