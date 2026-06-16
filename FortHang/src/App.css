@@ -96,15 +96,6 @@
   box-shadow: none;
 }
 
-.peely-label {
-  margin: 0;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #ffd84d;
-}
-
 .peely-image {
   display: block;
   width: 100%;
@@ -652,14 +643,14 @@
 
   .peely-panel {
     flex: 0 0 auto;
-    flex-direction: row;
     justify-content: center;
-    width: min(280px, 100%);
+    width: 100%;
     padding: 0;
   }
 
   .peely-image {
     width: min(88px, 24vw);
+    margin: 0 auto;
   }
 
   .outfit-guess-board {

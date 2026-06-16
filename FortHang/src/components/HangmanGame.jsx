@@ -228,7 +228,6 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
       <section className="hangman-stage">
         <div className="hangman-stage-layout">
           <div className="peely-panel">
-            <p className="peely-label">Peely</p>
             <img
               src={HANGMAN_IMAGES[peelyStage]}
               alt={`Peely damage stage ${peelyStage} of ${MAX_WRONG_GUESSES}`}
