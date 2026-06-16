@@ -13,19 +13,23 @@ export const SERIES_GROUPS = [
   { key: 'other-collab-skins', label: 'Other Collab Skins' },
   { key: 'general-collaborations', label: 'General Collaborations' },
   { key: 'nfl', label: 'NFL' },
+  { key: 'anime-originals', label: 'Anime Originals' },
   { key: 'nanners', label: 'Nanners' },
   { key: 'joneseys', label: 'Joneseys' },
   { key: 'briters-and-bombers', label: 'Briters and Bombers' },
   { key: 'fishies', label: 'Fishies' },
+  { key: 'ravens', label: 'Ravens' },
   { key: 'kitties', label: 'Kitties' },
   { key: 'team-leaders', label: 'Team Leaders' },
   { key: 'knights', label: 'Knights' },
   { key: 'space-voyagers', label: 'Space Voyagers' },
   { key: 'food', label: 'Food' },
+  { key: 'toys', label: 'Toys' },
   { key: 'the-seven', label: 'The Seven' },
   { key: 'fox-clan', label: 'Fox Clan' },
   { key: 'midas-family', label: 'Midas Family' },
   { key: 'high-stakes-club', label: 'High Stakes Club' },
+  { key: 'ruby-and-opal', label: 'Ruby & Opal' },
   { key: 'greek-gods', label: 'Greek Gods' },
   { key: 'other', label: 'Other' },
 ];
@@ -286,6 +290,8 @@ const OTHER_COLLAB_SKINS_OUTFIT_NAMES = new Set([
   'Guggimon',
   'Janky',
   'Kelsier',
+  'Yeddy',
+  'Swooshman',
 ]);
 
 const GENERAL_COLLABORATIONS_OUTFIT_NAMES = new Set([
@@ -423,6 +429,35 @@ const NFL_OUTFIT_NAMES = new Set([
   'Striped Soldier',
 ]);
 
+const ANIME_ORIGINALS_OUTFIT_NAMES = new Set([
+  'Erisa',
+  'Court Queen Erisa',
+  'Lennox Rose',
+  'Belle Berry',
+  'Zoe Clash',
+  'Remi',
+  'Lexa',
+  'Princess Lexa',
+  'Oathbound Lexa',
+  'Alpine Lexa',
+  'Lexa Hexbringer',
+  'Orin',
+  'Prince Orin',
+  'Oathbound Orin',
+  'Nurse Hikari',
+  'Nurse Miyako',
+  'Pi',
+  'Retro Zoe Clash',
+  'Chigusa',
+  'Koi Agent Chigusa',
+  'Imani',
+  'Mae',
+  'Battle Gamer Mae',
+  'Reina',
+  'Yuki',
+  'Megumi',
+]);
+
 const WWE_OUTFIT_NAMES = new Set([
   'Liv Morgan',
   'Stone Cold Steve Austin',
@@ -507,6 +542,20 @@ const FISHIES_OUTFIT_NAMES = new Set([
   'Robo-Fishstick',
   'Blinky Fishstick',
   'Contract Giller',
+  'Princess Felicity Fish',
+  'Stix',
+]);
+
+const RAVENS_OUTFIT_NAMES = new Set([
+  'Raven',
+  'Frozen Raven',
+  'Ravenpool',
+  'Graven',
+  'Storm-Wild Raven',
+  'Sir Raven',
+  'Raven Team Syd',
+  'Ravage',
+  'Bone Ravage',
 ]);
 
 const KITTIES_OUTFIT_NAMES = new Set([
@@ -550,6 +599,7 @@ const TEAM_LEADERS_OUTFIT_NAMES = new Set([
   'Cuddlepool',
   'Skull Squad Leader',
   'Bundles',
+  'Snuggs',
 ]);
 
 const KNIGHTS_OUTFIT_NAMES = new Set([
@@ -572,6 +622,12 @@ const KNIGHTS_OUTFIT_NAMES = new Set([
   'Knight Conqueror',
   'Blitz Knight',
   'The Dark Maw',
+  'Magmatic Carver',
+  'Boss Obsidian',
+  'O.M.E.G.A. Suit Alpha',
+  'Oblivion',
+  'Omega',
+  'Danger Zone',
 ]);
 
 const SPACE_VOYAGERS_OUTFIT_NAMES = new Set([
@@ -621,6 +677,34 @@ const FOOD_OUTFIT_NAMES = new Set([
   'Guaco',
   'Gumbo',
   'The Brat',
+  'Constable Sprinkle',
+  'Joey Caliente',
+  'Kernel Poppy',
+  'Big Dill',
+]);
+
+const TOYS_OUTFIT_NAMES = new Set([
+  'Monks',
+  'Shadow Monks',
+  'GHOST Monks',
+  'Toy Trooper',
+  'Plastic Patroller',
+  'Bendie',
+  'Twistie',
+  'Crackshot',
+  'Crackabella',
+  'Boxer',
+  'Boxy',
+  'Holiday Boxy',
+  'Hit Man',
+  'Dummy',
+  'Dummy Supreme',
+  'Summer Dummy',
+  'Wastelander Dummy',
+  'Glacial Dummy',
+  'The Ron-troller',
+  'Ruck',
+  'Signal',
 ]);
 
 const THE_SEVEN_OUTFIT_NAMES = new Set([
@@ -708,6 +792,16 @@ const GREEK_GODS_OUTFIT_NAMES = new Set([
   'Heartseeker Aphrodite',
 ]);
 
+const RUBY_AND_OPAL_OUTFIT_NAMES = new Set([
+  'Ruby',
+  'Ruby Shadows',
+  'Boardwalk Ruby',
+  'Dark Ruby',
+  'Redway Ruby',
+  'Opal',
+  'Snow Opal',
+]);
+
 export function getCatalogueSeriesKey(outfit) {
   if (ANIME_OUTFIT_NAMES.has(outfit.name)) return 'anime-legends';
   if (CARTOON_OUTFIT_NAMES.has(outfit.name)) return 'cartoon';
@@ -718,19 +812,23 @@ export function getCatalogueSeriesKey(outfit) {
     return 'general-collaborations';
   }
   if (NFL_OUTFIT_NAMES.has(outfit.name)) return 'nfl';
+  if (ANIME_ORIGINALS_OUTFIT_NAMES.has(outfit.name)) return 'anime-originals';
   if (NANNERS_OUTFIT_NAMES.has(outfit.name)) return 'nanners';
   if (JONESEYS_OUTFIT_NAMES.has(outfit.name)) return 'joneseys';
   if (BRITERS_AND_BOMBERS_OUTFIT_NAMES.has(outfit.name)) return 'briters-and-bombers';
   if (FISHIES_OUTFIT_NAMES.has(outfit.name)) return 'fishies';
+  if (RAVENS_OUTFIT_NAMES.has(outfit.name)) return 'ravens';
   if (KITTIES_OUTFIT_NAMES.has(outfit.name)) return 'kitties';
   if (TEAM_LEADERS_OUTFIT_NAMES.has(outfit.name)) return 'team-leaders';
   if (KNIGHTS_OUTFIT_NAMES.has(outfit.name)) return 'knights';
   if (SPACE_VOYAGERS_OUTFIT_NAMES.has(outfit.name)) return 'space-voyagers';
   if (FOOD_OUTFIT_NAMES.has(outfit.name)) return 'food';
+  if (TOYS_OUTFIT_NAMES.has(outfit.name)) return 'toys';
   if (THE_SEVEN_OUTFIT_NAMES.has(outfit.name)) return 'the-seven';
   if (FOX_CLAN_OUTFIT_NAMES.has(outfit.name)) return 'fox-clan';
   if (MIDAS_FAMILY_OUTFIT_NAMES.has(outfit.name)) return 'midas-family';
   if (HIGH_STAKES_CLUB_OUTFIT_NAMES.has(outfit.name)) return 'high-stakes-club';
+  if (RUBY_AND_OPAL_OUTFIT_NAMES.has(outfit.name)) return 'ruby-and-opal';
   if (GREEK_GODS_OUTFIT_NAMES.has(outfit.name)) return 'greek-gods';
 
   const raw = String(outfit.series ?? '').trim().toLowerCase();
