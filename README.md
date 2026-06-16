@@ -1,2 +1,2 @@
 # josef-sliwinski
-My personal website. Also containts a goofy little Fortnite themed hangman game.
+My personal website. Home to a goofy little Fortnite hangman game.
