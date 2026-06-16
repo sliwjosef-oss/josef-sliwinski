@@ -4,6 +4,7 @@ import SkinCatalogue from './components/SkinCatalogue';
 import { getGameOutfits } from './utils/outfits';
 import {
   addGuessedSkinId,
+  clearGuessedSkinIds,
   loadGuessedSkinIds,
   normalizeGuessedSkinIds,
   saveGuessedSkinIds,
@@ -50,6 +51,10 @@ function App() {
     setGuessedSkinIds((current) => addGuessedSkinId(current, outfit.id));
   }, []);
 
+  const handleDeleteAllData = useCallback(() => {
+    setGuessedSkinIds(clearGuessedSkinIds());
+  }, []);
+
   if (loading) {
     return (
       <main className="app">
@@ -80,6 +85,7 @@ function App() {
           outfits={outfits}
           guessedSkinIds={guessedSkinIds}
           onBack={() => setView(VIEWS.HANGMAN)}
+          onDeleteAllData={handleDeleteAllData}
         />
       )}
     </main>

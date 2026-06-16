@@ -15,6 +15,11 @@ export function saveGuessedSkinIds(ids) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
 }
 
+export function clearGuessedSkinIds() {
+  localStorage.removeItem(STORAGE_KEY);
+  return [];
+}
+
 export function normalizeGuessedSkinIds(guessedIds, outfits) {
   const discoveredIds = new Set();
 

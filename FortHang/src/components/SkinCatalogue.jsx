@@ -74,6 +74,31 @@ function CatalogueGrid({ outfits, guessedSkinIds }) {
   );
 }
 
+function DeleteAllDataConfirm({ onConfirm, onCancel }) {
+  return (
+    <div className="modal-overlay" role="presentation" onClick={onCancel}>
+      <div
+        className="modal-dialog"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-all-data-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <h2 id="delete-all-data-title">Are you sure?</h2>
+        <p>This will permanently delete all of your discovered skins and progress.</p>
+        <div className="modal-actions">
+          <button type="button" className="secondary-button" onClick={onCancel}>
+            No
+          </button>
+          <button type="button" className="danger-button" onClick={onConfirm}>
+            Yes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CatalogueSections({ sections, guessedSkinIds }) {
   return (
     <div className="catalogue-season-sections">
@@ -94,8 +119,9 @@ function CatalogueSections({ sections, guessedSkinIds }) {
   );
 }
 
-export default function SkinCatalogue({ outfits, guessedSkinIds, onBack }) {
+export default function SkinCatalogue({ outfits, guessedSkinIds, onBack, onDeleteAllData }) {
   const [sortMode, setSortMode] = useState(SORT_MODES.NUMBER);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const catalogueOutfits = useMemo(
     () =>
@@ -179,6 +205,26 @@ export default function SkinCatalogue({ outfits, guessedSkinIds, onBack }) {
 
       {sortMode === SORT_MODES.SERIES && (
         <CatalogueSections sections={seriesSections} guessedSkinIds={guessedSkinIds} />
+      )}
+
+      <footer className="catalogue-footer">
+        <button
+          type="button"
+          className="danger-button"
+          onClick={() => setShowDeleteConfirm(true)}
+        >
+          Delete All Data
+        </button>
+      </footer>
+
+      {showDeleteConfirm && (
+        <DeleteAllDataConfirm
+          onConfirm={() => {
+            setShowDeleteConfirm(false);
+            onDeleteAllData?.();
+          }}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
       )}
     </div>
   );
