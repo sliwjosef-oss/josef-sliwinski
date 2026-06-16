@@ -1,0 +1,55 @@
+name: Build and Deploy Fort Hang
+
+# Builds the FortHang Vite app and commits the production build into
+# fort-hang/, which is what the live site (joeysliwinski.com/fort-hang/)
+# actually serves. Without this, edits to FortHang/src never reach
+# the deployed game.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'FortHang/**'
+      - '.github/workflows/deploy-fort-hang.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-fort-hang
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: FortHang/package-lock.json
+
+      - name: Install dependencies
+        working-directory: FortHang
+        run: npm ci
+
+      - name: Build
+        working-directory: FortHang
+        run: npm run build
+
+      - name: Commit and push build output
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add fort-hang
+          if git diff --staged --quiet; then
+            echo "No build changes to deploy."
+          else
+            git commit -m "Deploy Fort Hang build [skip ci]"
+            git push
+          fi
