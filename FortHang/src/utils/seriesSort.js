@@ -25,6 +25,17 @@ export const SERIES_GROUPS = [
   { key: 'space-voyagers', label: 'Space Voyagers' },
   { key: 'food', label: 'Food' },
   { key: 'toys', label: 'Toys' },
+  { key: 'dancers-and-djs', label: "Dancers and DJ's" },
+  { key: 'winterfest', label: 'Winterfest' },
+  { key: 'fortnightmares', label: 'Fortnightmares' },
+  { key: 'robots', label: 'Robots' },
+  { key: 'easter-valentines', label: 'Easter & Valentines' },
+  { key: 'forestry', label: 'Forestry' },
+  { key: 'animals', label: 'Animals' },
+  { key: 'sports', label: 'Sports' },
+  { key: 'fire-and-ice', label: 'Fire & Ice' },
+  { key: 'astral-entities', label: 'Astral Entities' },
+  { key: 'aliens', label: 'Aliens' },
   { key: 'the-seven', label: 'The Seven' },
   { key: 'fox-clan', label: 'Fox Clan' },
   { key: 'midas-family', label: 'Midas Family' },
@@ -138,6 +149,7 @@ const CARTOON_OUTFIT_NAMES = new Set([
   'Cruella de Vil',
   'Captain Hook',
   'Maleficent',
+  'Splinter',
 ]);
 
 const ANIME_OUTFIT_NAMES = new Set([
@@ -281,6 +293,7 @@ const TV_OUTFIT_NAMES = new Set([
   'Chief Hopper',
   'Demogorgon',
   'Sofia',
+  'Wednesday Addams',
 ]);
 
 const OTHER_COLLAB_SKINS_OUTFIT_NAMES = new Set([
@@ -316,6 +329,13 @@ const OTHER_COLLAB_SKINS_OUTFIT_NAMES = new Set([
   'Shady Doggo',
   'Clutch',
   'Grind',
+  'Polo Prodigy',
+  "Stadium Hero '92",
+  'KAWS Skeleton',
+  'FIRE Master Kai',
+  'LIGHTNING Master Jay',
+  'EARTH Master Cole',
+  'ICE Master Zane',
 ]);
 
 const GENERAL_COLLABORATIONS_OUTFIT_NAMES = new Set([
@@ -480,6 +500,12 @@ const ANIME_ORIGINALS_OUTFIT_NAMES = new Set([
   'Reina',
   'Yuki',
   'Megumi',
+  'Joss',
+  'Greta Grim',
+  'Grriz',
+  'Nezumi',
+  'Ready Penny',
+  'Ricochet Rox',
 ]);
 
 const WWE_OUTFIT_NAMES = new Set([
@@ -509,6 +535,7 @@ const NANNERS_OUTFIT_NAMES = new Set([
   'Agent Peely',
   'Peely Bone',
   'P-1000',
+  'Lil Split',
 ]);
 
 const JONESEYS_OUTFIT_NAMES = new Set([
@@ -548,6 +575,7 @@ const BRITERS_AND_BOMBERS_OUTFIT_NAMES = new Set([
   'Brite Hunter',
   'BriteStar',
   'Brite Raider',
+  'B.R.I.T.E.',
 ]);
 
 const FISHIES_OUTFIT_NAMES = new Set([
@@ -625,6 +653,8 @@ const TEAM_LEADERS_OUTFIT_NAMES = new Set([
   'Bundles',
   'Snuggs',
   'Curdle Scream Leader',
+  'Mecha Strike Commander',
+  'Syd',
 ]);
 
 const KNIGHTS_OUTFIT_NAMES = new Set([
@@ -669,6 +699,9 @@ const SPACE_VOYAGERS_OUTFIT_NAMES = new Set([
   'Leviathan',
   'Slurp Leviathan ',
   'Dark Vanguard',
+  'Explorer Luna',
+  'Cosma',
+  'Horizon',
 ]);
 
 const FOOD_OUTFIT_NAMES = new Set([
@@ -706,6 +739,12 @@ const FOOD_OUTFIT_NAMES = new Set([
   'Joey Caliente',
   'Kernel Poppy',
   'Big Dill',
+  'Tomatohead',
+  'Bao Bros',
+  'Hothouse ',
+  'Bone Boss',
+  'Nash Nori',
+  'Nightshade',
 ]);
 
 const TOYS_OUTFIT_NAMES = new Set([
@@ -730,6 +769,11 @@ const TOYS_OUTFIT_NAMES = new Set([
   'The Ron-troller',
   'Ruck',
   'Signal',
+  'Megg',
+  'Webster',
+  'Nitrojerry',
+  'Snap',
+  'Splode',
 ]);
 
 const THE_SEVEN_OUTFIT_NAMES = new Set([
@@ -789,6 +833,9 @@ const MIDAS_FAMILY_OUTFIT_NAMES = new Set([
   'Summer Skye',
   'Winter Wonder Skye',
   'Undercover Skye',
+  'TNTina',
+  'Dynamo TNTina',
+  'Gear Specialist Maya',
 ]);
 
 const HIGH_STAKES_CLUB_OUTFIT_NAMES = new Set([
@@ -827,6 +874,294 @@ const RUBY_AND_OPAL_OUTFIT_NAMES = new Set([
   'Snow Opal',
 ]);
 
+const DANCERS_AND_DJS_OUTFIT_NAMES = new Set([
+  'DJ Yonder',
+  'Y0ND3R',
+  'Stratus',
+  'DJ Bop',
+  'Liteshow',
+  'Nitelite',
+  'Sparkle Specialist',
+  'Funk Ops',
+  'Bunnywolf',
+  'LLion',
+  'Party Diva',
+  'Party Star',
+  'Party MVP',
+  'Party Starter',
+  'Nightlife',
+  'Sabina',
+  'Soiree',
+  'Evie',
+  'Summitseeker Evie',
+  'Apprentice Evie',
+  'Evie X',
+  'Yon Dar 3000',
+  'Sparkle Supreme',
+  'Sparkle Diva',
+]);
+
+const WINTERFEST_OUTFIT_NAMES = new Set([
+  'Krampus',
+  'Slushy Soldier',
+  'Snowstrike',
+  'Snowfoot',
+  'Trog',
+  'Tinseltoes',
+  'Glimmer',
+  'Grimbles',
+  'Red-nosed Ranger',
+  'Sugarplum',
+  'Nog Ops',
+  'Red-Nosed Raider',
+  'Ginger Gunner',
+  'Merry Marauder',
+  'Yuletide Ranger',
+  'Globe Shaker',
+  'Kane',
+  'Frozen Nog Ops',
+  'The Devourer',
+  'Cutiepie',
+  'Wooly Warrior',
+  'Cozy Commander',
+  'Holly Jammer',
+  'Jolly Hammer',
+  'PJ Patroller',
+  'Gingerbread Raider',
+  'Snowmando',
+  'Blinky',
+  'Mr. Dappermint',
+  'Snowbell',
+  'Karve',
+  'Holly Striker',
+  'Guff Gringle',
+  'Sled Ready Guff',
+  'Arctic Adeline',
+  'Cobalt Snowfoot',
+  'Guffmas Tree',
+  'Yulejacket',
+  'Snowy Ops',
+  'The Winterfest Bandit',
+  'Sgt. Winter',
+  'Lt. Winter',
+  'Chilly',
+]);
+
+const FORTNIGHTMARES_OUTFIT_NAMES = new Set([
+  'Jack Gordon',
+  'Hollowhead',
+  'Skull Trooper ',
+  'Skull Ranger',
+  'Yule Trooper',
+  'Party Trooper',
+  'Skull Commander',
+  'Skull Raider',
+  'Sparkle Skull',
+  'Straw Ops',
+  'Ghoul Trooper',
+  'Baba Yaga',
+  'Patch',
+  'Headlock',
+  'Punk',
+  'The Good Doctor',
+  'Ravina',
+  'Skeletra',
+  'Tricksy',
+  'Sinister Glare',
+  'Undying Sorrow',
+  'Bonejamin',
+  'Chrome Punk',
+  "Jack O'Sassin",
+  'Phantom Guff',
+  'Pumpkin King',
+  'Rotten Penny',
+  'The Mothman',
+]);
+
+const ROBOTS_OUTFIT_NAMES = new Set([
+  'Tsuki',
+  'Tsuki 2.0',
+  'Designer Tsuki',
+  'Sentinel',
+  'Kitbash',
+  'Rebel',
+  'Revolt',
+  'A.I.M.',
+  'Eon',
+  'Bryce 3000',
+  'Zyg',
+  'Lok-Bot',
+  'CRZ-8',
+  'Robo-Kevin',
+  'Mecha-Pop',
+  'Battlebus',
+  'Dr. Vinderbot',
+  'Felina',
+  'T0m8T0HE4D',
+  'Reboot Man',
+  'Dex Diamond',
+]);
+
+const EASTER_VALENTINES_OUTFIT_NAMES = new Set([
+  'Heartbreaker',
+  'Bunny Brawler',
+  'Rabbit Raider',
+  'Lovethorn',
+  'Pinkie',
+  'Candyman',
+  'Bun Bun',
+  'Lovely',
+  'Dutch',
+  'Miss Bunny Penny',
+  'Heartbreaker Shadow',
+  'Hazard Hare',
+  'Esme',
+  'Ennui',
+  'Queen of Hearts',
+  'Love Ranger',
+  'Stoneheart',
+  'Oona Usagi',
+]);
+
+const EASTER_VALENTINES_SETS = new Set(['Bunny Power 5']);
+
+const FORESTRY_OUTFIT_NAMES = new Set([
+  'Prickly Patroller',
+  'Bushranger',
+  'Toon Bushy',
+  'Bloom',
+  'Winterfest Bushranger',
+  'Autumn',
+]);
+
+const ANIMALS_OUTFIT_NAMES = new Set([
+  'Fennix',
+  'Doggo',
+  'Hybrid',
+  'Wukong',
+  'Polar Patroller',
+  'Axo',
+  'Bryne',
+  'Azuki',
+  'Volpez',
+  'Drakon Steel Hybrid',
+  'Oscar',
+  'Budge',
+  'Sgt. Drake',
+  'Tex Flamingo',
+  'Rufus',
+  'Lizzik',
+  'Captain Talon',
+  'Corvus',
+  'Paulie Featherface',
+  'Andy Fangerson',
+  'Dark Doggo',
+  'Flakey the Snowbird',
+  'Hajime',
+  'Boss Koji',
+  'Alphonse',
+  'Chef',
+  'Duke',
+  'Flightalis',
+  'Fetch',
+  'Fletcher Kane',
+  'Wave Rider Axo',
+  'Skillet',
+  'Courtside Axo',
+  'Clyde',
+  'Ziggy',
+  'Dire',
+  'War Wolf Dire',
+  'Don Eggcracker',
+  'Ken Kestrel',
+  'Ural the Sage',
+  'Kingston',
+  'Cheeks',
+  'Pingwin',
+  'KD Rattical',
+  'Squibbly',
+  'Cluster',
+  'Agent Patch',
+]);
+
+const SPORTS_SETS = new Set(['Goalbound', 'Fearless Fairway', 'Let Them Know', 'Triple Threat']);
+
+const FIRE_AND_ICE_OUTFIT_NAMES = new Set([
+  'Molten Battle Hound',
+  'Molten Valkyrie',
+  'Ruin',
+  'Inferno',
+  'Ember',
+  'Molten Omen',
+  'Frozen Love Ranger',
+  'The Ice Queen',
+  'The Ice King',
+  'Shiver',
+  'Blaze',
+  'Snowheart',
+  'Frost Broker',
+  'Incinerator Kuno',
+  'Molten Ragnarok',
+  'Roast Lord',
+  'Ice Crystal',
+  'Permafrost Raider',
+  'Frigid Foregoer',
+  'Heartbreak Ranger',
+  'Icy Metal Mouth',
+  'Gale',
+  'Exalted Ice King',
+  'Pyreheart',
+  'Lady Windfrost',
+]);
+
+const ASTRAL_ENTITIES_OUTFIT_NAMES = new Set([
+  'Fusion',
+  'Slumber ',
+  'Infinity',
+  'Galaxy',
+  'Zero',
+  'Cyclo',
+  'Galaxy Scout',
+  'Galaxia',
+  'Iso',
+  'Hedron',
+  'Pulse',
+  'Galaxy Grappler',
+  'Koi Brawler Zero',
+  'Axion Sentinel ',
+  'Astrea',
+]);
+
+const ALIENS_OUTFIT_NAMES = new Set([
+  'Zorgoton',
+  'Madcap',
+  'Kymera',
+  'Joey',
+  'Human Bill',
+  'Trespasser Elite',
+  'Geometrik',
+  'U',
+  'The Cube Queen',
+  'Cube Assassin',
+  'The Herald',
+  'Serenade',
+]);
+
+function isEasterValentinesOutfit(outfit) {
+  if (EASTER_VALENTINES_OUTFIT_NAMES.has(outfit.name)) return true;
+  return EASTER_VALENTINES_SETS.has(outfit.setName ?? '');
+}
+
+function isSportsOutfit(outfit) {
+  const name = outfit.name ?? '';
+  const setName = outfit.setName ?? '';
+  if (name.includes('Alpine Ace')) return true;
+  if (name.includes('Mogul Master')) return true;
+  if (SPORTS_SETS.has(setName)) return true;
+  if (name.includes('Triple Threat')) return true;
+  return false;
+}
+
 export function getCatalogueSeriesKey(outfit) {
   if (ANIME_OUTFIT_NAMES.has(outfit.name)) return 'anime-legends';
   if (CARTOON_OUTFIT_NAMES.has(outfit.name)) return 'cartoon';
@@ -849,6 +1184,17 @@ export function getCatalogueSeriesKey(outfit) {
   if (SPACE_VOYAGERS_OUTFIT_NAMES.has(outfit.name)) return 'space-voyagers';
   if (FOOD_OUTFIT_NAMES.has(outfit.name)) return 'food';
   if (TOYS_OUTFIT_NAMES.has(outfit.name)) return 'toys';
+  if (DANCERS_AND_DJS_OUTFIT_NAMES.has(outfit.name)) return 'dancers-and-djs';
+  if (WINTERFEST_OUTFIT_NAMES.has(outfit.name)) return 'winterfest';
+  if (FORTNIGHTMARES_OUTFIT_NAMES.has(outfit.name)) return 'fortnightmares';
+  if (ROBOTS_OUTFIT_NAMES.has(outfit.name)) return 'robots';
+  if (isEasterValentinesOutfit(outfit)) return 'easter-valentines';
+  if (FORESTRY_OUTFIT_NAMES.has(outfit.name)) return 'forestry';
+  if (ANIMALS_OUTFIT_NAMES.has(outfit.name)) return 'animals';
+  if (isSportsOutfit(outfit)) return 'sports';
+  if (FIRE_AND_ICE_OUTFIT_NAMES.has(outfit.name)) return 'fire-and-ice';
+  if (ASTRAL_ENTITIES_OUTFIT_NAMES.has(outfit.name)) return 'astral-entities';
+  if (ALIENS_OUTFIT_NAMES.has(outfit.name)) return 'aliens';
   if (THE_SEVEN_OUTFIT_NAMES.has(outfit.name)) return 'the-seven';
   if (FOX_CLAN_OUTFIT_NAMES.has(outfit.name)) return 'fox-clan';
   if (MIDAS_FAMILY_OUTFIT_NAMES.has(outfit.name)) return 'midas-family';
