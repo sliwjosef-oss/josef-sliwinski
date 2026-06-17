@@ -874,6 +874,12 @@ const RUBY_AND_OPAL_OUTFIT_NAMES = new Set([
   'Snow Opal',
 ]);
 
+const ICON_OUTFIT_NAMES = new Set([
+  'Triple Threat Moxie',
+  'Triple Threat Reddysh',
+  'Triple Threat Sommerset',
+]);
+
 const DANCERS_AND_DJS_OUTFIT_NAMES = new Set([
   'DJ Yonder',
   'Y0ND3R',
@@ -899,6 +905,7 @@ const DANCERS_AND_DJS_OUTFIT_NAMES = new Set([
   'Yon Dar 3000',
   'Sparkle Supreme',
   'Sparkle Diva',
+  'Disco Diva',
 ]);
 
 const WINTERFEST_OUTFIT_NAMES = new Set([
@@ -965,7 +972,7 @@ const FORTNIGHTMARES_OUTFIT_NAMES = new Set([
   'Punk',
   'The Good Doctor',
   'Ravina',
-  'Skeletra',
+  'Skeletara',
   'Tricksy',
   'Sinister Glare',
   'Undying Sorrow',
@@ -976,6 +983,7 @@ const FORTNIGHTMARES_OUTFIT_NAMES = new Set([
   'Pumpkin King',
   'Rotten Penny',
   'The Mothman',
+  "All-Hallow's Steve",
 ]);
 
 const ROBOTS_OUTFIT_NAMES = new Set([
@@ -995,7 +1003,9 @@ const ROBOTS_OUTFIT_NAMES = new Set([
   'Robo-Kevin',
   'Mecha-Pop',
   'Battlebus',
-  'Dr. Vinderbot',
+  'Dr. VinderBot',
+  'Beastmode',
+  'Iconica Prime',
   'Felina',
   'T0m8T0HE4D',
   'Reboot Man',
@@ -1032,6 +1042,8 @@ const FORESTRY_OUTFIT_NAMES = new Set([
   'Bloom',
   'Winterfest Bushranger',
   'Autumn',
+  'Xerick',
+  'Cursed Kodama',
 ]);
 
 const ANIMALS_OUTFIT_NAMES = new Set([
@@ -1058,7 +1070,7 @@ const ANIMALS_OUTFIT_NAMES = new Set([
   'Dark Doggo',
   'Flakey the Snowbird',
   'Hajime',
-  'Boss Koji',
+  'Boss Kōji',
   'Alphonse',
   'Chef',
   'Duke',
@@ -1082,6 +1094,13 @@ const ANIMALS_OUTFIT_NAMES = new Set([
   'Squibbly',
   'Cluster',
   'Agent Patch',
+  'Synthesis',
+  'Fabio Sparklemane',
+  'Safety First Steve',
+  'Champion Drake',
+  'Karasu',
+  'The Goldfish',
+  'J.B. Chimpanski',
 ]);
 
 const SPORTS_SETS = new Set(['Goalbound', 'Fearless Fairway', 'Let Them Know', 'Triple Threat']);
@@ -1112,6 +1131,10 @@ const FIRE_AND_ICE_OUTFIT_NAMES = new Set([
   'Exalted Ice King',
   'Pyreheart',
   'Lady Windfrost',
+  'Molten Metal Mouth',
+  'Lady Flamespark',
+  'Lady Waveflow',
+  'Afterburn',
 ]);
 
 const ASTRAL_ENTITIES_OUTFIT_NAMES = new Set([
@@ -1130,6 +1153,9 @@ const ASTRAL_ENTITIES_OUTFIT_NAMES = new Set([
   'Koi Brawler Zero',
   'Axion Sentinel ',
   'Astrea',
+  'Sunspot',
+  'Andromeda',
+  'Titan',
 ]);
 
 const ALIENS_OUTFIT_NAMES = new Set([
@@ -1184,6 +1210,7 @@ export function getCatalogueSeriesKey(outfit) {
   if (SPACE_VOYAGERS_OUTFIT_NAMES.has(outfit.name)) return 'space-voyagers';
   if (FOOD_OUTFIT_NAMES.has(outfit.name)) return 'food';
   if (TOYS_OUTFIT_NAMES.has(outfit.name)) return 'toys';
+  if (ICON_OUTFIT_NAMES.has(outfit.name)) return 'icon';
   if (DANCERS_AND_DJS_OUTFIT_NAMES.has(outfit.name)) return 'dancers-and-djs';
   if (WINTERFEST_OUTFIT_NAMES.has(outfit.name)) return 'winterfest';
   if (FORTNIGHTMARES_OUTFIT_NAMES.has(outfit.name)) return 'fortnightmares';
