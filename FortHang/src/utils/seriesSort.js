@@ -1233,7 +1233,6 @@ const ALIENS_OUTFIT_NAMES = new Set([
   'Human Bill',
   'Trespasser Elite',
   'Geometrik',
-  'U',
   'The Cube Queen',
   'Cube Assassin',
   'The Herald',

@@ -6,6 +6,7 @@ import {
   EXCLUDED_NAMES,
   getIntroductionFields,
   hasValidSeason,
+  isDuplicateVariant,
 } from './outfit-filters.mjs';
 import { createSilhouette } from './silhouette.mjs';
 
@@ -68,6 +69,7 @@ const playable = dedupeByName(
   json.data
     .filter((item) => item.type?.value === 'outfit' && item.name?.trim())
     .filter((item) => !EXCLUDED_NAMES.has(item.name))
+    .filter((item) => !isDuplicateVariant(item.id))
     .filter((item) => /[a-zA-Z]/.test(item.name))
     .filter((item) => hasValidSeason(getIntroductionFields(item).season))
     .map(mapApiOutfit)

@@ -68,7 +68,12 @@ function dedupeByName(outfits) {
 
 export function getGameOutfits(outfits) {
   return dedupeByName(
-    outfits.filter((outfit) => isPlayableOutfitName(outfit.name) && hasValidSeason(outfit))
+    outfits.filter(
+      (outfit) =>
+        isPlayableOutfitName(outfit.name) &&
+        hasValidSeason(outfit) &&
+        !isDuplicateVariant(outfit.id)
+    )
   );
 }
 
