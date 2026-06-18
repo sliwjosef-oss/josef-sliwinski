@@ -344,7 +344,7 @@ const OTHER_COLLAB_SKINS_OUTFIT_NAMES = new Set([
   'LIGHTNING Master Jay',
   'EARTH Master Cole',
   'ICE Master Zane',
-  'Aire',
+  'Airie',
 ]);
 
 const GENERAL_COLLABORATIONS_OUTFIT_NAMES = new Set([
@@ -1080,7 +1080,7 @@ const EASTER_VALENTINES_OUTFIT_NAMES = new Set([
   'Oona Usagi',
   'Hopper',
   'Fallen Love Ranger',
-  'Nighthare',
+  'Nitehare',
 ]);
 
 const EASTER_VALENTINES_SETS = new Set(['Bunny Power 5']);
@@ -1157,7 +1157,7 @@ const ANIMALS_OUTFIT_NAMES = new Set([
   'Dolph',
   'Wendell',
   'Dr. Theodore Flyesbee',
-  'Wolfee',
+  'Wolfie',
   'Kozaru',
 ]);
 
