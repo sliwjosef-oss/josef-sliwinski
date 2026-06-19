@@ -1265,7 +1265,6 @@ const STUDENTS_AND_SORCERY_OUTFIT_NAMES = new Set([
   'Elmira',
   'Luminos',
   'Delirium',
-  'Dominion',
   'Blacklight',
   'Isabelle',
   'Grisabelle',
@@ -1432,6 +1431,7 @@ const THE_SOCIETY_OUTFIT_NAMES = new Set([
   'Champion Siren',
   'Spycatcher Siren',
   "Stash'd",
+  "Champion Stash'd",
 ]);
 
 const OXR_OUTFIT_NAMES = new Set([
@@ -1464,6 +1464,9 @@ const DEMON_WARRIORS_OUTFIT_NAMES = new Set([
   'Midnight Thorn',
   'Desdemona',
   'Underworld Desdemona',
+  'Dominion',
+  'Malice',
+  'Mal',
 ]);
 
 function isGoofingAroundOutfit(outfit) {
