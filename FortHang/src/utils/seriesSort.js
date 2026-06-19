@@ -39,10 +39,14 @@ export const SERIES_GROUPS = [
   { key: 'students-and-sorcery', label: 'Students and Sorcery' },
   { key: 'superhero-originals', label: 'Superhero Originals' },
   { key: 'no-sweat-summer', label: 'No Sweat Summer' },
+  { key: 'goofing-around', label: 'Goofing Around' },
   { key: 'ready-to-heist', label: 'Ready to Heist' },
   { key: 'imagined-order', label: 'Imagined Order' },
   { key: 'aerosol-and-auras', label: 'Aerosol & Auras' },
   { key: 'the-underground', label: 'The Underground' },
+  { key: 'the-society', label: 'The Society' },
+  { key: 'oxr', label: 'O. X. R.' },
+  { key: 'demon-warriors', label: 'Demon Warriors' },
   { key: 'the-seven', label: 'The Seven' },
   { key: 'fox-clan', label: 'Fox Clan' },
   { key: 'midas-family', label: 'Midas Family' },
@@ -447,6 +451,7 @@ const GENERAL_COLLABORATIONS_OUTFIT_NAMES = new Set([
   'Derby Dominator',
   'Breakaway',
   'Triple-Double',
+  'Shot-Caller',
 ]);
 
 const NFL_OUTFIT_NAMES = new Set([
@@ -932,13 +937,13 @@ const DANCERS_AND_DJS_OUTFIT_NAMES = new Set([
   'Disco Diva',
   'PJ',
   'Hana Park',
-  'Yoo-mi',
   'Champion PJ',
   'Stage Slayer',
   'Venus Hart',
   'Heatwave PJ',
   'Mullet Marauder',
   'Aerobic Assassin',
+  'Colby',
 ]);
 
 const WINTERFEST_OUTFIT_NAMES = new Set([
@@ -1057,6 +1062,9 @@ const ROBOTS_OUTFIT_NAMES = new Set([
   'Felina',
   'T0M8T0HE4D',
   'Reboot Man',
+  'Renegade Runner',
+  'Robo-Ray',
+  'FNCS Renegade',
 ]);
 
 const EASTER_VALENTINES_OUTFIT_NAMES = new Set([
@@ -1081,6 +1089,8 @@ const EASTER_VALENTINES_OUTFIT_NAMES = new Set([
   'Hopper',
   'Fallen Love Ranger',
   'Nitehare',
+  'Stella',
+  'Pastel',
 ]);
 
 const EASTER_VALENTINES_SETS = new Set(['Bunny Power 5']);
@@ -1095,6 +1105,8 @@ const FORESTRY_OUTFIT_NAMES = new Set([
   'Xerick',
   'Cursed Kodama',
   'Flytrap',
+  'Terns',
+  'The Autumn Queen',
 ]);
 
 const ANIMALS_OUTFIT_NAMES = new Set([
@@ -1144,26 +1156,30 @@ const ANIMALS_OUTFIT_NAMES = new Set([
   'KD Rattical',
   'Squibbly',
   'Cluster',
-  'Agent Patch',
   'Synthesis',
   'Fabio Sparklemane',
   'Safety First Steve',
   'Champion Drake',
   'Karasu',
-  'The Goldfish',
   'J.B. Chimpanski',
   'Moisty Merman',
   'Cluck',
   'Dolph',
   'Wendell',
-  'Dr. Theodore Flyesbee',
   'Wolfie',
   'Kozaru',
 ]);
 
 const SPORTS_SETS = new Set(['Goalbound', 'Fearless Fairway', 'Let Them Know', 'Triple Threat']);
 
-const SPORTS_OUTFIT_NAMES = new Set(['Jumpshot']);
+const SPORTS_OUTFIT_NAMES = new Set([
+  'Jumpshot',
+  'Whiteout',
+  'Birdie',
+  'Overtaker',
+  'Fastball',
+  'Slugger',
+]);
 
 const FIRE_AND_ICE_OUTFIT_NAMES = new Set([
   'Molten Battle Hound',
@@ -1223,6 +1239,7 @@ const ASTRAL_ENTITIES_OUTFIT_NAMES = new Set([
   'Triarch Nox',
   'Triarch Aurora',
   'Flow',
+  'Galaxy Crossfade',
 ]);
 
 const ALIENS_OUTFIT_NAMES = new Set([
@@ -1270,6 +1287,7 @@ const SUPERHERO_ORIGINALS_OUTFIT_NAMES = new Set([
   'Afterburn',
   'Dex Diamond',
   'Umbra Nyte',
+  'Synthwave',
 ]);
 
 const SUPERHERO_ORIGINALS_SETS = new Set(['Boundless', 'Fallen Heroes']);
@@ -1290,8 +1308,6 @@ const NO_SWEAT_SUMMER_OUTFIT_NAMES = new Set([
   'King Krab',
   'Medley',
   'Riptide Raz',
-  'Slayer Charlotte',
-  'Undercover Kor',
   'Unstuffed Guff',
   'Coastal Machinist',
   'Tidewalker Trace',
@@ -1329,6 +1345,7 @@ const READY_TO_HEIST_OUTFIT_NAMES = new Set([
   'Cassidy Quinn',
   'Valentina',
   'Keisha Cross',
+  'Kado Thorne',
 ]);
 
 const IMAGINED_ORDER_OUTFIT_NAMES = new Set([
@@ -1347,7 +1364,6 @@ const IMAGINED_ORDER_OUTFIT_NAMES = new Set([
   'Shadow Ops',
   'Special Forces',
   'Maven',
-  'Kor',
   'Panther',
   'Janice',
   'Chaos Agent',
@@ -1368,6 +1384,7 @@ const AEROSOL_AND_AURAS_OUTFIT_NAMES = new Set([
   'Fresh Aura',
   'Saura',
   'Treasured Aura',
+  'Championship Aura',
 ]);
 
 const THE_UNDERGROUND_OUTFIT_NAMES = new Set([
@@ -1375,10 +1392,79 @@ const THE_UNDERGROUND_OUTFIT_NAMES = new Set([
   'Heroic Hope',
   'Shadow Blade Hope',
   'Rival Hope',
+  'Nisha',
+  'Starr Oakley',
+  'Blair',
+  'Kavel',
+  'Sonor',
+]);
+
+const GOOFING_AROUND_OUTFIT_NAMES = new Set([
+  'Giddy-up',
+  'Yee-Haw!',
+  'Nite Nite',
+  'Peekaboo',
+  'Tender Defender',
+  'King Flamingo',
+  'Growler',
+  'Llambro',
+  'Lt. John Llama',
+  'Rain-Bear',
+  'Jella',
+  'Ella Slurp',
+  'Bathany',
+]);
+
+const GOOFING_AROUND_SETS = new Set(['Bedhead Brigade']);
+
+const THE_SOCIETY_OUTFIT_NAMES = new Set([
   'Valeria',
   'Montague',
-  'Nisha',
+  'The Goldfish',
+  'Lustrous Luxe',
+  'Gunslinger Calamity',
+  'Killian',
+  'Clara',
+  'Siren',
+  "Stash'd",
 ]);
+
+const OXR_OUTFIT_NAMES = new Set([
+  'Onyx Winter',
+  'Lt. Ripp Slade',
+  'O.X.R. Agent Stryker',
+  'O.X.R. Agent Shay',
+  'Yoo-mi',
+  'Agent Patch',
+  'Dr. Theodore Flyesbee',
+  'Bandolier',
+  'Xanthus',
+]);
+
+const DEMON_WARRIORS_OUTFIT_NAMES = new Set([
+  'Shogun',
+  'Corrupted Shogun',
+  'Shogun X',
+  'Daigo',
+  'Mask Maker Daigo',
+  'Elite Daigo',
+  'The Night Rose',
+  'Rebloomed Night Rose',
+  'Kor',
+  'Undercover Kor',
+  'Mercenary Kor',
+  'Champion Kor',
+  'Torment',
+  'Nemia',
+  'Midnight Thorn',
+  'Desdemona',
+  'Underworld Desdemona',
+]);
+
+function isGoofingAroundOutfit(outfit) {
+  if (GOOFING_AROUND_OUTFIT_NAMES.has(outfit.name)) return true;
+  return GOOFING_AROUND_SETS.has(outfit.setName ?? '');
+}
 
 function isStudentsAndSorceryOutfit(outfit) {
   if (STUDENTS_AND_SORCERY_OUTFIT_NAMES.has(outfit.name)) return true;
@@ -1443,10 +1529,14 @@ export function getCatalogueSeriesKey(outfit) {
   if (isStudentsAndSorceryOutfit(outfit)) return 'students-and-sorcery';
   if (isSuperheroOriginalsOutfit(outfit)) return 'superhero-originals';
   if (NO_SWEAT_SUMMER_OUTFIT_NAMES.has(outfit.name)) return 'no-sweat-summer';
+  if (isGoofingAroundOutfit(outfit)) return 'goofing-around';
   if (READY_TO_HEIST_OUTFIT_NAMES.has(outfit.name)) return 'ready-to-heist';
   if (IMAGINED_ORDER_OUTFIT_NAMES.has(outfit.name)) return 'imagined-order';
   if (AEROSOL_AND_AURAS_OUTFIT_NAMES.has(outfit.name)) return 'aerosol-and-auras';
   if (THE_UNDERGROUND_OUTFIT_NAMES.has(outfit.name)) return 'the-underground';
+  if (THE_SOCIETY_OUTFIT_NAMES.has(outfit.name)) return 'the-society';
+  if (OXR_OUTFIT_NAMES.has(outfit.name)) return 'oxr';
+  if (DEMON_WARRIORS_OUTFIT_NAMES.has(outfit.name)) return 'demon-warriors';
   if (THE_SEVEN_OUTFIT_NAMES.has(outfit.name)) return 'the-seven';
   if (FOX_CLAN_OUTFIT_NAMES.has(outfit.name)) return 'fox-clan';
   if (MIDAS_FAMILY_OUTFIT_NAMES.has(outfit.name)) return 'midas-family';
