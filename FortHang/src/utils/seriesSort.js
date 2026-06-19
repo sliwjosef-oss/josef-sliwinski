@@ -1424,9 +1424,13 @@ const THE_SOCIETY_OUTFIT_NAMES = new Set([
   'The Goldfish',
   'Lustrous Luxe',
   'Gunslinger Calamity',
+  'Calamity',
+  'Omen Hunter Calamity',
   'Killian',
   'Clara',
   'Siren',
+  'Champion Siren',
+  'Spycatcher Siren',
   "Stash'd",
 ]);
 

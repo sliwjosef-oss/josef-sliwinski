@@ -15,7 +15,8 @@ import {
   getOutfitIconSrc,
   getOutfitSilhouetteSrc,
 } from '../utils/outfits';
-import { countDiscoveredSkins } from '../utils/progress';
+import { countDiscoveredSkins, isCollectionComplete } from '../utils/progress';
+import CollectionCompleteScreen from './CollectionCompleteScreen';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const GAME_STATES = {
@@ -120,6 +121,7 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
   );
 
   const discoveredCount = countDiscoveredSkins(outfits, guessedSkinIds);
+  const collectionComplete = isCollectionComplete(outfits, guessedSkinIds);
 
   const peelyStage = gameState === GAME_STATES.WON ? 0 : wrongGuesses;
 
@@ -264,6 +266,9 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
       )}
 
       {gameState === GAME_STATES.IDLE && (
+        collectionComplete ? (
+          <CollectionCompleteScreen onOpenCatalogue={onOpenCatalogue} />
+        ) : (
         <div className="action-panel">
           {remainingOutfits.length > 0 ? (
             <>
@@ -290,6 +295,7 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
             </>
           )}
         </div>
+        )
       )}
 
       {gameState === GAME_STATES.PLAYING && (
@@ -318,6 +324,9 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
       )}
 
       {(gameState === GAME_STATES.WON || gameState === GAME_STATES.LOST) && currentOutfit && (
+        collectionComplete && gameState === GAME_STATES.WON ? (
+          <CollectionCompleteScreen onOpenCatalogue={onOpenCatalogue} />
+        ) : (
         <div className="result-panel">
           {gameState === GAME_STATES.WON ? (
             <>
@@ -342,6 +351,7 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
             <p className="play-again-prompt">You have discovered every outfit in the catalogue!</p>
           )}
         </div>
+        )
       )}
     </div>
   );
