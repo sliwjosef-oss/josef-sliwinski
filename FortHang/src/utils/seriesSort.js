@@ -1413,6 +1413,7 @@ const GOOFING_AROUND_OUTFIT_NAMES = new Set([
   'Jella',
   'Ella Slurp',
   'Bathany',
+  'Gnarly Charlie',
 ]);
 
 const GOOFING_AROUND_SETS = new Set(['Bedhead Brigade']);
