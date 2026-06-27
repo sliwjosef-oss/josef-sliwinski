@@ -306,6 +306,7 @@ const TV_OUTFIT_NAMES = new Set([
   'Sofia',
   'Wednesday Addams',
   'Eleven',
+  'John Rambo',
 ]);
 
 const OTHER_COLLAB_SKINS_OUTFIT_NAMES = new Set([
@@ -874,6 +875,9 @@ const HIGH_STAKES_CLUB_OUTFIT_NAMES = new Set([
   'Helsie Midnight',
   'Red Ruin Joni',
   'Lycan West',
+  'Summer Slayer Joni',
+  'Sand Witch Helsie',
+  'Beach Beast Lucien',
 ]);
 
 const GREEK_GODS_OUTFIT_NAMES = new Set([
