@@ -60,6 +60,7 @@ try {
     'Spectral Devourer': 'fortnightmares',
     "Bunnii O'Hare": 'easter-valentines',
     K1ttyW1ns: 'kitties',
+    'Mortuus X': 'robots',
   };
 
   let failures = 0;

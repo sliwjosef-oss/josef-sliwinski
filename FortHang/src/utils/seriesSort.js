@@ -1095,6 +1095,7 @@ const ROBOTS_OUTFIT_NAMES = new Set([
   'Renegade Runner',
   'Robo-Ray',
   'FNCS Renegade',
+  'Mortuus X',
 ]);
 
 const EASTER_VALENTINES_OUTFIT_NAMES = new Set([
