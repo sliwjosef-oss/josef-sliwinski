@@ -54,6 +54,12 @@ try {
     'The Finisher': 'general-collaborations',
     'The Mastermind': 'general-collaborations',
     'Cosmic Armor Singularity': 'imagined-order',
+    'Champion Aphrodite': 'greek-gods',
+    Geno: 'imagined-order',
+    'Imagined Order Hush': 'imagined-order',
+    'Spectral Devourer': 'fortnightmares',
+    "Bunnii O'Hare": 'easter-valentines',
+    K1ttyW1ns: 'kitties',
   };
 
   let failures = 0;

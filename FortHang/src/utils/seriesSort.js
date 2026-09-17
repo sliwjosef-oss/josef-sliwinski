@@ -659,6 +659,7 @@ const KITTIES_OUTFIT_NAMES = new Set([
   'Trailblazer Lynx',
   'Void Walker Lynx',
   'Metalhead Meow Skulls',
+  'K1ttyW1ns',
 ]);
 
 const TEAM_LEADERS_OUTFIT_NAMES = new Set([
@@ -910,6 +911,7 @@ const GREEK_GODS_OUTFIT_NAMES = new Set([
   'Medusa',
   'Apollo',
   'Heartseeker Aphrodite',
+  'Champion Aphrodite',
   'Perseus',
   'Olympian',
   'Underworld Commander',
@@ -1060,6 +1062,7 @@ const FORTNIGHTMARES_OUTFIT_NAMES = new Set([
   'Scourge',
   'Plague',
   'Hay Man',
+  'Spectral Devourer',
 ]);
 
 const ROBOTS_OUTFIT_NAMES = new Set([
@@ -1119,6 +1122,7 @@ const EASTER_VALENTINES_OUTFIT_NAMES = new Set([
   'Stella',
   'Pastel',
   'Bunnybone',
+  "Bunnii O'Hare",
 ]);
 
 const EASTER_VALENTINES_SETS = new Set(['Bunny Power 5']);
@@ -1400,6 +1404,8 @@ const IMAGINED_ORDER_OUTFIT_NAMES = new Set([
   'Riot',
   'Kiara K.O.',
   'Dasha',
+  'Geno',
+  'Imagined Order Hush',
 ]);
 
 const AEROSOL_AND_AURAS_OUTFIT_NAMES = new Set([
