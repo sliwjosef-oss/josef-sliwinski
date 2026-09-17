@@ -44,6 +44,10 @@ try {
     'Fractal Midas': 'midas-family',
     Bunnybone: 'easter-valentines',
     Galaxon: 'astral-entities',
+    'Pond Guardian Froggory': 'animals',
+    Odysseus: 'tv-legends',
+    Agamemnon: 'tv-legends',
+    'Kickoff Yeddy': 'other-collab-skins',
   };
 
   let failures = 0;

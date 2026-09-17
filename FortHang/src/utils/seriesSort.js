@@ -312,6 +312,8 @@ const TV_OUTFIT_NAMES = new Set([
   'Wednesday Addams',
   'Eleven',
   'John Rambo',
+  'Odysseus',
+  'Agamemnon',
 ]);
 
 const OTHER_COLLAB_SKINS_OUTFIT_NAMES = new Set([
@@ -323,6 +325,7 @@ const OTHER_COLLAB_SKINS_OUTFIT_NAMES = new Set([
   'Janky',
   'Kelsier',
   'Yeddy',
+  'Kickoff Yeddy',
   'Swooshman',
   'Maxxed Out Max',
   'Airphorian',
@@ -1188,6 +1191,7 @@ const ANIMALS_OUTFIT_NAMES = new Set([
   'Wendell',
   'Wolfie',
   'Kozaru',
+  'Pond Guardian Froggory',
 ]);
 
 const SPORTS_SETS = new Set(['Goalbound', 'Fearless Fairway', 'Let Them Know', 'Triple Threat']);
