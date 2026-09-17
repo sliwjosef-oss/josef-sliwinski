@@ -1383,6 +1383,7 @@ const IMAGINED_ORDER_OUTFIT_NAMES = new Set([
   'Innovator Slone',
   'Vanguard Slone',
   'Singularity',
+  'Cosmic Armor Singularity',
   'Zadie',
   'Shady Zadie',
   'Vanguard Zadie',

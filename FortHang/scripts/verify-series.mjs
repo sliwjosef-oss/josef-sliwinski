@@ -53,6 +53,7 @@ try {
     'Star Striker': 'general-collaborations',
     'The Finisher': 'general-collaborations',
     'The Mastermind': 'general-collaborations',
+    'Cosmic Armor Singularity': 'imagined-order',
   };
 
   let failures = 0;
