@@ -161,6 +161,9 @@ const CARTOON_OUTFIT_NAMES = new Set([
   'Captain Hook',
   'Maleficent',
   'Splinter',
+  'Samurai Jack',
+  'Stan Smith',
+  'Francine Smith',
 ]);
 
 const ANIME_OUTFIT_NAMES = new Set([
@@ -217,6 +220,8 @@ const ANIME_OUTFIT_NAMES = new Set([
   'Orihime Inoue',
   'Spike Spiegel',
   'Faye Valentine',
+  'Kisuke Urahara',
+  'Yoruichi Shihoin',
 ]);
 
 const TV_OUTFIT_NAMES = new Set([
@@ -592,6 +597,7 @@ const BRITERS_AND_BOMBERS_OUTFIT_NAMES = new Set([
   'Brite Raider',
   'B.R.I.T.E.',
   'Dark Bomber',
+  'Fractal Brite Bomber',
 ]);
 
 const FISHIES_OUTFIT_NAMES = new Set([
@@ -645,6 +651,7 @@ const KITTIES_OUTFIT_NAMES = new Set([
   'Renegade Lynx',
   'Trailblazer Lynx',
   'Void Walker Lynx',
+  'Metalhead Meow Skulls',
 ]);
 
 const TEAM_LEADERS_OUTFIT_NAMES = new Set([
@@ -700,6 +707,7 @@ const KNIGHTS_OUTFIT_NAMES = new Set([
   'Omega',
   'Danger Zone',
   'Gildhart',
+  'Ultima King',
 ]);
 
 const SPACE_VOYAGERS_OUTFIT_NAMES = new Set([
@@ -816,6 +824,7 @@ const THE_SEVEN_OUTFIT_NAMES = new Set([
   'The Paradigm',
   'The Origin',
   'The Scientist',
+  'The Prophecy',
 ]);
 
 const FOX_CLAN_OUTFIT_NAMES = new Set([
@@ -832,6 +841,7 @@ const FOX_CLAN_OUTFIT_NAMES = new Set([
   'Snow Drift',
   'Driftwalker',
   'Riftreaver Drift',
+  'Kinetic Catalyst',
 ]);
 
 const MIDAS_FAMILY_OUTFIT_NAMES = new Set([
@@ -863,6 +873,7 @@ const MIDAS_FAMILY_OUTFIT_NAMES = new Set([
   'TNTina',
   'Dynamo TNTina',
   'Gear Specialist Maya',
+  'Fractal Midas',
 ]);
 
 const HIGH_STAKES_CLUB_OUTFIT_NAMES = new Set([
@@ -911,6 +922,10 @@ const ICON_OUTFIT_NAMES = new Set([
   'Triple Threat Moxie',
   'Triple Threat Reddysh',
   'Triple Threat Sommerset',
+]);
+
+const GAMING_LEGENDS_OUTFIT_NAMES = new Set([
+  'Walter Irons',
 ]);
 
 const DANCERS_AND_DJS_OUTFIT_NAMES = new Set([
@@ -1095,6 +1110,7 @@ const EASTER_VALENTINES_OUTFIT_NAMES = new Set([
   'Nitehare',
   'Stella',
   'Pastel',
+  'Bunnybone',
 ]);
 
 const EASTER_VALENTINES_SETS = new Set(['Bunny Power 5']);
@@ -1244,6 +1260,7 @@ const ASTRAL_ENTITIES_OUTFIT_NAMES = new Set([
   'Triarch Aurora',
   'Flow',
   'Galaxy Crossfade',
+  'Galaxon',
 ]);
 
 const ALIENS_OUTFIT_NAMES = new Set([
@@ -1527,6 +1544,7 @@ export function getCatalogueSeriesKey(outfit) {
   if (FOOD_OUTFIT_NAMES.has(outfit.name)) return 'food';
   if (TOYS_OUTFIT_NAMES.has(outfit.name)) return 'toys';
   if (ICON_OUTFIT_NAMES.has(outfit.name)) return 'icon';
+  if (GAMING_LEGENDS_OUTFIT_NAMES.has(outfit.name)) return 'gaming-legends';
   if (DANCERS_AND_DJS_OUTFIT_NAMES.has(outfit.name)) return 'dancers-and-djs';
   if (WINTERFEST_OUTFIT_NAMES.has(outfit.name)) return 'winterfest';
   if (FORTNIGHTMARES_OUTFIT_NAMES.has(outfit.name)) return 'fortnightmares';
