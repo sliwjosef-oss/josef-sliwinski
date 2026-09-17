@@ -461,6 +461,10 @@ const GENERAL_COLLABORATIONS_OUTFIT_NAMES = new Set([
   'Breakaway',
   'Triple-Double',
   'Shot-Caller',
+  'Rogue Winger',
+  'Star Striker',
+  'The Finisher',
+  'The Mastermind',
 ]);
 
 const NFL_OUTFIT_NAMES = new Set([

@@ -49,6 +49,10 @@ try {
     Odysseus: 'tv-legends',
     Agamemnon: 'tv-legends',
     'Kickoff Yeddy': 'other-collab-skins',
+    'Rogue Winger': 'general-collaborations',
+    'Star Striker': 'general-collaborations',
+    'The Finisher': 'general-collaborations',
+    'The Mastermind': 'general-collaborations',
   };
 
   let failures = 0;
