@@ -36,6 +36,7 @@ try {
     'Knuckles the Echidna': 'gaming-legends',
     'Dr. Eggman': 'gaming-legends',
     'Walter Irons': 'gaming-legends',
+    Soul: 'gaming-legends',
     'Metalhead Meow Skulls': 'kitties',
     'The Prophecy': 'the-seven',
     'Ultima King': 'knights',

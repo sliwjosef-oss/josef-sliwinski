@@ -929,6 +929,7 @@ const ICON_OUTFIT_NAMES = new Set([
 
 const GAMING_LEGENDS_OUTFIT_NAMES = new Set([
   'Walter Irons',
+  'Soul',
 ]);
 
 const DANCERS_AND_DJS_OUTFIT_NAMES = new Set([
