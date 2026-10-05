@@ -222,6 +222,10 @@ const ANIME_OUTFIT_NAMES = new Set([
   'Faye Valentine',
   'Kisuke Urahara',
   'Yoruichi Shihoin',
+  'Lucyna Kushinada',
+  'Asta',
+  'Noelle',
+  'Yuno',
 ]);
 
 const TV_OUTFIT_NAMES = new Set([
@@ -314,6 +318,8 @@ const TV_OUTFIT_NAMES = new Set([
   'John Rambo',
   'Odysseus',
   'Agamemnon',
+  'Freddy Krueger',
+  'Jack the Clown',
 ]);
 
 const OTHER_COLLAB_SKINS_OUTFIT_NAMES = new Set([
@@ -1063,6 +1069,12 @@ const FORTNIGHTMARES_OUTFIT_NAMES = new Set([
   'Plague',
   'Hay Man',
   'Spectral Devourer',
+  'Gold Punk',
+  'Jack-a-Nape',
+  'Dollie',
+  'Mineko',
+  'Poppy Pinns',
+  'Nitemare Hack',
 ]);
 
 const ROBOTS_OUTFIT_NAMES = new Set([
@@ -1380,6 +1392,7 @@ const READY_TO_HEIST_OUTFIT_NAMES = new Set([
   'Valentina',
   'Keisha Cross',
   'Kado Thorne',
+  'Elite Kado Thorne',
 ]);
 
 const IMAGINED_ORDER_OUTFIT_NAMES = new Set([
