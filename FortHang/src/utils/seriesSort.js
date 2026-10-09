@@ -666,6 +666,8 @@ const KITTIES_OUTFIT_NAMES = new Set([
   'Void Walker Lynx',
   'Metalhead Meow Skulls',
   'K1ttyW1ns',
+  'Catrin Glitch',
+  'Nyanja',
 ]);
 
 const TEAM_LEADERS_OUTFIT_NAMES = new Set([
@@ -722,6 +724,8 @@ const KNIGHTS_OUTFIT_NAMES = new Set([
   'Danger Zone',
   'Gildhart',
   'Ultima King',
+  'FNCS Teal Knight',
+  'Omegarok',
 ]);
 
 const SPACE_VOYAGERS_OUTFIT_NAMES = new Set([
@@ -823,6 +827,7 @@ const TOYS_OUTFIT_NAMES = new Set([
   'Dahlia',
   'Styx',
   'Guff',
+  'Wrixel',
 ]);
 
 const THE_SEVEN_OUTFIT_NAMES = new Set([
@@ -937,6 +942,9 @@ const ICON_OUTFIT_NAMES = new Set([
   'Triple Threat Moxie',
   'Triple Threat Reddysh',
   'Triple Threat Sommerset',
+  'Champion Clix',
+  'Champion Lachlan',
+  'Champion Loserfruit',
 ]);
 
 const GAMING_LEGENDS_OUTFIT_NAMES = new Set([
@@ -1075,6 +1083,9 @@ const FORTNIGHTMARES_OUTFIT_NAMES = new Set([
   'Mineko',
   'Poppy Pinns',
   'Nitemare Hack',
+  'Vivica Saint',
+  'The Inkquisitor',
+  'Skull Scout',
 ]);
 
 const ROBOTS_OUTFIT_NAMES = new Set([
@@ -1216,9 +1227,10 @@ const ANIMALS_OUTFIT_NAMES = new Set([
   'Pond Guardian Froggory',
 ]);
 
-const SPORTS_SETS = new Set(['Goalbound', 'Fearless Fairway', 'Let Them Know', 'Triple Threat']);
+const SPORTS_SETS = new Set(['Goalbound', 'Fearless Fairway', 'Let Them Know', 'Triple Threat', 'Dead Ball']);
 
 const SPORTS_OUTFIT_NAMES = new Set([
+  'Par Patroller',
   'Jumpshot',
   'Whiteout',
   'Birdie',
@@ -1393,6 +1405,8 @@ const READY_TO_HEIST_OUTFIT_NAMES = new Set([
   'Keisha Cross',
   'Kado Thorne',
   'Elite Kado Thorne',
+  'Stingray',
+  'Sorana',
 ]);
 
 const IMAGINED_ORDER_OUTFIT_NAMES = new Set([
@@ -1464,6 +1478,7 @@ const GOOFING_AROUND_OUTFIT_NAMES = new Set([
   'Ella Slurp',
   'Bathany',
   'Gnarly Charlie',
+  'Wonkee',
 ]);
 
 const GOOFING_AROUND_SETS = new Set(['Bedhead Brigade']);
