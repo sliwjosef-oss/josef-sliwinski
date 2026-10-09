@@ -37,7 +37,7 @@ function mapApiOutfit(item) {
     name: item.name,
     description: item.description ?? null,
     added: item.added ?? null,
-    remoteIcon: item.images?.smallIcon ?? item.images?.icon ?? null,
+    remoteIcon: item.images?.icon ?? item.images?.smallIcon ?? null,
     chapter,
     season,
     introductionText,
