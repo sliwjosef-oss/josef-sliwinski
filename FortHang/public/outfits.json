@@ -39117,7 +39117,7 @@
   },
   {
     "id": "Character_VagueHex",
-    "name": "Poppy Pinns",
+    "name": "Pippa Pinns",
     "description": "A poppet with perilous purpose.",
     "added": "2026-10-01T18:37:28Z",
     "chapter": "7",
@@ -39198,5 +39198,47 @@
     "series": null,
     "icon": "/skin-icons/3015.png",
     "number": 2800
+  },
+  {
+    "id": "Character_TerryBroke",
+    "name": "The Deer",
+    "description": "The Deer is hungry tonight...",
+    "added": "2026-10-08T13:00:54Z",
+    "chapter": "7",
+    "season": "4",
+    "introductionText": "Introduced in Chapter 7, Season 4.",
+    "setText": "Part of the 99 Nights in the Forest set.",
+    "setName": "99 Nights in the Forest",
+    "series": "Gaming Legends Series",
+    "icon": "/skin-icons/3016.png",
+    "number": 2801
+  },
+  {
+    "id": "Character_PongoQuell",
+    "name": "Chun-Li (Street Fighter 2026)",
+    "description": "The strongest woman in the world.",
+    "added": "2026-10-08T17:00:54Z",
+    "chapter": "7",
+    "season": "4",
+    "introductionText": "Introduced in Chapter 7, Season 4.",
+    "setText": "Part of the Street Fighter set.",
+    "setName": "Street Fighter",
+    "series": "Gaming Legends Series",
+    "icon": "/skin-icons/3017.png",
+    "number": 2802
+  },
+  {
+    "id": "Character_HadTummy",
+    "name": "Ryu (Street Fighter 2026)",
+    "description": "To live is to fight. To fight is to live.",
+    "added": "2026-10-08T17:00:54Z",
+    "chapter": "7",
+    "season": "4",
+    "introductionText": "Introduced in Chapter 7, Season 4.",
+    "setText": "Part of the Street Fighter set.",
+    "setName": "Street Fighter",
+    "series": "Gaming Legends Series",
+    "icon": "/skin-icons/3018.png",
+    "number": 2803
   }
 ]

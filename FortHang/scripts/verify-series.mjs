@@ -84,6 +84,9 @@ try {
     'Soulless Sweeper': 'sports',
     Stingray: 'ready-to-heist',
     Sorana: 'ready-to-heist',
+    'The Deer': 'gaming-legends',
+    'Chun-Li (Street Fighter 2026)': 'gaming-legends',
+    'Ryu (Street Fighter 2026)': 'gaming-legends',
   };
 
   let failures = 0;
