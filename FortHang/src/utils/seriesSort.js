@@ -53,6 +53,7 @@ export const SERIES_GROUPS = [
   { key: 'high-stakes-club', label: 'High Stakes Club' },
   { key: 'ruby-and-opal', label: 'Ruby & Opal' },
   { key: 'greek-gods', label: 'Greek Gods' },
+  { key: 'the-unseen', label: 'The Unseen' },
   { key: 'other', label: 'Other' },
 ];
 
@@ -824,8 +825,6 @@ const TOYS_OUTFIT_NAMES = new Set([
   'Splode',
   'Airhead',
   'Diamond Hanz',
-  'Dahlia',
-  'Styx',
   'Guff',
   'Wrixel',
 ]);
@@ -945,6 +944,18 @@ const ICON_OUTFIT_NAMES = new Set([
   'Champion Clix',
   'Champion Lachlan',
   'Champion Loserfruit',
+  'Champion Bugha',
+]);
+
+const THE_UNSEEN_OUTFIT_NAMES = new Set([
+  'Renzo the Destroyer',
+  'Renzo the Champion',
+  'Lorenzo',
+  'Highwire',
+  'Dahlia',
+  'Styx',
+  'Triarch Nox',
+  'Nightburn Highwire',
 ]);
 
 const GAMING_LEGENDS_OUTFIT_NAMES = new Set([
@@ -1294,7 +1305,6 @@ const ASTRAL_ENTITIES_OUTFIT_NAMES = new Set([
   'Corascana',
   'Mystica',
   'Cosmic Infinity',
-  'Triarch Nox',
   'Triarch Aurora',
   'Flow',
   'Galaxy Crossfade',
@@ -1618,6 +1628,7 @@ export function getCatalogueSeriesKey(outfit) {
   if (HIGH_STAKES_CLUB_OUTFIT_NAMES.has(outfit.name)) return 'high-stakes-club';
   if (RUBY_AND_OPAL_OUTFIT_NAMES.has(outfit.name)) return 'ruby-and-opal';
   if (GREEK_GODS_OUTFIT_NAMES.has(outfit.name)) return 'greek-gods';
+  if (THE_UNSEEN_OUTFIT_NAMES.has(outfit.name)) return 'the-unseen';
 
   const raw = String(outfit.series ?? '').trim().toLowerCase();
   if (!raw) return 'other';
