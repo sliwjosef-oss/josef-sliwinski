@@ -648,7 +648,6 @@ const RAVENS_OUTFIT_NAMES = new Set([
   'Graven',
   'Storm-Wild Raven',
   'Sir Raven',
-  'Raven Team Syd',
   'Ravage',
   'Bone Ravage',
 ]);
@@ -704,6 +703,7 @@ const TEAM_LEADERS_OUTFIT_NAMES = new Set([
   'Curdle Scream Leader',
   'Mecha Strike Commander',
   'Syd',
+  'Raven Team Syd',
 ]);
 
 const KNIGHTS_OUTFIT_NAMES = new Set([
@@ -849,6 +849,7 @@ const WILD_FARMERS_OUTFIT_NAMES = new Set([
   'Wrangler',
   'Rio Grande',
   'Dreamflower',
+  'Safari',
 ]);
 
 const THE_SEVEN_OUTFIT_NAMES = new Set([
@@ -1094,6 +1095,7 @@ const WINTERFEST_OUTFIT_NAMES = new Set([
   'Frost Squad',
   'Jolly Jammer',
   'Snow Patroller',
+  'Gala Glimmer',
 ]);
 
 const FORTNIGHTMARES_OUTFIT_NAMES = new Set([
@@ -1441,14 +1443,9 @@ const NO_SWEAT_SUMMER_OUTFIT_NAMES = new Set([
   'Laguna',
   'Sun Strider',
   'Sun Tan Specialist',
-  'Chomp Sr.',
-  'Comfy Chomps',
-  'Cozy Chomps',
   'Surf Witch',
   'Summer Fable',
   'Tropical Punch Zoey',
-  'Reef Ranger',
-  'Trench Trawler',
   'King Krab',
   'Medley',
   'Riptide Raz',
@@ -1473,6 +1470,12 @@ const IN_THE_OCEAN_OUTFIT_NAMES = new Set([
   'Deep Sea Dominator',
   'Bull Shark',
   'Surf Strider',
+  'Cepha',
+  'Trench Trawler',
+  'Chomp Sr.',
+  'Comfy Chomps',
+  'Reef Ranger',
+  'Cozy Chomps',
 ]);
 
 const FORTNITE_TO_THE_FUTURE_OUTFIT_NAMES = new Set([
