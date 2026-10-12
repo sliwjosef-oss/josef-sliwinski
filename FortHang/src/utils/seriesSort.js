@@ -56,6 +56,7 @@ export const SERIES_GROUPS = [
   { key: 'ruby-and-opal', label: 'Ruby & Opal' },
   { key: 'greek-gods', label: 'Norse & Greek Gods' },
   { key: 'the-unseen', label: 'The Unseen' },
+  { key: 'save-the-world', label: 'Save the World' },
   { key: 'other', label: 'Other' },
 ];
 
@@ -966,6 +967,21 @@ const THE_UNSEEN_OUTFIT_NAMES = new Set([
   'Nightburn Highwire',
 ]);
 
+const SAVE_THE_WORLD_OUTFIT_NAMES = new Set([
+  'Endless Ned',
+  'Scrapper Kyle',
+  'Penny',
+  'Lars',
+  'Clip',
+  'Jess',
+  'Sarah',
+  'Dr. VinderBot',
+  'Lok-Bot',
+  'Robo-Ray',
+  'Wukong',
+  'Machinist Mina',
+]);
+
 const GAMING_LEGENDS_OUTFIT_NAMES = new Set([
   'Walter Irons',
   'Soul',
@@ -1119,12 +1135,10 @@ const ROBOTS_OUTFIT_NAMES = new Set([
   'Eon',
   'Bryce 3000',
   'Zyg',
-  'Lok-Bot',
   'CRZ-8',
   'Robo-Kevin',
   'Mecha-Pop',
   'BattleBus',
-  'Dr. VinderBot',
   'Beastmode',
   'Iconica Prime',
   'Copper Wasp',
@@ -1135,7 +1149,6 @@ const ROBOTS_OUTFIT_NAMES = new Set([
   'T0M8T0HE4D',
   'Reboot Man',
   'Renegade Runner',
-  'Robo-Ray',
   'FNCS Renegade',
   'Mortuus X',
   'Signalbreaker',
@@ -1206,7 +1219,6 @@ const ANIMALS_OUTFIT_NAMES = new Set([
   'Fennix',
   'Doggo',
   'Hybrid',
-  'Wukong',
   'Polar Patroller',
   'Axo',
   'Bryne',
@@ -1664,6 +1676,7 @@ export function getCatalogueSeriesKey(outfit) {
   if (RUBY_AND_OPAL_OUTFIT_NAMES.has(outfit.name)) return 'ruby-and-opal';
   if (GREEK_GODS_OUTFIT_NAMES.has(outfit.name)) return 'greek-gods';
   if (THE_UNSEEN_OUTFIT_NAMES.has(outfit.name)) return 'the-unseen';
+  if (SAVE_THE_WORLD_OUTFIT_NAMES.has(outfit.name)) return 'save-the-world';
 
   const raw = String(outfit.series ?? '').trim().toLowerCase();
   if (!raw) return 'other';
