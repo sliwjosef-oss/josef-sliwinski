@@ -31,7 +31,7 @@ export function hasValidSeason(outfit) {
 }
 
 function isDuplicateVariant(id) {
-  return /_NPC|_LOD|CINE|ForSwitch|TBD_Athena/i.test(id);
+  return /_NPC|_LOD(?![A-Za-z])|CINE|ForSwitch|TBD_Athena/i.test(id);
 }
 
 function dedupeByName(outfits) {
