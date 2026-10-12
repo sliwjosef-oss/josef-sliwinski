@@ -850,6 +850,7 @@ const WILD_FARMERS_OUTFIT_NAMES = new Set([
   'Rio Grande',
   'Dreamflower',
   'Safari',
+  'Far Out Man',
 ]);
 
 const THE_SEVEN_OUTFIT_NAMES = new Set([
@@ -1256,7 +1257,6 @@ const ANIMALS_OUTFIT_NAMES = new Set([
   'Hybrid',
   'Polar Patroller',
   'Axo',
-  'Bryne',
   'Azuki',
   'Volpez',
   'Drakon Steel Hybrid',
@@ -1476,6 +1476,7 @@ const IN_THE_OCEAN_OUTFIT_NAMES = new Set([
   'Comfy Chomps',
   'Reef Ranger',
   'Cozy Chomps',
+  'Bryne',
 ]);
 
 const FORTNITE_TO_THE_FUTURE_OUTFIT_NAMES = new Set([
@@ -1521,6 +1522,8 @@ const READY_TO_HEIST_OUTFIT_NAMES = new Set([
   'Dylan',
   'Wolfe',
   'Doublecross',
+  'The Reaper',
+  'Grace Crowne',
 ]);
 
 const IMAGINED_ORDER_OUTFIT_NAMES = new Set([
