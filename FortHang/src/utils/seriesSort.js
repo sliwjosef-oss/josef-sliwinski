@@ -26,6 +26,7 @@ export const SERIES_GROUPS = [
   { key: 'food', label: 'Food' },
   { key: 'toys', label: 'Toys' },
   { key: 'billiard-warriors', label: 'Billiard Warriors' },
+  { key: 'wild-farmers', label: 'Wild Farmers' },
   { key: 'dancers-and-djs', label: "Dancers and DJ's" },
   { key: 'winterfest', label: 'Winterfest' },
   { key: 'fortnightmares', label: 'Fortnightmares' },
@@ -41,9 +42,12 @@ export const SERIES_GROUPS = [
   { key: 'students-and-sorcery', label: 'Students and Sorcery' },
   { key: 'superhero-originals', label: 'Superhero Originals' },
   { key: 'no-sweat-summer', label: 'No Sweat Summer' },
+  { key: 'in-the-ocean', label: 'In the Ocean' },
+  { key: 'fortnite-to-the-future', label: 'Fortnite to the Future' },
   { key: 'goofing-around', label: 'Goofing Around' },
   { key: 'ready-to-heist', label: 'Ready to Heist' },
   { key: 'imagined-order', label: 'Imagined Order' },
+  { key: 'the-unseen', label: 'The Unseen' },
   { key: 'aerosol-and-auras', label: 'Aerosol & Auras' },
   { key: 'the-underground', label: 'The Underground' },
   { key: 'the-society', label: 'The Society' },
@@ -55,7 +59,6 @@ export const SERIES_GROUPS = [
   { key: 'high-stakes-club', label: 'High Stakes Club' },
   { key: 'ruby-and-opal', label: 'Ruby & Opal' },
   { key: 'greek-gods', label: 'Norse & Greek Gods' },
-  { key: 'the-unseen', label: 'The Unseen' },
   { key: 'save-the-world', label: 'Save the World' },
   { key: 'other', label: 'Other' },
 ];
@@ -615,6 +618,7 @@ const BRITERS_AND_BOMBERS_OUTFIT_NAMES = new Set([
   'B.R.I.T.E.',
   'Dark Bomber',
   'Fractal Brite Bomber',
+  'Bash',
 ]);
 
 const FISHIES_OUTFIT_NAMES = new Set([
@@ -751,6 +755,7 @@ const SPACE_VOYAGERS_OUTFIT_NAMES = new Set([
   'Horizon',
   'Starwalker',
   'Starflare',
+  'Astro Assassin',
 ]);
 
 const FOOD_OUTFIT_NAMES = new Set([
@@ -834,6 +839,16 @@ const BILLIARD_WARRIORS_OUTFIT_NAMES = new Set([
   '1-Ball',
   '8-Ball vs Scratch',
   '10-Ball',
+]);
+
+const WILD_FARMERS_OUTFIT_NAMES = new Set([
+  'Hayseed',
+  'Sunflower',
+  'Rustler',
+  'Frontier',
+  'Wrangler',
+  'Rio Grande',
+  'Dreamflower',
 ]);
 
 const THE_SEVEN_OUTFIT_NAMES = new Set([
@@ -934,6 +949,9 @@ const GREEK_GODS_OUTFIT_NAMES = new Set([
   'Underworld Commander',
   'Ragnarok',
   'Omegarok',
+  'Valkyrie',
+  'Thor, the Terrible',
+  'Jaeger',
 ]);
 
 const RUBY_AND_OPAL_OUTFIT_NAMES = new Set([
@@ -982,6 +1000,8 @@ const SAVE_THE_WORLD_OUTFIT_NAMES = new Set([
   'Machinist Mina',
   'Robo-Kevin',
   'Mecha-Pop',
+  'Razor',
+  'Kurohomura',
 ]);
 
 const GAMING_LEGENDS_OUTFIT_NAMES = new Set([
@@ -1123,6 +1143,10 @@ const FORTNIGHTMARES_OUTFIT_NAMES = new Set([
   'Vivica Saint',
   'The Inkquisitor',
   'Skull Scout',
+  'Brainiac',
+  'Grimey',
+  'Deimos',
+  'Grave Feather',
 ]);
 
 const ROBOTS_OUTFIT_NAMES = new Set([
@@ -1153,6 +1177,12 @@ const ROBOTS_OUTFIT_NAMES = new Set([
   'Mortuus X',
   'Signalbreaker',
   'Sid Obsidian',
+  'Oppressor',
+  'Bone Wasp',
+  'Star Assassin',
+  'Mecha R3X',
+  'SH4RK',
+  'Powerhouse',
 ]);
 
 const THE_FINAL_RECKONING_OUTFIT_NAMES = new Set([
@@ -1197,6 +1227,9 @@ const EASTER_VALENTINES_OUTFIT_NAMES = new Set([
   'Pastel',
   'Bunnybone',
   "Bunnii O'Hare",
+  'Bunnymoon',
+  'Glumbunny',
+  'Darkheart',
 ]);
 
 const EASTER_VALENTINES_SETS = new Set(['Bunny Power 5']);
@@ -1274,6 +1307,7 @@ const ANIMALS_OUTFIT_NAMES = new Set([
   'Wolfie',
   'Kozaru',
   'Pond Guardian Froggory',
+  'Bigfoot',
 ]);
 
 const SPORTS_SETS = new Set(['Goalbound', 'Fearless Fairway', 'Let Them Know', 'Triple Threat', 'Dead Ball']);
@@ -1286,6 +1320,7 @@ const SPORTS_OUTFIT_NAMES = new Set([
   'Overtaker',
   'Fastball',
   'Slugger',
+  'Match Point',
 ]);
 
 const FIRE_AND_ICE_OUTFIT_NAMES = new Set([
@@ -1347,6 +1382,7 @@ const ASTRAL_ENTITIES_OUTFIT_NAMES = new Set([
   'Flow',
   'Galaxy Crossfade',
   'Galaxon',
+  'Dream',
 ]);
 
 const ALIENS_OUTFIT_NAMES = new Set([
@@ -1425,13 +1461,36 @@ const NO_SWEAT_SUMMER_OUTFIT_NAMES = new Set([
   'Malibu',
   'Surf Rider',
   'Wake Rider',
+  'Snorkel Ops',
+]);
+
+const IN_THE_OCEAN_OUTFIT_NAMES = new Set([
+  'Starfish',
+  'Buccaneer',
+  'Blackheart',
+  'Deep Sea Destroyer',
+  'Tenta',
+  'Deep Sea Dominator',
+  'Bull Shark',
+  'Surf Strider',
+]);
+
+const FORTNITE_TO_THE_FUTURE_OUTFIT_NAMES = new Set([
+  'Vendetta',
+  'Rox',
+  'Southpaw',
+  'Neo Future Rox',
+  'Mecha Strike Defender',
+  'Mecha Strike Navigator',
+  'Demi',
+  'Dragonheart Demi',
+  'Adira',
 ]);
 
 const READY_TO_HEIST_OUTFIT_NAMES = new Set([
   'Heist',
   'Rapscallion',
   'Scoundrel',
-  'Demi',
   'Goldie',
   'Hush',
   'Wild Card',
@@ -1458,6 +1517,7 @@ const READY_TO_HEIST_OUTFIT_NAMES = new Set([
   'Gold Blooded Ace',
   'Dylan',
   'Wolfe',
+  'Doublecross',
 ]);
 
 const IMAGINED_ORDER_OUTFIT_NAMES = new Set([
@@ -1533,6 +1593,11 @@ const GOOFING_AROUND_OUTFIT_NAMES = new Set([
   'Onesie',
   'Wonder Onesie',
   'PJ Pepperoni',
+  'Bronto',
+  'Rex',
+  'Dark Rex',
+  'Dark Tricera Ops',
+  'Tricera Ops',
 ]);
 
 const GOOFING_AROUND_SETS = new Set(['Bedhead Brigade']);
@@ -1588,6 +1653,7 @@ const DEMON_WARRIORS_OUTFIT_NAMES = new Set([
   'Malice',
   'Mal',
   'Raijū',
+  'Malcore',
 ]);
 
 function isGoofingAroundOutfit(outfit) {
@@ -1644,6 +1710,7 @@ export function getCatalogueSeriesKey(outfit) {
   if (FOOD_OUTFIT_NAMES.has(outfit.name)) return 'food';
   if (TOYS_OUTFIT_NAMES.has(outfit.name)) return 'toys';
   if (BILLIARD_WARRIORS_OUTFIT_NAMES.has(outfit.name)) return 'billiard-warriors';
+  if (WILD_FARMERS_OUTFIT_NAMES.has(outfit.name)) return 'wild-farmers';
   if (ICON_OUTFIT_NAMES.has(outfit.name)) return 'icon';
   if (GAMING_LEGENDS_OUTFIT_NAMES.has(outfit.name)) return 'gaming-legends';
   if (DANCERS_AND_DJS_OUTFIT_NAMES.has(outfit.name)) return 'dancers-and-djs';
@@ -1661,6 +1728,8 @@ export function getCatalogueSeriesKey(outfit) {
   if (isStudentsAndSorceryOutfit(outfit)) return 'students-and-sorcery';
   if (isSuperheroOriginalsOutfit(outfit)) return 'superhero-originals';
   if (NO_SWEAT_SUMMER_OUTFIT_NAMES.has(outfit.name)) return 'no-sweat-summer';
+  if (IN_THE_OCEAN_OUTFIT_NAMES.has(outfit.name)) return 'in-the-ocean';
+  if (FORTNITE_TO_THE_FUTURE_OUTFIT_NAMES.has(outfit.name)) return 'fortnite-to-the-future';
   if (isGoofingAroundOutfit(outfit)) return 'goofing-around';
   if (READY_TO_HEIST_OUTFIT_NAMES.has(outfit.name)) return 'ready-to-heist';
   if (IMAGINED_ORDER_OUTFIT_NAMES.has(outfit.name)) return 'imagined-order';
