@@ -1477,6 +1477,7 @@ const IN_THE_OCEAN_OUTFIT_NAMES = new Set([
   'Reef Ranger',
   'Cozy Chomps',
   'Bryne',
+  'Mave',
 ]);
 
 const FORTNITE_TO_THE_FUTURE_OUTFIT_NAMES = new Set([
