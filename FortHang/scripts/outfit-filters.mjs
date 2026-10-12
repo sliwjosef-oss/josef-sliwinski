@@ -15,6 +15,11 @@ export const INTRODUCTION_PATCHES = {
     season: '2',
     introductionText: 'Introduced in Chapter 4, Season 2.',
   },
+  Character_TideCompost: {
+    chapter: '7',
+    season: '3',
+    introductionText: 'Introduced in Chapter 7, Season 3.',
+  },
 };
 
 export function getIntroductionFields(item) {

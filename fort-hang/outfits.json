@@ -37842,6 +37842,20 @@
     "number": 2703
   },
   {
+    "id": "Character_TideCompost",
+    "name": "Beach Bod Batman",
+    "description": "Crime's all washed up.",
+    "added": "2026-07-16T08:00:00Z",
+    "chapter": "7",
+    "season": "3",
+    "introductionText": "Introduced in Chapter 7, Season 3.",
+    "setText": "Part of the Gotham City Summer set.",
+    "setName": "Gotham City Summer",
+    "series": "DC SERIES",
+    "icon": "/skin-icons/3020.png",
+    "number": 2704
+  },
+  {
     "id": "Character_CrimpPerfume",
     "name": "Chlorophyll Ivy",
     "description": "Blossom under the summer sun.",
@@ -37853,7 +37867,7 @@
     "setName": "Gotham City Summer",
     "series": "DC SERIES",
     "icon": "/skin-icons/2918.png",
-    "number": 2704
+    "number": 2705
   },
   {
     "id": "Character_HammerVice",
@@ -37867,7 +37881,7 @@
     "setName": "Gotham City Summer",
     "series": "DC SERIES",
     "icon": "/skin-icons/2919.png",
-    "number": 2705
+    "number": 2706
   },
   {
     "id": "Character_HumorShale_Teak",
@@ -37881,7 +37895,7 @@
     "setName": "Gotham City Summer",
     "series": "DC SERIES",
     "icon": "/skin-icons/2920.png",
-    "number": 2706
+    "number": 2707
   },
   {
     "id": "Character_SkyRuled",
@@ -37895,7 +37909,7 @@
     "setName": "Cosmic Titan",
     "series": null,
     "icon": "/skin-icons/2921.png",
-    "number": 2707
+    "number": 2708
   },
   {
     "id": "Character_CreamDecoy",
@@ -37909,7 +37923,7 @@
     "setName": "Chess Kingdom",
     "series": null,
     "icon": "/skin-icons/2922.png",
-    "number": 2708
+    "number": 2709
   },
   {
     "id": "Character_SnowyCoast",
@@ -37923,7 +37937,7 @@
     "setName": null,
     "series": null,
     "icon": "/skin-icons/2923.png",
-    "number": 2709
+    "number": 2710
   },
   {
     "id": "Character_GothClaws",
@@ -37937,7 +37951,7 @@
     "setName": "KATS Island Tour",
     "series": null,
     "icon": "/skin-icons/2924.png",
-    "number": 2710
+    "number": 2711
   },
   {
     "id": "Character_MatteDecoy",
@@ -37951,7 +37965,7 @@
     "setName": "Chess Kingdom",
     "series": null,
     "icon": "/skin-icons/2925.png",
-    "number": 2711
+    "number": 2712
   },
   {
     "id": "Character_HornetBerm",
@@ -37965,7 +37979,7 @@
     "setName": "The Odyssey",
     "series": null,
     "icon": "/skin-icons/2926.png",
-    "number": 2712
+    "number": 2713
   },
   {
     "id": "Character_BeaverStage",
@@ -37979,7 +37993,7 @@
     "setName": "The Odyssey",
     "series": null,
     "icon": "/skin-icons/2927.png",
-    "number": 2713
+    "number": 2714
   },
   {
     "id": "Character_CiderPetalFlax",
@@ -37993,7 +38007,7 @@
     "setName": "David Beckham",
     "series": "Icon Series",
     "icon": "/skin-icons/2928.png",
-    "number": 2714
+    "number": 2715
   },
   {
     "id": "Character_CiderPetalClover",
@@ -38007,7 +38021,7 @@
     "setName": "David Beckham",
     "series": "Icon Series",
     "icon": "/skin-icons/2929.png",
-    "number": 2715
+    "number": 2716
   },
   {
     "id": "Character_DangerIndex",
@@ -38021,7 +38035,7 @@
     "setName": "Ice Spice",
     "series": "Icon Series",
     "icon": "/skin-icons/2930.png",
-    "number": 2716
+    "number": 2717
   },
   {
     "id": "Character_AnvilAlarmRobin",
@@ -38035,7 +38049,7 @@
     "setName": "Lil Tecca",
     "series": "Icon Series",
     "icon": "/skin-icons/2931.png",
-    "number": 2717
+    "number": 2718
   },
   {
     "id": "Character_OceanPearlFNCS",
@@ -38049,7 +38063,7 @@
     "setName": "FNCS",
     "series": null,
     "icon": "/skin-icons/2932.png",
-    "number": 2718
+    "number": 2719
   },
   {
     "id": "Character_VerTet",
@@ -38063,7 +38077,7 @@
     "setName": "Umbra Ex Machina",
     "series": "CREW SERIES",
     "icon": "/skin-icons/2933.png",
-    "number": 2719
+    "number": 2720
   },
   {
     "id": "Character_EarPsych",
@@ -38077,7 +38091,7 @@
     "setName": "Chaos Operative",
     "series": null,
     "icon": "/skin-icons/2934.png",
-    "number": 2720
+    "number": 2721
   },
   {
     "id": "Character_CadetFrog_Slide",
@@ -38091,7 +38105,7 @@
     "setName": "Pond Protector",
     "series": null,
     "icon": "/skin-icons/2935.png",
-    "number": 2721
+    "number": 2722
   },
   {
     "id": "Character_CloakedFaith",
@@ -38105,7 +38119,7 @@
     "setName": null,
     "series": null,
     "icon": "/skin-icons/2936.png",
-    "number": 2722
+    "number": 2723
   },
   {
     "id": "Character_HerbalFist",
@@ -38119,7 +38133,7 @@
     "setName": "Brand New Day",
     "series": "MARVEL SERIES",
     "icon": "/skin-icons/2937.png",
-    "number": 2723
+    "number": 2724
   },
   {
     "id": "Character_ChromeSiren",
@@ -38133,7 +38147,7 @@
     "setName": "The New Seven",
     "series": null,
     "icon": "/skin-icons/2938.png",
-    "number": 2724
+    "number": 2725
   },
   {
     "id": "Character_FluidWedge",
@@ -38147,7 +38161,7 @@
     "setName": "Brand New Day",
     "series": "MARVEL SERIES",
     "icon": "/skin-icons/2939.png",
-    "number": 2725
+    "number": 2726
   },
   {
     "id": "Character_AnvilAlarmMoth",
@@ -38161,7 +38175,7 @@
     "setName": "Lil Tecca",
     "series": "Icon Series",
     "icon": "/skin-icons/2940.png",
-    "number": 2726
+    "number": 2727
   },
   {
     "id": "Character_TeddyPermit",
@@ -38175,7 +38189,7 @@
     "setName": "BLEACH: TYBW",
     "series": null,
     "icon": "/skin-icons/2941.png",
-    "number": 2727
+    "number": 2728
   },
   {
     "id": "Character_ShovelCrop",
@@ -38189,7 +38203,7 @@
     "setName": "BLEACH: TYBW",
     "series": null,
     "icon": "/skin-icons/2942.png",
-    "number": 2728
+    "number": 2729
   },
   {
     "id": "Character_SprintLuckSweat",
@@ -38203,7 +38217,7 @@
     "setName": "Addison Rae",
     "series": "Icon Series",
     "icon": "/skin-icons/2943.png",
-    "number": 2729
+    "number": 2730
   },
   {
     "id": "Character_SprintLuckSlaw",
@@ -38217,7 +38231,7 @@
     "setName": "Addison Rae",
     "series": "Icon Series",
     "icon": "/skin-icons/2944.png",
-    "number": 2730
+    "number": 2731
   },
   {
     "id": "Character_SubtleSilly",
@@ -38231,7 +38245,7 @@
     "setName": "Phantom Blade Zero",
     "series": null,
     "icon": "/skin-icons/2945.png",
-    "number": 2731
+    "number": 2732
   },
   {
     "id": "Character_GraphShook",
@@ -38245,7 +38259,7 @@
     "setName": "Arknights: Endfield",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/2946.png",
-    "number": 2732
+    "number": 2733
   },
   {
     "id": "Character_EmailStamp",
@@ -38259,7 +38273,7 @@
     "setName": null,
     "series": "Star Wars Series",
     "icon": "/skin-icons/2947.png",
-    "number": 2733
+    "number": 2734
   },
   {
     "id": "Character_OutletVerve",
@@ -38273,7 +38287,7 @@
     "setName": "Kernel Hearts",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/2948.png",
-    "number": 2734
+    "number": 2735
   },
   {
     "id": "Character_SouthBalk",
@@ -38287,7 +38301,7 @@
     "setName": "Sonic the Hedgehog",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/2949.png",
-    "number": 2735
+    "number": 2736
   },
   {
     "id": "Character_InterOrbit_Shock",
@@ -38301,7 +38315,7 @@
     "setName": "Imagined Hush",
     "series": null,
     "icon": "/skin-icons/2950.png",
-    "number": 2736
+    "number": 2737
   },
   {
     "id": "Character_MixedAlley",
@@ -38315,7 +38329,7 @@
     "setName": "Sonic the Hedgehog",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/2951.png",
-    "number": 2737
+    "number": 2738
   },
   {
     "id": "Character_ScribeSpider",
@@ -38329,7 +38343,7 @@
     "setName": "Sonic the Hedgehog",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/2952.png",
-    "number": 2738
+    "number": 2739
   },
   {
     "id": "Character_HeroicTale_Fair",
@@ -38343,7 +38357,7 @@
     "setName": "The Ancient Tale",
     "series": null,
     "icon": "/skin-icons/2953.png",
-    "number": 2739
+    "number": 2740
   },
   {
     "id": "Character_UniqueBeetle",
@@ -38357,7 +38371,7 @@
     "setName": "Singularity Approaching",
     "series": null,
     "icon": "/skin-icons/2954.png",
-    "number": 2740
+    "number": 2741
   },
   {
     "id": "Character_NoonDoctor",
@@ -38371,7 +38385,7 @@
     "setName": "CONTROL Resonant",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/2955.png",
-    "number": 2741
+    "number": 2742
   },
   {
     "id": "Character_SheerWill_Blot",
@@ -38385,7 +38399,7 @@
     "setName": "Reality's Reign",
     "series": null,
     "icon": "/skin-icons/2956.png",
-    "number": 2742
+    "number": 2743
   },
   {
     "id": "Character_SlickIntel_Swipe",
@@ -38399,7 +38413,7 @@
     "setName": "Stealth’s Crowne",
     "series": null,
     "icon": "/skin-icons/2957.png",
-    "number": 2743
+    "number": 2744
   },
   {
     "id": "Character_PebbleScout_Lean",
@@ -38413,7 +38427,7 @@
     "setName": "Go Kat!",
     "series": null,
     "icon": "/skin-icons/2958.png",
-    "number": 2744
+    "number": 2745
   },
   {
     "id": "Character_PhoenixKick_Gain",
@@ -38427,7 +38441,7 @@
     "setName": "Island Brawler XII",
     "series": null,
     "icon": "/skin-icons/2959.png",
-    "number": 2745
+    "number": 2746
   },
   {
     "id": "Character_SpecterDunk",
@@ -38441,7 +38455,7 @@
     "setName": "Endgame Wraith",
     "series": null,
     "icon": "/skin-icons/2960.png",
-    "number": 2746
+    "number": 2747
   },
   {
     "id": "Character_BrokenGravel_Brunt",
@@ -38455,7 +38469,7 @@
     "setName": "Valor Strike: Global Frontier",
     "series": null,
     "icon": "/skin-icons/2961.png",
-    "number": 2747
+    "number": 2748
   },
   {
     "id": "Character_TimeTrotter",
@@ -38469,7 +38483,7 @@
     "setName": "Prismatic Racer",
     "series": "CREW SERIES",
     "icon": "/skin-icons/2962.png",
-    "number": 2748
+    "number": 2749
   },
   {
     "id": "Character_SaltyBrim_Pin",
@@ -38483,7 +38497,7 @@
     "setName": "Sonic the Hedgehog",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/2963.png",
-    "number": 2749
+    "number": 2750
   },
   {
     "id": "Character_BlockStack",
@@ -38497,7 +38511,7 @@
     "setName": "Build-A-Ville",
     "series": null,
     "icon": "/skin-icons/2964.png",
-    "number": 2750
+    "number": 2751
   },
   {
     "id": "Character_SpruceBark",
@@ -38511,7 +38525,7 @@
     "setName": "Crash Bandicoot",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/2965.png",
-    "number": 2751
+    "number": 2752
   },
   {
     "id": "Character_FifthFully",
@@ -38525,7 +38539,7 @@
     "setName": "Mayhem",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/2966.png",
-    "number": 2752
+    "number": 2753
   },
   {
     "id": "Character_TutSoothe",
@@ -38539,7 +38553,7 @@
     "setName": "Bunny Mummy",
     "series": null,
     "icon": "/skin-icons/2967.png",
-    "number": 2753
+    "number": 2754
   },
   {
     "id": "Character_DyeBlast",
@@ -38553,7 +38567,7 @@
     "setName": "Fractal Heroes",
     "series": null,
     "icon": "/skin-icons/2968.png",
-    "number": 2754
+    "number": 2755
   },
   {
     "id": "Character_GlintRush",
@@ -38567,7 +38581,7 @@
     "setName": "Fractal Heroes",
     "series": null,
     "icon": "/skin-icons/2969.png",
-    "number": 2755
+    "number": 2756
   },
   {
     "id": "Character_ShimPilon",
@@ -38581,7 +38595,7 @@
     "setName": "Fox Clan",
     "series": null,
     "icon": "/skin-icons/2970.png",
-    "number": 2756
+    "number": 2757
   },
   {
     "id": "Character_FaintDoor",
@@ -38595,7 +38609,7 @@
     "setName": "Moonlit Hunter",
     "series": "CREW SERIES",
     "icon": "/skin-icons/2971.png",
-    "number": 2757
+    "number": 2758
   },
   {
     "id": "Character_RustedBlade",
@@ -38609,7 +38623,7 @@
     "setName": "Storm Scavenger",
     "series": null,
     "icon": "/skin-icons/2972.png",
-    "number": 2758
+    "number": 2759
   },
   {
     "id": "Character_NobleCrusher",
@@ -38623,7 +38637,7 @@
     "setName": "Fort Knights",
     "series": null,
     "icon": "/skin-icons/2973.png",
-    "number": 2759
+    "number": 2760
   },
   {
     "id": "Character_TikkaTaste",
@@ -38637,7 +38651,7 @@
     "setName": "John Carpenter's Toxic Commando",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/2974.png",
-    "number": 2760
+    "number": 2761
   },
   {
     "id": "Character_DuneBriefMerry",
@@ -38651,7 +38665,7 @@
     "setName": "Mega Man",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/2975.png",
-    "number": 2761
+    "number": 2762
   },
   {
     "id": "Character_DuneBriefShift",
@@ -38665,7 +38679,7 @@
     "setName": "Mega Man",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/2976.png",
-    "number": 2762
+    "number": 2763
   },
   {
     "id": "Character_TackleShow",
@@ -38679,7 +38693,7 @@
     "setName": "Mega Man",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/2977.png",
-    "number": 2763
+    "number": 2764
   },
   {
     "id": "Character_NoiseClueLurch",
@@ -38693,7 +38707,7 @@
     "setName": "Lil Wayne",
     "series": "Icon Series",
     "icon": "/skin-icons/2978.png",
-    "number": 2764
+    "number": 2765
   },
   {
     "id": "Character_NoiseClueGust",
@@ -38707,7 +38721,7 @@
     "setName": "Lil Wayne",
     "series": "Icon Series",
     "icon": "/skin-icons/2979.png",
-    "number": 2765
+    "number": 2766
   },
   {
     "id": "Character_BentCarpet",
@@ -38721,7 +38735,7 @@
     "setName": "Screamer",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/2980.png",
-    "number": 2766
+    "number": 2767
   },
   {
     "id": "Character_WaningCacti",
@@ -38735,7 +38749,7 @@
     "setName": "Kingdom Hearts",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/2981.png",
-    "number": 2767
+    "number": 2768
   },
   {
     "id": "Character_VealCadet",
@@ -38749,7 +38763,7 @@
     "setName": "Kingdom Hearts",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/2982.png",
-    "number": 2768
+    "number": 2769
   },
   {
     "id": "Character_FaunaPike",
@@ -38763,7 +38777,7 @@
     "setName": "Kingdom Hearts",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/2983.png",
-    "number": 2769
+    "number": 2770
   },
   {
     "id": "Character_SpireTend",
@@ -38777,7 +38791,7 @@
     "setName": "Kingdom Hearts",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/2984.png",
-    "number": 2770
+    "number": 2771
   },
   {
     "id": "Character_GulchTruce",
@@ -38791,7 +38805,7 @@
     "setName": "Dawning Apocalypse",
     "series": null,
     "icon": "/skin-icons/2985.png",
-    "number": 2771
+    "number": 2772
   },
   {
     "id": "Character_CyberFNCS",
@@ -38805,7 +38819,7 @@
     "setName": "FNCS",
     "series": null,
     "icon": "/skin-icons/2986.png",
-    "number": 2772
+    "number": 2773
   },
   {
     "id": "Character_FeelUnionMoo",
@@ -38819,7 +38833,7 @@
     "setName": "Ironmouse",
     "series": "Icon Series",
     "icon": "/skin-icons/2987.png",
-    "number": 2773
+    "number": 2774
   },
   {
     "id": "Character_LazarusUntold",
@@ -38833,7 +38847,7 @@
     "setName": "The Elites",
     "series": null,
     "icon": "/skin-icons/2988.png",
-    "number": 2774
+    "number": 2775
   },
   {
     "id": "Character_SharpCrave",
@@ -38847,7 +38861,7 @@
     "setName": "Dawning Apocalypse",
     "series": null,
     "icon": "/skin-icons/2989.png",
-    "number": 2775
+    "number": 2776
   },
   {
     "id": "Character_FeelUnionSki",
@@ -38861,7 +38875,7 @@
     "setName": "Ironmouse",
     "series": "Icon Series",
     "icon": "/skin-icons/2990.png",
-    "number": 2776
+    "number": 2777
   },
   {
     "id": "Character_FaithPerch",
@@ -38875,7 +38889,7 @@
     "setName": "Cyberpunk Edgerunners",
     "series": null,
     "icon": "/skin-icons/2991.png",
-    "number": 2777
+    "number": 2778
   },
   {
     "id": "Character_RetroBlade",
@@ -38889,7 +38903,7 @@
     "setName": null,
     "series": null,
     "icon": "/skin-icons/2992.png",
-    "number": 2778
+    "number": 2779
   },
   {
     "id": "Character_GrizzlyDemise",
@@ -38903,7 +38917,7 @@
     "setName": "Dawning Apocalypse",
     "series": null,
     "icon": "/skin-icons/2993.png",
-    "number": 2779
+    "number": 2780
   },
   {
     "id": "Character_RoutPinch",
@@ -38917,7 +38931,7 @@
     "setName": "Dawning Apocalypse",
     "series": null,
     "icon": "/skin-icons/2994.png",
-    "number": 2780
+    "number": 2781
   },
   {
     "id": "Character_MistTycoonHike",
@@ -38931,7 +38945,7 @@
     "setName": "Madison Beer",
     "series": "Icon Series",
     "icon": "/skin-icons/2995.png",
-    "number": 2781
+    "number": 2782
   },
   {
     "id": "Character_MistTycoonLife",
@@ -38945,7 +38959,7 @@
     "setName": "Madison Beer",
     "series": "Icon Series",
     "icon": "/skin-icons/2996.png",
-    "number": 2782
+    "number": 2783
   },
   {
     "id": "Character_CosmicTrellis",
@@ -38959,7 +38973,7 @@
     "setName": "Persona 5 Royal",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/2997.png",
-    "number": 2783
+    "number": 2784
   },
   {
     "id": "Character_DebitScent",
@@ -38973,7 +38987,7 @@
     "setName": "Persona 5 Royal",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/2998.png",
-    "number": 2784
+    "number": 2785
   },
   {
     "id": "Character_TearErrand",
@@ -38987,7 +39001,7 @@
     "setName": "Five Nights at Freddy's",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/2999.png",
-    "number": 2785
+    "number": 2786
   },
   {
     "id": "Character_SushiAware",
@@ -39001,7 +39015,7 @@
     "setName": "Five Nights at Freddy's",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/3000.png",
-    "number": 2786
+    "number": 2787
   },
   {
     "id": "Character_JigsawWaste",
@@ -39015,7 +39029,7 @@
     "setName": "Five Nights at Freddy's",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/3001.png",
-    "number": 2787
+    "number": 2788
   },
   {
     "id": "Character_GuardHence",
@@ -39029,7 +39043,7 @@
     "setName": "Five Nights at Freddy's",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/3002.png",
-    "number": 2788
+    "number": 2789
   },
   {
     "id": "Character_CollarRigor",
@@ -39043,7 +39057,7 @@
     "setName": "End of Abyss",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/3003.png",
-    "number": 2789
+    "number": 2790
   },
   {
     "id": "Character_QuaintToy",
@@ -39057,7 +39071,7 @@
     "setName": "Lost Dolls",
     "series": null,
     "icon": "/skin-icons/3004.png",
-    "number": 2790
+    "number": 2791
   },
   {
     "id": "Character_RubyWardenFNCS",
@@ -39071,7 +39085,7 @@
     "setName": "FNCS",
     "series": null,
     "icon": "/skin-icons/3005.png",
-    "number": 2791
+    "number": 2792
   },
   {
     "id": "Character_GoldPumpkin",
@@ -39085,7 +39099,7 @@
     "setName": "Carving Corps",
     "series": null,
     "icon": "/skin-icons/3006.png",
-    "number": 2792
+    "number": 2793
   },
   {
     "id": "Character_HiHat",
@@ -39099,7 +39113,7 @@
     "setName": "Clockwork Circus Chimp",
     "series": null,
     "icon": "/skin-icons/3007.png",
-    "number": 2793
+    "number": 2794
   },
   {
     "id": "Character_PaleMaiko",
@@ -39113,7 +39127,7 @@
     "setName": "Lost Dolls",
     "series": null,
     "icon": "/skin-icons/3008.png",
-    "number": 2794
+    "number": 2795
   },
   {
     "id": "Character_InfoInvader",
@@ -39127,7 +39141,7 @@
     "setName": null,
     "series": null,
     "icon": "/skin-icons/3009.png",
-    "number": 2795
+    "number": 2796
   },
   {
     "id": "Character_VagueHex",
@@ -39141,7 +39155,7 @@
     "setName": "Lost Dolls",
     "series": null,
     "icon": "/skin-icons/3010.png",
-    "number": 2796
+    "number": 2797
   },
   {
     "id": "Character_ApronChow",
@@ -39155,7 +39169,7 @@
     "setName": "Freddy Krueger",
     "series": null,
     "icon": "/skin-icons/3011.png",
-    "number": 2797
+    "number": 2798
   },
   {
     "id": "Character_MimicGlean",
@@ -39169,7 +39183,7 @@
     "setName": "Black Clover",
     "series": null,
     "icon": "/skin-icons/3012.png",
-    "number": 2798
+    "number": 2799
   },
   {
     "id": "Character_SlumpAfter",
@@ -39183,7 +39197,7 @@
     "setName": "Black Clover",
     "series": null,
     "icon": "/skin-icons/3013.png",
-    "number": 2799
+    "number": 2800
   },
   {
     "id": "Character_SwornSnout",
@@ -39197,7 +39211,7 @@
     "setName": "Black Clover",
     "series": null,
     "icon": "/skin-icons/3014.png",
-    "number": 2800
+    "number": 2801
   },
   {
     "id": "Character_WitchValve",
@@ -39211,7 +39225,7 @@
     "setName": "Halloween Horror Nights",
     "series": null,
     "icon": "/skin-icons/3015.png",
-    "number": 2801
+    "number": 2802
   },
   {
     "id": "Character_TerryBroke",
@@ -39225,7 +39239,7 @@
     "setName": "99 Nights in the Forest",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/3016.png",
-    "number": 2802
+    "number": 2803
   },
   {
     "id": "Character_PongoQuell",
@@ -39239,7 +39253,7 @@
     "setName": "Street Fighter",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/3017.png",
-    "number": 2803
+    "number": 2804
   },
   {
     "id": "Character_HadTummy",
@@ -39253,6 +39267,6 @@
     "setName": "Street Fighter",
     "series": "Gaming Legends Series",
     "icon": "/skin-icons/3018.png",
-    "number": 2804
+    "number": 2805
   }
 ]
