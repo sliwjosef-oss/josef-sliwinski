@@ -980,6 +980,8 @@ const SAVE_THE_WORLD_OUTFIT_NAMES = new Set([
   'Robo-Ray',
   'Wukong',
   'Machinist Mina',
+  'Robo-Kevin',
+  'Mecha-Pop',
 ]);
 
 const GAMING_LEGENDS_OUTFIT_NAMES = new Set([
@@ -1136,8 +1138,6 @@ const ROBOTS_OUTFIT_NAMES = new Set([
   'Bryce 3000',
   'Zyg',
   'CRZ-8',
-  'Robo-Kevin',
-  'Mecha-Pop',
   'BattleBus',
   'Beastmode',
   'Iconica Prime',
