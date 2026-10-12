@@ -99,16 +99,19 @@ function DeleteAllDataConfirm({ onConfirm, onCancel }) {
   );
 }
 
-function CatalogueSections({ sections, guessedSkinIds }) {
+function CatalogueSections({ sections, guessedSkinIds, showCounts = false }) {
   return (
     <div className="catalogue-season-sections">
       {sections.map((section) => {
         const sectionComplete = isSeasonComplete(section.outfits, guessedSkinIds);
+        const label = showCounts
+          ? `${section.label} (${countDiscoveredSkins(section.outfits, guessedSkinIds)}/${section.outfits.length})`
+          : section.label;
 
         return (
           <section key={section.key} className="catalogue-season-section">
             <h2 className={`catalogue-season-heading ${sectionComplete ? 'complete' : ''}`}>
-              <span className="catalogue-season-label">{section.label}</span>
+              <span className="catalogue-season-label">{label}</span>
               <span className="catalogue-season-underline" aria-hidden="true" />
             </h2>
             <CatalogueGrid outfits={section.outfits} guessedSkinIds={guessedSkinIds} />
@@ -204,7 +207,7 @@ export default function SkinCatalogue({ outfits, guessedSkinIds, onBack, onDelet
       )}
 
       {sortMode === SORT_MODES.SERIES && (
-        <CatalogueSections sections={seriesSections} guessedSkinIds={guessedSkinIds} />
+        <CatalogueSections sections={seriesSections} guessedSkinIds={guessedSkinIds} showCounts />
       )}
 
       <footer className="catalogue-footer">

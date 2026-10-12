@@ -20,6 +20,36 @@ export const INTRODUCTION_PATCHES = {
     season: '3',
     introductionText: 'Introduced in Chapter 7, Season 3.',
   },
+  Character_NoonDoctor: {
+    chapter: '7',
+    season: '4',
+    introductionText: 'Introduced in Chapter 7, Season 4.',
+  },
+  Character_RetroBlade: {
+    chapter: '7',
+    season: '4',
+    introductionText: 'Introduced in Chapter 7, Season 4.',
+  },
+  Character_GildedBrick: {
+    chapter: '6',
+    season: '5',
+    introductionText: 'Introduced in Chapter 6, Season 5.',
+  },
+  Character_WonderHill: {
+    chapter: '5',
+    season: '1',
+    introductionText: 'Introduced in Chapter 5, Season 1.',
+  },
+  Character_AzureBlade: {
+    chapter: '6',
+    season: '2',
+    introductionText: 'Introduced in Chapter 6, Season 2.',
+  },
+  Character_ModernMilitary_Crisp: {
+    chapter: '5',
+    season: '1',
+    introductionText: 'Introduced in Chapter 5, Season 1.',
+  },
 };
 
 export function getIntroductionFields(item) {
@@ -49,6 +79,7 @@ export const EXCLUDED_NAMES = new Set([
   'Marauder Elite',
   'null',
   'Random',
+  'Default',
 ]);
 
 export function hasValidSeason(season) {

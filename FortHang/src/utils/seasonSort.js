@@ -40,6 +40,7 @@ const SEASON_ORDER = [
   { chapter: '7', season: '1' },
   { chapter: '7', season: '2' },
   { chapter: '7', season: '3' },
+  { chapter: '7', season: '4' },
 ];
 
 const SEASON_ORDER_INDEX = new Map(

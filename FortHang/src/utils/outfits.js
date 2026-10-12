@@ -13,6 +13,7 @@ const EXCLUDED_NAMES = new Set([
   'Marauder Elite',
   'null',
   'Random',
+  'Default',
 ]);
 
 export function isPlayableOutfitName(name) {
