@@ -203,7 +203,7 @@ export default function SkinCatalogue({ outfits, guessedSkinIds, onBack, onDelet
       )}
 
       {sortMode === SORT_MODES.SEASON && (
-        <CatalogueSections sections={seasonSections} guessedSkinIds={guessedSkinIds} />
+        <CatalogueSections sections={seasonSections} guessedSkinIds={guessedSkinIds} showCounts />
       )}
 
       {sortMode === SORT_MODES.SERIES && (
