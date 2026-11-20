@@ -106,6 +106,6 @@ function getOutfitIconFileName(outfit) {
 
 export function getOutfitSilhouetteSrc(outfit) {
   const fileName = getOutfitIconFileName(outfit);
-  if (!fileName) return null;
-  return resolveAssetPath(`skin-icons-silhouette/${fileName}`);
+  if (fileName) return resolveAssetPath(`skin-icons-silhouette/${fileName}`);
+  return getOutfitIconSrc(outfit);
 }

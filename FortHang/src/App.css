@@ -148,7 +148,7 @@
 }
 
 .outfit-guess-silhouette {
-  filter: drop-shadow(0 0 8px rgba(147, 197, 253, 0.25));
+  filter: brightness(0) drop-shadow(0 0 8px rgba(147, 197, 253, 0.25));
 }
 
 .outfit-guess-image {
@@ -550,6 +550,10 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+.catalogue-silhouette {
+  filter: brightness(0);
 }
 
 .catalogue-placeholder {

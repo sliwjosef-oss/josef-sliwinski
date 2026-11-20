@@ -171,6 +171,9 @@ const CARTOON_OUTFIT_NAMES = new Set([
   'Samurai Jack',
   'Stan Smith',
   'Francine Smith',
+  'Alastor',
+  'Princess Charlie Morningstar',
+  'Vagatha',
 ]);
 
 const ANIME_OUTFIT_NAMES = new Set([
@@ -233,6 +236,14 @@ const ANIME_OUTFIT_NAMES = new Set([
   'Asta',
   'Noelle',
   'Yuno',
+  'Monkey D. Luffy',
+  'Nami',
+  'Usopp',
+  'Roronoa Zoro',
+  'Sanji',
+  'Buggy',
+  'Portgas D. Ace',
+  'Ms. All Sunday',
 ]);
 
 const TV_OUTFIT_NAMES = new Set([
@@ -327,6 +338,11 @@ const TV_OUTFIT_NAMES = new Set([
   'Agamemnon',
   'Freddy Krueger',
   'Jack the Clown',
+  'Lady Liberty',
+  'Nikki',
+  'Beetlejuice',
+  'HamiKuma',
+  'Dek',
 ]);
 
 const OTHER_COLLAB_SKINS_OUTFIT_NAMES = new Set([
@@ -478,6 +494,7 @@ const GENERAL_COLLABORATIONS_OUTFIT_NAMES = new Set([
   'Star Striker',
   'The Finisher',
   'The Mastermind',
+  'The Slender Man',
 ]);
 
 const NFL_OUTFIT_NAMES = new Set([
@@ -546,6 +563,7 @@ const ANIME_ORIGINALS_OUTFIT_NAMES = new Set([
   'Nezumi',
   'Ready Penny',
   'Ricochet Rox',
+  'Charlotte-Sensei',
 ]);
 
 const WWE_OUTFIT_NAMES = new Set([
@@ -598,6 +616,7 @@ const JONESEYS_OUTFIT_NAMES = new Set([
   'Guernsey',
   'Codename E.L.F.',
   'Lt. Evergreen',
+  'Buccaneer Brigand Jones',
 ]);
 
 const BRITERS_AND_BOMBERS_OUTFIT_NAMES = new Set([
@@ -677,6 +696,7 @@ const KITTIES_OUTFIT_NAMES = new Set([
   'K1ttyW1ns',
   'Catrin Glitch',
   'Nyanja',
+  'N.E.K.O.',
 ]);
 
 const TEAM_LEADERS_OUTFIT_NAMES = new Set([
@@ -704,6 +724,7 @@ const TEAM_LEADERS_OUTFIT_NAMES = new Set([
   'Mecha Strike Commander',
   'Syd',
   'Raven Team Syd',
+  'Kawaii Team Leader',
 ]);
 
 const KNIGHTS_OUTFIT_NAMES = new Set([
@@ -974,6 +995,9 @@ const ICON_OUTFIT_NAMES = new Set([
   'Champion Lachlan',
   'Champion Loserfruit',
   'Champion Bugha',
+  'Solid Gold Rugahand',
+  'Solid Gold Lil Uzi Vert',
+  'Solid Gold Miku',
 ]);
 
 const THE_UNSEEN_OUTFIT_NAMES = new Set([
@@ -1150,6 +1174,10 @@ const FORTNIGHTMARES_OUTFIT_NAMES = new Set([
   'Grimey',
   'Deimos',
   'Grave Feather',
+  'Miasma',
+  'Monarcha',
+  'Nurse Lenore',
+  'Sugar',
 ]);
 
 const ROBOTS_OUTFIT_NAMES = new Set([
@@ -1310,6 +1338,7 @@ const ANIMALS_OUTFIT_NAMES = new Set([
   'Kozaru',
   'Pond Guardian Froggory',
   'Bigfoot',
+  'Privateer Oscar',
 ]);
 
 const SPORTS_SETS = new Set(['Goalbound', 'Fearless Fairway', 'Let Them Know', 'Triple Threat', 'Dead Ball']);
@@ -1525,6 +1554,7 @@ const READY_TO_HEIST_OUTFIT_NAMES = new Set([
   'Doublecross',
   'The Reaper',
   'Grace Crowne',
+  'Captain X',
 ]);
 
 const IMAGINED_ORDER_OUTFIT_NAMES = new Set([
@@ -1578,6 +1608,7 @@ const THE_UNDERGROUND_OUTFIT_NAMES = new Set([
   'Blair',
   'Kavel',
   'Sonor',
+  'Treasure Hunter Hope',
 ]);
 
 const GOOFING_AROUND_OUTFIT_NAMES = new Set([
@@ -1661,6 +1692,7 @@ const DEMON_WARRIORS_OUTFIT_NAMES = new Set([
   'Mal',
   'Raijū',
   'Malcore',
+  'Class President Nemia',
 ]);
 
 function isGoofingAroundOutfit(outfit) {
