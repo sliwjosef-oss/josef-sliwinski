@@ -5,17 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FortSort</title>
     <link rel="icon" href="../fort-hang/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="style.css?v=3" />
+    <link rel="stylesheet" href="style.css?v=4" />
   </head>
   <body>
     <header class="top-bar">
       <h1>FortSort</h1>
+      <nav class="mode-tabs" aria-label="Mode">
+        <button id="mode-rank" class="mode-tab" data-mode="rank">Ranking</button>
+        <button id="mode-bracket" class="mode-tab" data-mode="bracket">Bracket</button>
+      </nav>
       <button id="restart-button" class="ghost-button" hidden>Start over</button>
     </header>
 
     <main>
       <section id="import-view" hidden>
         <h2>Paste your owned skins</h2>
+        <p id="mode-description" class="hint"></p>
         <p class="hint">One skin name per line. Numbering like "1." is ignored and duplicates are removed.</p>
         <textarea id="import-text" spellcheck="false" placeholder="Renegade Raider&#10;Peely&#10;Drift"></textarea>
         <div class="import-actions">
@@ -38,7 +43,8 @@
           <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
           <p id="progress-text"></p>
         </div>
-        <h2>Which skin do you like more?</h2>
+        <p id="match-label" class="match-label" hidden></p>
+        <h2 id="compare-title">Which skin do you like more?</h2>
         <div class="matchup">
           <button id="left-card" class="skin-card"></button>
           <span class="versus">vs</span>
@@ -46,6 +52,7 @@
         </div>
         <div class="compare-actions">
           <button id="undo-button" class="ghost-button">Undo</button>
+          <button id="jump-button" class="ghost-button" hidden>Show in bracket</button>
         </div>
         <p class="hint">Keyboard: Left / Right arrow to pick, Backspace to undo. Progress saves automatically.</p>
       </section>
@@ -61,10 +68,25 @@
         <ol id="results-list" class="results-list"></ol>
       </section>
 
+      <section id="champion-view" hidden>
+        <h2>Tournament champion</h2>
+        <div class="podium">
+          <div id="champion-card" class="skin-card podium-card champion"></div>
+          <div id="runner-up-card" class="skin-card podium-card"></div>
+        </div>
+        <div class="compare-actions">
+          <button id="champion-undo-button" class="ghost-button">Undo last pick</button>
+        </div>
+      </section>
+
       <p id="load-error" class="error" hidden></p>
       <p id="save-warning" class="error" hidden>This browser is blocking saving (private mode?), so progress will be lost when you leave.</p>
     </main>
 
-    <script type="module" src="app.js?v=3"></script>
+    <section id="bracket-view" class="bracket-view" hidden>
+      <div id="bracket-board" class="bracket-board"></div>
+    </section>
+
+    <script type="module" src="app.js?v=4"></script>
   </body>
 </html>
