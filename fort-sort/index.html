@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FortSort</title>
     <link rel="icon" href="../fort-hang/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="style.css?v=4" />
+    <link rel="stylesheet" href="style.css?v=6" />
   </head>
   <body>
     <header class="top-bar">
@@ -84,9 +84,15 @@
     </main>
 
     <section id="bracket-view" class="bracket-view" hidden>
+      <div id="bracket-nav" class="bracket-nav" hidden></div>
+      <div class="bracket-download-bar">
+        <button id="download-page-button" class="ghost-button">Download this page (PNG)</button>
+        <button id="download-progress-button" class="ghost-button">Download progress (.json)</button>
+        <span id="download-status" class="hint"></span>
+      </div>
       <div id="bracket-board" class="bracket-board"></div>
     </section>
 
-    <script type="module" src="app.js?v=4"></script>
+    <script type="module" src="app.js?v=6"></script>
   </body>
 </html>

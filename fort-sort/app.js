@@ -1,6 +1,6 @@
-import { estimateRemaining, looseName, normalizeName, parsePastedNames, replay, shuffle } from './sorter.js?v=4';
-import { BYE, createBracket, resolveBracket, roundLabel } from './bracket.js?v=4';
-import { MY_SKINS } from './preset.js?v=4';
+import { estimateRemaining, looseName, normalizeName, parsePastedNames, replay, shuffle } from './sorter.js?v=6';
+import { BYE, createBracket, resolveBracket, roundLabel } from './bracket.js?v=6';
+import { MY_SKINS } from './preset.js?v=6';
 
 const STORAGE_KEY = 'fort-sort-progress-v1';
 const BRACKET_KEY = 'fort-sort-bracket-v1';
@@ -17,7 +17,7 @@ const EXCLUDED_NAMES = new Set([
 const MODE_DESCRIPTIONS = {
   rank: 'Ranking mode: pick between two skins until every skin has a place from favorite to least favorite.',
   bracket:
-    'Bracket mode: skins play a double-elimination tournament. Losing once drops a skin to the losers bracket; losing twice knocks it out.',
+    'Bracket mode: skins play a double-elimination tournament. Losing once drops a skin to the losers bracket; losing twice knocks it out. Big brackets are split into Round 1 Pools, Round 2 Pools if needed, Top 64, and Top 8.',
 };
 
 const $ = (id) => document.getElementById(id);
@@ -31,6 +31,9 @@ let mode = 'rank';
 let progress = null;
 let tournament = null;
 let board = null;
+let pageIndex = 0;
+let followCurrentPage = true;
+let html2canvasPromise = null;
 
 function isDuplicateVariant(id) {
   return /_NPC|_LOD(?![A-Za-z])|CINE|ForSwitch|TBD_Athena/i.test(id);
@@ -107,17 +110,23 @@ function saveProgress() {
 function loadTournament() {
   const saved = readJson(BRACKET_KEY);
   if (!saved || !Array.isArray(saved.entrants) || !Array.isArray(saved.history)) return null;
-  return makeTournament(saved.entrants, saved.history);
+  // Old saves used cross-pool drop wiring (version 1); new brackets stay pool-local (version 2).
+  return makeTournament(saved.entrants, saved.history, saved.version ?? 1);
 }
 
-function makeTournament(entrants, history) {
-  return { entrants, history, bracket: createBracket(entrants) };
+function makeTournament(entrants, history, version = 2) {
+  return { entrants, history, version, bracket: createBracket(entrants, version) };
 }
 
 function saveTournament() {
   writeStorage(
     BRACKET_KEY,
-    JSON.stringify({ entrants: tournament.entrants, history: tournament.history, savedAt: Date.now() }),
+    JSON.stringify({
+      entrants: tournament.entrants,
+      history: tournament.history,
+      version: tournament.version ?? 2,
+      savedAt: Date.now(),
+    }),
   );
 }
 
@@ -199,6 +208,8 @@ function start() {
   } else {
     tournament = makeTournament(shuffle(pendingIds), []);
     board = null;
+    pageIndex = 0;
+    followCurrentPage = true;
     saveTournament();
   }
   $('resume-note').hidden = true;
@@ -214,6 +225,7 @@ function choose(firstWins) {
     if (!current) return;
     tournament.history.push([current.id, firstWins ? 0 : 1]);
     saveTournament();
+    followCurrentPage = true;
   }
   $('resume-note').hidden = true;
   render();
@@ -228,6 +240,7 @@ function undo() {
     if (!tournament?.history.length) return;
     tournament.history.pop();
     saveTournament();
+    followCurrentPage = true;
   }
   render();
 }
@@ -294,9 +307,77 @@ function renderResults(state) {
   };
 }
 
-function buildBoard(bracket) {
+function pageTitle(page) {
+  return page.pool ? `${page.phase} · ${page.pool}` : page.phase;
+}
+
+function goToPage(index, { follow = false } = {}) {
+  pageIndex = index;
+  followCurrentPage = follow;
+  board = null;
+  render();
+}
+
+function renderPageNav(bracket, currentMatchId) {
+  const nav = $('bracket-nav');
+  if (bracket.pages.length < 2) {
+    nav.hidden = true;
+    nav.replaceChildren();
+    return;
+  }
+  nav.hidden = false;
+
+  const phases = [];
+  for (const [index, page] of bracket.pages.entries()) {
+    const last = phases[phases.length - 1];
+    if (last?.phase === page.phase) last.pages.push({ index, page });
+    else phases.push({ phase: page.phase, pages: [{ index, page }] });
+  }
+
+  const phaseBar = document.createElement('div');
+  phaseBar.className = 'page-tabs';
+  const currentPhase = bracket.pages[pageIndex].phase;
+  for (const group of phases) {
+    const button = document.createElement('button');
+    button.className = 'page-tab';
+    button.classList.toggle('is-active', group.phase === currentPhase);
+    button.textContent = group.phase;
+    if (group.pages.some(({ index }) => bracket.pageOf.get(currentMatchId) === index)) {
+      button.classList.add('has-current');
+    }
+    button.addEventListener('click', () => goToPage(group.pages[0].index));
+    phaseBar.append(button);
+  }
+
+  const children = [phaseBar];
+  const activeGroup = phases.find((group) => group.phase === currentPhase);
+  if (activeGroup?.pages.length > 1) {
+    const poolBar = document.createElement('div');
+    poolBar.className = 'page-tabs pool-tabs';
+    for (const { index, page } of activeGroup.pages) {
+      const button = document.createElement('button');
+      button.className = 'page-tab';
+      button.classList.toggle('is-active', index === pageIndex);
+      if (bracket.pageOf.get(currentMatchId) === index) button.classList.add('has-current');
+      button.textContent = page.pool;
+      button.addEventListener('click', () => goToPage(index));
+      poolBar.append(button);
+    }
+    children.push(poolBar);
+  }
+
+  const title = Object.assign(document.createElement('p'), {
+    className: 'page-title',
+    textContent: pageTitle(bracket.pages[pageIndex]),
+  });
+  children.push(title);
+  nav.replaceChildren(...children);
+}
+
+function buildBoard(bracket, index) {
   const rows = new Map();
   const boxes = new Map();
+  const page = bracket.pages[index];
 
   const matchBox = (match) => {
     const box = document.createElement('div');
@@ -322,6 +403,7 @@ function buildBoard(bracket) {
     const columns = document.createElement('div');
     columns.className = 'bracket-rounds';
     for (const round of rounds) {
+      if (!round.length) continue;
       const column = document.createElement('div');
       column.className = 'bracket-round';
       const label = Object.assign(document.createElement('h4'), { textContent: roundLabel(bracket, round[0]) });
@@ -335,11 +417,10 @@ function buildBoard(bracket) {
     return wrapper;
   };
 
-  const sections = [section('Winners Bracket', bracket.winners)];
-  if (bracket.losers.length) sections.push(section('Losers Bracket', bracket.losers));
-  sections.push(section('Finals', [[bracket.grandFinal], [bracket.reset]]));
-  $('bracket-board').replaceChildren(...sections);
-  return { rows, boxes };
+  $('bracket-board').replaceChildren(
+    ...page.sections.map(({ title, rounds }) => section(title, rounds)),
+  );
+  return { rows, boxes, pageIndex: index };
 }
 
 function fillRow(row, participant) {
@@ -360,9 +441,10 @@ function fillRow(row, participant) {
 }
 
 function updateBoard(state) {
-  for (const [id, outcome] of state.outcomes) {
+  for (const [id, rows] of board.rows) {
+    const outcome = state.outcomes.get(id);
     const box = board.boxes.get(id);
-    const [first, second] = board.rows.get(id);
+    const [first, second] = rows;
     fillRow(first, outcome.participants[0]);
     fillRow(second, outcome.participants[1]);
     const decided = outcome.winnerSlot != null;
@@ -383,9 +465,99 @@ function realMatchesLeft(state) {
   return 2 * tournament.entrants.length - 2 - played + (resetPending ? 1 : 0);
 }
 
+function safeFileName(text) {
+  return text.replace(/[^\w.-]+/g, '-').replace(/^-|-$/g, '') || 'fortsort';
+}
+
+function downloadBlob(blob, filename) {
+  const link = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(blob),
+    download: filename,
+  });
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
+function loadHtml2Canvas() {
+  if (window.html2canvas) return Promise.resolve(window.html2canvas);
+  if (html2canvasPromise) return html2canvasPromise;
+  html2canvasPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+    script.onload = () => resolve(window.html2canvas);
+    script.onerror = () => reject(new Error('Could not load the image exporter'));
+    document.head.append(script);
+  });
+  return html2canvasPromise;
+}
+
+async function downloadBracketPage() {
+  if (!tournament) return;
+  const status = $('download-status');
+  const button = $('download-page-button');
+  button.disabled = true;
+  status.textContent = 'Preparing PNG…';
+  try {
+    const boardEl = $('bracket-board');
+    const previous = {
+      maxHeight: boardEl.style.maxHeight,
+      overflow: boardEl.style.overflow,
+      height: boardEl.style.height,
+      width: boardEl.style.width,
+    };
+    // Expand the scroll box so the full page is captured, not just the viewport.
+    boardEl.style.maxHeight = 'none';
+    boardEl.style.overflow = 'visible';
+    boardEl.style.height = `${boardEl.scrollHeight}px`;
+    boardEl.style.width = `${Math.max(boardEl.scrollWidth, boardEl.clientWidth)}px`;
+
+    const html2canvas = await loadHtml2Canvas();
+    const canvas = await html2canvas(boardEl, {
+      backgroundColor: '#0b1222',
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      width: boardEl.scrollWidth,
+      height: boardEl.scrollHeight,
+      windowWidth: boardEl.scrollWidth,
+      windowHeight: boardEl.scrollHeight,
+    });
+
+    Object.assign(boardEl.style, previous);
+
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    if (!blob) throw new Error('PNG export failed');
+    const title = pageTitle(tournament.bracket.pages[pageIndex]);
+    downloadBlob(blob, `fortsort-${safeFileName(title)}.png`);
+    status.textContent = 'Downloaded PNG.';
+  } catch (error) {
+    $('download-status').textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function downloadBracketProgress() {
+  if (!tournament) return;
+  const payload = {
+    type: 'fort-sort-bracket',
+    version: tournament.version ?? 2,
+    entrants: tournament.entrants,
+    history: tournament.history,
+    savedAt: Date.now(),
+  };
+  downloadBlob(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }), 'fortsort-bracket-progress.json');
+  $('download-status').textContent = 'Downloaded progress.';
+}
+
 function renderBracket() {
   const state = tournamentState();
-  if (!board) board = buildBoard(tournament.bracket);
+  const { bracket } = tournament;
+  const currentPage = state.current ? bracket.pageOf.get(state.current.id) : bracket.pages.length - 1;
+  if (pageIndex >= bracket.pages.length) pageIndex = currentPage;
+  else if (!state.done && followCurrentPage) pageIndex = currentPage;
+  if (!board || board.pageIndex !== pageIndex) board = buildBoard(bracket, pageIndex);
+  renderPageNav(bracket, state.current?.id);
   updateBoard(state);
 
   if (state.done) {
@@ -401,10 +573,15 @@ function renderBracket() {
   showView('compare', 'bracket');
   const match = state.current;
   const [first, second] = state.outcomes.get(match.id).participants;
+  const page = bracket.pages[currentPage];
   $('match-label').hidden = false;
-  $('match-label').textContent = roundLabel(tournament.bracket, match);
+  $('match-label').textContent = `${roundLabel(bracket, match)} · ${pageTitle(page)}`;
   $('jump-button').hidden = false;
-  setProgress(tournament.history.length, realMatchesLeft(state), `${tournament.entrants.length} skins in the bracket`);
+  setProgress(
+    tournament.history.length,
+    realMatchesLeft(state),
+    `${tournament.entrants.length} skins · ${pageTitle(page)}`,
+  );
   fillCard($('left-card'), outfitsById.get(first), () => choose(true));
   fillCard($('right-card'), outfitsById.get(second), () => choose(false));
   $('undo-button').disabled = tournament.history.length === 0;
@@ -463,8 +640,20 @@ function wireEvents() {
     tab.addEventListener('click', () => switchMode(tab.dataset.mode));
   }
   $('jump-button').addEventListener('click', () => {
-    board?.boxes.get(tournamentState().current?.id)?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+    const state = tournamentState();
+    const target = tournament.bracket.pageOf.get(state.current?.id) ?? pageIndex;
+    if (target !== pageIndex) {
+      goToPage(target, { follow: true });
+      requestAnimationFrame(() => {
+        board?.boxes.get(state.current?.id)?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+      });
+      return;
+    }
+    followCurrentPage = true;
+    board?.boxes.get(state.current?.id)?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
   });
+  $('download-page-button').addEventListener('click', downloadBracketPage);
+  $('download-progress-button').addEventListener('click', downloadBracketProgress);
   $('restart-button').addEventListener('click', () => {
     const what = mode === 'rank' ? 'ranking' : 'bracket';
     if (!confirm(`Start over? This erases all your ${what} picks.`)) return;
@@ -475,8 +664,11 @@ function wireEvents() {
       localStorage.removeItem(BRACKET_KEY);
       tournament = null;
       board = null;
+      pageIndex = 0;
+      followCurrentPage = true;
     }
     $('copy-status').textContent = '';
+    $('download-status').textContent = '';
     $('resume-note').hidden = true;
     render();
     if ($('import-text').value.trim()) checkPastedNames();

@@ -10,7 +10,9 @@ function standardSeedOrder(size) {
   return order;
 }
 
-export function createBracket(entrants) {
+// Version 1 brackets cross losers-bracket drops between halves, which ties regions together,
+// so only version 2 brackets can be played pool by pool.
+export function createBracket(entrants, version = 2) {
   let size = 2;
   while (size < entrants.length) size *= 2;
   const slots = standardSeedOrder(size).map((seed) => entrants[seed - 1] ?? BYE);
@@ -47,7 +49,7 @@ export function createBracket(entrants) {
     } else if (round % 2 === 0) {
       const dropRound = round / 2 + 1;
       const count = losers[round - 2].length;
-      const reverse = (round / 2) % 2 === 1;
+      const reverse = version === 1 && (round / 2) % 2 === 1;
       for (let index = 0; index < count; index += 1) {
         const dropIndex = reverse ? count - 1 - index : index;
         list.push({
@@ -80,9 +82,97 @@ export function createBracket(entrants) {
     if (losersRounds) order.push(...losers[2 * round - 4], ...losers[2 * round - 3]);
   }
   order.push(grandFinal, reset);
-  matches.push(...order);
 
-  return { size, winners, losers, grandFinal, reset, matches };
+  const bracket = { version, size, winners, losers, grandFinal, reset, matches };
+  bracket.pages = buildPages(bracket);
+  bracket.pageOf = new Map();
+  bracket.pages.forEach((page, pageIndex) => {
+    for (const section of page.sections) {
+      for (const round of section.rounds) for (const match of round) bracket.pageOf.set(match.id, pageIndex);
+    }
+  });
+
+  if (version === 1) matches.push(...order);
+  else matches.push(...order.map((match, i) => [bracket.pageOf.get(match.id), i, match]).sort((a, b) => a[0] - b[0] || a[1] - b[1]).map(([, , match]) => match));
+
+  return bracket;
+}
+
+const PHASE_CUTS = [512, 64, 8];
+const POOL_SIZE = 64;
+
+function poolName(index, round) {
+  let name = '';
+  let n = index;
+  do {
+    name = String.fromCharCode(65 + (n % 26)) + name;
+    n = Math.floor(n / 26) - 1;
+  } while (n >= 0);
+  return round === 1 ? `Pool ${name}` : `Pool ${name}1`;
+}
+
+// Splits the bracket at the points where Top 512, Top 64 and Top 8 remain
+// (half still on the winners side, half on the losers side).
+function buildPages(bracket) {
+  const { size, winners, losers } = bracket;
+  const rounds = winners.length;
+  const boundaries = [{ top: size, w: 0, l: 0 }];
+  for (const top of PHASE_CUTS) {
+    if (top >= size) continue;
+    const w = rounds - Math.log2(top / 2);
+    boundaries.push({ top, w, l: Math.max(0, 2 * w - 2) });
+  }
+  boundaries.push({ top: 0, w: rounds, l: losers.length });
+
+  const segments = [];
+  for (let i = 0; i < boundaries.length - 1; i += 1) {
+    const from = boundaries[i];
+    const to = boundaries[i + 1];
+    const isLast = i === boundaries.length - 2;
+    const isPools = to.top === 64 || to.top === 512;
+    segments.push({ from, to, isLast, isPools });
+  }
+
+  const poolSegments = segments.filter((segment) => segment.isPools);
+  const pages = [];
+  for (const segment of segments) {
+    const winnersRounds = winners.slice(segment.from.w, segment.to.w);
+    const losersRounds = losers.slice(segment.from.l, segment.to.l);
+    const finals = segment.isLast ? [[bracket.grandFinal], [bracket.reset]] : [];
+
+    if (!segment.isPools) {
+      pages.push({
+        phase: `Top ${segment.from.top}`,
+        pool: null,
+        sections: makeSections(winnersRounds, losersRounds, finals),
+      });
+      continue;
+    }
+
+    const poolRound = poolSegments.indexOf(segment) + 1;
+    const phase = `Round ${poolRound} Pools`;
+    const pools = segment.from.top / POOL_SIZE;
+    for (let pool = 0; pool < pools; pool += 1) {
+      const slice = (round) => {
+        const per = round.length / pools;
+        return round.slice(pool * per, (pool + 1) * per);
+      };
+      pages.push({
+        phase,
+        pool: poolName(pool, poolRound),
+        sections: makeSections(winnersRounds.map(slice), losersRounds.map(slice), []),
+      });
+    }
+  }
+  return pages;
+}
+
+function makeSections(winnersRounds, losersRounds, finals) {
+  const sections = [];
+  if (winnersRounds.length) sections.push({ title: 'Winners Side', rounds: winnersRounds });
+  if (losersRounds.length) sections.push({ title: 'Losers Side', rounds: losersRounds });
+  if (finals.length) sections.push({ title: 'Finals', rounds: finals });
+  return sections;
 }
 
 // results: Map or object of matchId -> 0 | 1 (index of the winning participant).
