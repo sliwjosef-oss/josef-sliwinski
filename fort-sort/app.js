@@ -1,4 +1,5 @@
 import { estimateRemaining, looseName, normalizeName, parsePastedNames, replay, shuffle } from './sorter.js';
+import { MY_SKINS } from './preset.js';
 
 const STORAGE_KEY = 'fort-sort-progress-v1';
 const EXCLUDED_NAMES = new Set(['default']);
@@ -194,6 +195,11 @@ function render() {
 
 function wireEvents() {
   $('check-button').addEventListener('click', checkPastedNames);
+  $('preset-button').textContent = `Load Josef's skins (${MY_SKINS.length})`;
+  $('preset-button').addEventListener('click', () => {
+    $('import-text').value = MY_SKINS.join('\n');
+    checkPastedNames();
+  });
   $('start-button').addEventListener('click', startSorting);
   $('undo-button').addEventListener('click', undo);
   $('results-undo-button').addEventListener('click', undo);
