@@ -91,11 +91,57 @@ export function createBracket(entrants, version = 2) {
       for (const round of section.rounds) for (const match of round) bracket.pageOf.set(match.id, pageIndex);
     }
   });
-
   if (version === 1) matches.push(...order);
   else matches.push(...order.map((match, i) => [bracket.pageOf.get(match.id), i, match]).sort((a, b) => a[0] - b[0] || a[1] - b[1]).map(([, , match]) => match));
+  buildFeeds(bracket);
 
   return bracket;
+}
+
+export function pageLabel(page) {
+  return page.pool ? `${page.phase} · ${page.pool}` : page.phase;
+}
+
+export function shortPageLabel(page) {
+  return page.pool ?? page.phase;
+}
+
+// Cross-page winner/loser feeds, like smash.gg pool → finals markers.
+function buildFeeds(bracket) {
+  const feeds = [];
+  const outbound = new Map();
+  const inbound = new Map();
+
+  for (const match of bracket.matches) {
+    match.sources.forEach((source, slot) => {
+      const fromMatchId = source.winner ?? source.loser;
+      if (!fromMatchId) return;
+      const fromPage = bracket.pageOf.get(fromMatchId);
+      const toPage = bracket.pageOf.get(match.id);
+      if (fromPage == null || toPage == null || fromPage === toPage) return;
+
+      const feed = {
+        fromMatchId,
+        result: source.winner ? 'winner' : 'loser',
+        toMatchId: match.id,
+        toSlot: slot,
+        fromPage,
+        toPage,
+        fromLabel: shortPageLabel(bracket.pages[fromPage]),
+        toLabel: shortPageLabel(bracket.pages[toPage]),
+      };
+      feeds.push(feed);
+
+      if (!outbound.has(fromMatchId)) outbound.set(fromMatchId, []);
+      outbound.get(fromMatchId).push(feed);
+
+      inbound.set(`${match.id}:${slot}`, feed);
+    });
+  }
+
+  bracket.feeds = feeds;
+  bracket.outbound = outbound;
+  bracket.inbound = inbound;
 }
 
 const PHASE_CUTS = [512, 64, 8];

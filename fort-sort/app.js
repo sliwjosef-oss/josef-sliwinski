@@ -1,6 +1,6 @@
-import { estimateRemaining, looseName, normalizeName, parsePastedNames, replay, shuffle } from './sorter.js?v=6';
-import { BYE, createBracket, resolveBracket, roundLabel } from './bracket.js?v=6';
-import { MY_SKINS } from './preset.js?v=6';
+import { estimateRemaining, looseName, normalizeName, parsePastedNames, replay, shuffle } from './sorter.js?v=7';
+import { BYE, createBracket, pageLabel, resolveBracket, roundLabel } from './bracket.js?v=7';
+import { MY_SKINS } from './preset.js?v=7';
 
 const STORAGE_KEY = 'fort-sort-progress-v1';
 const BRACKET_KEY = 'fort-sort-bracket-v1';
@@ -33,6 +33,7 @@ let tournament = null;
 let board = null;
 let pageIndex = 0;
 let followCurrentPage = true;
+let pendingJumpMatchId = null;
 let html2canvasPromise = null;
 
 function isDuplicateVariant(id) {
@@ -307,15 +308,44 @@ function renderResults(state) {
   };
 }
 
-function pageTitle(page) {
-  return page.pool ? `${page.phase} · ${page.pool}` : page.phase;
-}
-
 function goToPage(index, { follow = false } = {}) {
   pageIndex = index;
   followCurrentPage = follow;
   board = null;
   render();
+}
+
+function jumpToMatch(matchId) {
+  if (!tournament || !matchId) return;
+  followCurrentPage = false;
+  pendingJumpMatchId = matchId;
+  const target = tournament.bracket.pageOf.get(matchId);
+  if (target != null && target !== pageIndex) goToPage(target);
+  else render();
+}
+
+function finishPendingJump() {
+  const matchId = pendingJumpMatchId;
+  if (!matchId || !board) return;
+  pendingJumpMatchId = null;
+  const box = board.boxes.get(matchId);
+  if (!box) return;
+  box.classList.add('is-jump-target');
+  box.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+  window.setTimeout(() => box.classList.remove('is-jump-target'), 1600);
+}
+
+function feedButton(text, matchId, className = 'feed-link') {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = className;
+  button.textContent = text;
+  button.title = text;
+  button.addEventListener('click', (event) => {
+    event.stopPropagation();
+    jumpToMatch(matchId);
+  });
+  return button;
 }
 
 function renderPageNav(bracket, currentMatchId) {
@@ -368,10 +398,56 @@ function renderPageNav(bracket, currentMatchId) {
 
   const title = Object.assign(document.createElement('p'), {
     className: 'page-title',
-    textContent: pageTitle(bracket.pages[pageIndex]),
+    textContent: pageLabel(bracket.pages[pageIndex]),
   });
   children.push(title);
+
+  const connections = renderConnectionShortcuts(bracket, pageIndex);
+  if (connections) children.push(connections);
+
   nav.replaceChildren(...children);
+}
+
+function renderConnectionShortcuts(bracket, index) {
+  const outs = bracket.feeds.filter((feed) => feed.fromPage === index);
+  const ins = bracket.feeds.filter((feed) => feed.toPage === index);
+  if (!outs.length && !ins.length) return null;
+
+  const bar = document.createElement('div');
+  bar.className = 'connection-bar';
+
+  const addGroup = (label, items, pickMatch) => {
+    if (!items.length) return;
+    const group = document.createElement('div');
+    group.className = 'connection-group';
+    group.append(Object.assign(document.createElement('span'), { className: 'connection-label', textContent: label }));
+    for (const item of items) {
+      group.append(feedButton(item.label, pickMatch(item.feed), 'feed-link connection-chip'));
+    }
+    bar.append(group);
+  };
+
+  const uniqueBy = (feeds, keyFn, labelFn) => {
+    const seen = new Map();
+    for (const feed of feeds) {
+      const key = keyFn(feed);
+      if (!seen.has(key)) seen.set(key, { key, label: labelFn(feed), feed });
+    }
+    return [...seen.values()];
+  };
+
+  addGroup(
+    'Advances to',
+    uniqueBy(outs, (feed) => feed.toPage, (feed) => `→ ${feed.toLabel}`),
+    (feed) => feed.toMatchId,
+  );
+  addGroup(
+    'Feeds in from',
+    uniqueBy(ins, (feed) => feed.fromPage, (feed) => `← ${feed.fromLabel}`),
+    (feed) => feed.fromMatchId,
+  );
+
+  return bar;
 }
 
 function buildBoard(bracket, index) {
@@ -385,12 +461,28 @@ function buildBoard(bracket, index) {
     const matchRows = [0, 1].map((slot) => {
       const row = document.createElement('div');
       row.className = 'bracket-row';
+      const inbound = bracket.inbound.get(`${match.id}:${slot}`);
+      if (inbound) {
+        row.dataset.inboundFrom = inbound.fromMatchId;
+        row.dataset.inboundLabel = inbound.fromLabel;
+      }
       row.addEventListener('click', () => {
         if (box.classList.contains('is-current')) choose(slot === 0);
       });
       box.append(row);
       return row;
     });
+
+    const outbound = bracket.outbound.get(match.id) ?? [];
+    if (outbound.length) {
+      const links = document.createElement('div');
+      links.className = 'feed-out';
+      for (const feed of outbound) {
+        links.append(feedButton(`→ ${feed.toLabel}`, feed.toMatchId));
+      }
+      box.append(links);
+    }
+
     rows.set(match.id, matchRows);
     boxes.set(match.id, box);
     return box;
@@ -424,20 +516,37 @@ function buildBoard(bracket, index) {
 }
 
 function fillRow(row, participant) {
-  const key = participant ?? '__tbd__';
+  const inboundFrom = row.dataset.inboundFrom || '';
+  const inboundLabel = row.dataset.inboundLabel || '';
+  const key = `${participant ?? '__tbd__'}|${inboundFrom}`;
   if (row.dataset.participant === key) return;
   row.dataset.participant = key;
   row.classList.toggle('is-tbd', participant === null);
   row.classList.toggle('is-bye', participant === BYE);
+  row.classList.toggle('has-inbound', Boolean(inboundFrom));
 
-  if (participant === null || participant === BYE) {
-    row.replaceChildren(Object.assign(document.createElement('span'), { textContent: participant ? 'BYE' : 'TBD' }));
+  const children = [];
+  if (inboundFrom) {
+    children.push(feedButton(`← ${inboundLabel}`, inboundFrom, 'feed-link feed-in'));
+  }
+
+  if (participant === null) {
+    if (!inboundFrom) children.push(Object.assign(document.createElement('span'), { textContent: 'TBD' }));
+    row.replaceChildren(...children);
     return;
   }
+  if (participant === BYE) {
+    children.push(Object.assign(document.createElement('span'), { textContent: 'BYE' }));
+    row.replaceChildren(...children);
+    return;
+  }
+
   const outfit = outfitsById.get(participant);
   const name = Object.assign(document.createElement('span'), { textContent: outfit?.name ?? participant });
   row.title = outfit?.name ?? '';
-  row.replaceChildren(outfit ? renderIcon(outfit) : '', name);
+  if (outfit) children.push(renderIcon(outfit));
+  children.push(name);
+  row.replaceChildren(...children);
 }
 
 function updateBoard(state) {
@@ -527,7 +636,7 @@ async function downloadBracketPage() {
 
     const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
     if (!blob) throw new Error('PNG export failed');
-    const title = pageTitle(tournament.bracket.pages[pageIndex]);
+    const title = pageLabel(tournament.bracket.pages[pageIndex]);
     downloadBlob(blob, `fortsort-${safeFileName(title)}.png`);
     status.textContent = 'Downloaded PNG.';
   } catch (error) {
@@ -559,6 +668,7 @@ function renderBracket() {
   if (!board || board.pageIndex !== pageIndex) board = buildBoard(bracket, pageIndex);
   renderPageNav(bracket, state.current?.id);
   updateBoard(state);
+  finishPendingJump();
 
   if (state.done) {
     showView('champion', 'bracket');
@@ -575,12 +685,12 @@ function renderBracket() {
   const [first, second] = state.outcomes.get(match.id).participants;
   const page = bracket.pages[currentPage];
   $('match-label').hidden = false;
-  $('match-label').textContent = `${roundLabel(bracket, match)} · ${pageTitle(page)}`;
+  $('match-label').textContent = `${roundLabel(bracket, match)} · ${pageLabel(page)}`;
   $('jump-button').hidden = false;
   setProgress(
     tournament.history.length,
     realMatchesLeft(state),
-    `${tournament.entrants.length} skins · ${pageTitle(page)}`,
+    `${tournament.entrants.length} skins · ${pageLabel(page)}`,
   );
   fillCard($('left-card'), outfitsById.get(first), () => choose(true));
   fillCard($('right-card'), outfitsById.get(second), () => choose(false));
