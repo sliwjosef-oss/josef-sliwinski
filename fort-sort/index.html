@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FortSort</title>
     <link rel="icon" href="../fort-hang/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=3" />
   </head>
   <body>
     <header class="top-bar">
@@ -21,6 +21,7 @@
         <div class="import-actions">
           <button id="check-button" class="primary-button">Check names</button>
           <button id="preset-button" class="ghost-button">Load Josef's skins</button>
+          <button id="all-preset-button" class="ghost-button">Load every skin</button>
           <span id="import-summary"></span>
         </div>
         <div id="unmatched-box" hidden>
@@ -32,6 +33,7 @@
       </section>
 
       <section id="compare-view" hidden>
+        <p id="resume-note" class="resume-note" hidden></p>
         <div class="progress">
           <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
           <p id="progress-text"></p>
@@ -60,8 +62,9 @@
       </section>
 
       <p id="load-error" class="error" hidden></p>
+      <p id="save-warning" class="error" hidden>This browser is blocking saving (private mode?), so progress will be lost when you leave.</p>
     </main>
 
-    <script type="module" src="app.js"></script>
+    <script type="module" src="app.js?v=3"></script>
   </body>
 </html>

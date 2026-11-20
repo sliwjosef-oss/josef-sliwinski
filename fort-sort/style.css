@@ -47,6 +47,19 @@ main {
   color: #fca5a5;
 }
 
+.resume-note {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #14532d;
+  color: #bbf7d0;
+  text-align: center;
+}
+
+.primary-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .primary-button,
 .ghost-button {
   border-radius: 8px;

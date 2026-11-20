@@ -1,36 +1,56 @@
-import { estimateRemaining, looseName, normalizeName, parsePastedNames, replay, shuffle } from './sorter.js';
-import { MY_SKINS } from './preset.js';
+import { estimateRemaining, looseName, normalizeName, parsePastedNames, replay, shuffle } from './sorter.js?v=3';
+import { MY_SKINS } from './preset.js?v=3';
 
 const STORAGE_KEY = 'fort-sort-progress-v1';
-const EXCLUDED_NAMES = new Set(['default']);
+const DRAFT_KEY = 'fort-sort-draft-v1';
+const FORT_HANG_PATH = '../fort-hang';
+
+// Mirrors getGameOutfits in FortHang/src/utils/outfits.js so "every skin" matches the game.
+const EXCLUDED_NAMES = new Set([
+  'Recruit', 'TBD', 'Set_01_LA_SG', 'Set_01_OA', 'Set_01_OA_SG', 'Set_01_PA', 'Set_01_TA_SG',
+  'PERF OPTIMIZED', 'Marauder', 'Marauder Heavy', 'Doombot Agent', 'Marauder Elite', 'null', 'Random', 'Default',
+]);
 
 const $ = (id) => document.getElementById(id);
 
-let outfitsById = new Map();
-let exactNames = new Map();
-let looseNames = new Map();
+const outfitsById = new Map();
+const exactNames = new Map();
+const looseNames = new Map();
+let gameOutfits = [];
 let pendingIds = [];
 let progress = null;
 
-function loadProgress() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (saved && Array.isArray(saved.order) && Array.isArray(saved.decisions)) return saved;
-  } catch {
-    // Corrupt saves fall through to a fresh start.
-  }
-  return null;
+function isDuplicateVariant(id) {
+  return /_NPC|_LOD(?![A-Za-z])|CINE|ForSwitch|TBD_Athena/i.test(id);
 }
 
-function saveProgress() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+function isGameOutfit(outfit) {
+  const season = String(outfit.season ?? '').trim();
+  return (
+    outfit.name?.trim() &&
+    !EXCLUDED_NAMES.has(outfit.name) &&
+    season &&
+    season.toUpperCase() !== 'TBD' &&
+    !isDuplicateVariant(outfit.id)
+  );
+}
+
+function addedTime(outfit) {
+  return outfit.added ? Date.parse(outfit.added) : Number.MAX_SAFE_INTEGER;
 }
 
 function buildCatalogue(outfits) {
+  const byName = new Map();
   for (const outfit of outfits) {
-    const exact = normalizeName(outfit.name);
-    if (EXCLUDED_NAMES.has(exact)) continue;
+    if (!isGameOutfit(outfit)) continue;
+    const existing = byName.get(outfit.name);
+    if (!existing || addedTime(outfit) < addedTime(existing)) byName.set(outfit.name, outfit);
+  }
+  gameOutfits = [...byName.values()];
+
+  for (const outfit of gameOutfits) {
     outfitsById.set(outfit.id, outfit);
+    const exact = normalizeName(outfit.name);
     if (!exactNames.has(exact)) exactNames.set(exact, outfit);
     const loose = looseName(outfit.name);
     if (loose && !looseNames.has(loose)) looseNames.set(loose, outfit);
@@ -41,7 +61,32 @@ function findOutfit(name) {
   return exactNames.get(normalizeName(name)) ?? looseNames.get(looseName(name)) ?? null;
 }
 
-const FORT_HANG_PATH = '../fort-hang';
+function writeStorage(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    $('save-warning').hidden = true;
+  } catch {
+    $('save-warning').hidden = false;
+  }
+}
+
+function loadProgress() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (!saved || !Array.isArray(saved.order)) return null;
+    const decisions = Array.isArray(saved.decisions)
+      ? saved.decisions
+      : [...String(saved.decisions ?? '')].map((bit) => bit === '1');
+    return { order: saved.order, decisions };
+  } catch {
+    return null;
+  }
+}
+
+function saveProgress() {
+  const decisions = progress.decisions.map((win) => (win ? '1' : '0')).join('');
+  writeStorage(STORAGE_KEY, JSON.stringify({ order: progress.order, decisions, savedAt: Date.now() }));
+}
 
 function iconSrc(outfit) {
   const icon = outfit.icon || `/skin-icons/${outfit.number}.png`;
@@ -98,6 +143,12 @@ function checkPastedNames() {
   $('start-button').textContent = `Start sorting ${ids.length} skins`;
 }
 
+function loadPreset(names) {
+  $('import-text').value = names.join('\n');
+  writeStorage(DRAFT_KEY, $('import-text').value);
+  checkPastedNames();
+}
+
 function startSorting() {
   progress = { order: shuffle(pendingIds), decisions: [] };
   saveProgress();
@@ -107,6 +158,7 @@ function startSorting() {
 function choose(challengerWins) {
   progress.decisions.push(challengerWins);
   saveProgress();
+  $('resume-note').hidden = true;
   render();
 }
 
@@ -126,7 +178,6 @@ function fillCard(card, outfit, challengerWins) {
   meta.textContent = seasonLabel(outfit);
   card.replaceChildren(renderIcon(outfit), name, meta);
   card.onclick = () => choose(challengerWins);
-  card.dataset.challengerWins = String(challengerWins);
 }
 
 function renderCompare(state) {
@@ -136,7 +187,7 @@ function renderCompare(state) {
   const percent = (done / (done + remaining)) * 100;
   $('progress-fill').style.width = `${percent}%`;
   $('progress-text').textContent =
-    `${done} picks made · about ${remaining} left · ${state.index} of ${total} skins placed`;
+    `${done} picks made · about ${remaining} left · ${state.index} of ${total} skins placed · saved on this device`;
 
   const challenger = outfitsById.get(state.challenger);
   const opponent = outfitsById.get(state.opponent);
@@ -195,11 +246,9 @@ function render() {
 
 function wireEvents() {
   $('check-button').addEventListener('click', checkPastedNames);
-  $('preset-button').textContent = `Load Josef's skins (${MY_SKINS.length})`;
-  $('preset-button').addEventListener('click', () => {
-    $('import-text').value = MY_SKINS.join('\n');
-    checkPastedNames();
-  });
+  $('preset-button').addEventListener('click', () => loadPreset(MY_SKINS));
+  $('all-preset-button').addEventListener('click', () => loadPreset(gameOutfits.map((outfit) => outfit.name.trim())));
+  $('import-text').addEventListener('input', () => writeStorage(DRAFT_KEY, $('import-text').value));
   $('start-button').addEventListener('click', startSorting);
   $('undo-button').addEventListener('click', undo);
   $('results-undo-button').addEventListener('click', undo);
@@ -208,7 +257,9 @@ function wireEvents() {
     localStorage.removeItem(STORAGE_KEY);
     progress = null;
     $('copy-status').textContent = '';
+    $('resume-note').hidden = true;
     render();
+    if ($('import-text').value.trim()) checkPastedNames();
   });
 
   document.addEventListener('keydown', (event) => {
@@ -221,20 +272,48 @@ function wireEvents() {
   });
 }
 
+function setImportEnabled(enabled) {
+  for (const id of ['check-button', 'preset-button', 'all-preset-button']) $(id).disabled = !enabled;
+}
+
 async function init() {
   wireEvents();
+  setImportEnabled(false);
+  $('import-summary').textContent = 'Loading skins…';
+  showView('import');
+
   try {
     const response = await fetch(`${FORT_HANG_PATH}/outfits.json`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     buildCatalogue(await response.json());
   } catch (error) {
+    $('import-summary').textContent = '';
     $('load-error').hidden = false;
     $('load-error').textContent = `Could not load the skin catalogue: ${error.message}`;
     return;
   }
 
-  progress = loadProgress();
-  if (progress && !progress.order.every((id) => outfitsById.has(id))) progress = null;
+  setImportEnabled(true);
+  $('import-summary').textContent = '';
+  $('preset-button').textContent = `Load Josef's skins (${MY_SKINS.length})`;
+  $('all-preset-button').textContent = `Load every skin (${gameOutfits.length.toLocaleString()})`;
+  $('import-text').value = localStorage.getItem(DRAFT_KEY) ?? '';
+
+  const saved = loadProgress();
+  if (saved && saved.order.every((id) => outfitsById.has(id))) {
+    progress = saved;
+    if (saved.decisions.length) {
+      $('resume-note').hidden = false;
+      $('resume-note').textContent = `Welcome back! Picking up where you left off (${saved.decisions.length} picks saved).`;
+    }
+  } else if (saved) {
+    $('load-error').hidden = false;
+    $('load-error').textContent =
+      'Your saved sort uses skins that are no longer in the catalogue, so it could not be resumed. It is still saved until you start a new sort.';
+  }
+
   render();
+  if (!progress && $('import-text').value.trim()) checkPastedNames();
 }
 
 init();
