@@ -10,9 +10,11 @@ function standardSeedOrder(size) {
   return order;
 }
 
-// Version 1 brackets cross losers-bracket drops between halves, which ties regions together,
-// so only version 2 brackets can be played pool by pool.
-export function createBracket(entrants, version = 2) {
+// Version history:
+// 1 = global reverse drops (crosses pools; hard to play pool-by-pool)
+// 2 = pool-local drops, no reverse (can rematch the skin that just eliminated you)
+// 3 = pool-local reverse every other drop, and pool winners-final losers float cross-pool
+export function createBracket(entrants, version = 3) {
   let size = 2;
   while (size < entrants.length) size *= 2;
   const slots = standardSeedOrder(size).map((seed) => entrants[seed - 1] ?? BYE);
@@ -20,6 +22,7 @@ export function createBracket(entrants, version = 2) {
   const matches = [];
   const winnersId = (round, index) => `W${round}-${index}`;
   const losersId = (round, index) => `L${round}-${index}`;
+  const floatedDropRounds = version >= 3 ? floatedPoolDropRounds(size) : new Set();
 
   const winners = [];
   for (let round = 1; round <= winnersRounds; round += 1) {
@@ -49,9 +52,8 @@ export function createBracket(entrants, version = 2) {
     } else if (round % 2 === 0) {
       const dropRound = round / 2 + 1;
       const count = losers[round - 2].length;
-      const reverse = version === 1 && (round / 2) % 2 === 1;
       for (let index = 0; index < count; index += 1) {
-        const dropIndex = reverse ? count - 1 - index : index;
+        const dropIndex = chooseDropIndex({ version, round, index, count, size, floatedDropRounds });
         list.push({
           id: losersId(round, index),
           sources: [{ winner: losersId(round - 1, index) }, { loser: winnersId(dropRound, dropIndex) }],
@@ -157,16 +159,55 @@ function poolName(index, round) {
   return round === 1 ? `Pool ${name}` : `Pool ${name}1`;
 }
 
+function isPoolCut(top) {
+  return top === 64 || top === 512;
+}
+
+// Losers rounds that receive drops from the last winners round of a pool phase.
+function floatedPoolDropRounds(size) {
+  const rounds = Math.log2(size);
+  const floated = new Set();
+  for (const top of PHASE_CUTS) {
+    if (top >= size || !isPoolCut(top)) continue;
+    const winnersEnd = rounds - Math.log2(top / 2);
+    if (winnersEnd >= 2) floated.add(2 * (winnersEnd - 1));
+  }
+  return floated;
+}
+
+function poolLocalReverseIndex(index, count, size) {
+  const pools = size / POOL_SIZE;
+  if (pools <= 1 || count % pools !== 0) return count - 1 - index;
+  const perPool = count / pools;
+  const pool = Math.floor(index / perPool);
+  const local = index % perPool;
+  return pool * perPool + (perPool - 1 - local);
+}
+
+function chooseDropIndex({ version, round, index, count, size, floatedDropRounds }) {
+  const alternateReverse = (round / 2) % 2 === 1;
+  // Pool winners-final losers always cross pools so they meet another pool's losers side.
+  if (floatedDropRounds.has(round)) return count - 1 - index;
+  if (version === 1) return alternateReverse ? count - 1 - index : index;
+  if (version === 2) return index;
+  // version 3+: reverse every other drop, but keep the reverse inside each pool.
+  if (!alternateReverse) return index;
+  return poolLocalReverseIndex(index, count, size);
+}
+
 // Splits the bracket at the points where Top 512, Top 64 and Top 8 remain
 // (half still on the winners side, half on the losers side).
 function buildPages(bracket) {
-  const { size, winners, losers } = bracket;
+  const { size, winners, losers, version } = bracket;
   const rounds = winners.length;
   const boundaries = [{ top: size, w: 0, l: 0 }];
   for (const top of PHASE_CUTS) {
     if (top >= size) continue;
     const w = rounds - Math.log2(top / 2);
-    boundaries.push({ top, w, l: Math.max(0, 2 * w - 2) });
+    let l = Math.max(0, 2 * w - 2);
+    // Float the pool's final winners-bracket losers into the next phase's losers side.
+    if (version >= 3 && isPoolCut(top)) l = Math.max(0, l - 1);
+    boundaries.push({ top, w, l });
   }
   boundaries.push({ top: 0, w: rounds, l: losers.length });
 
@@ -175,7 +216,7 @@ function buildPages(bracket) {
     const from = boundaries[i];
     const to = boundaries[i + 1];
     const isLast = i === boundaries.length - 2;
-    const isPools = to.top === 64 || to.top === 512;
+    const isPools = isPoolCut(to.top);
     segments.push({ from, to, isLast, isPools });
   }
 

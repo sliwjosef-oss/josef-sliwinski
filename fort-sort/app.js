@@ -1,6 +1,6 @@
-import { estimateRemaining, looseName, normalizeName, parsePastedNames, replay, shuffle } from './sorter.js?v=7';
-import { BYE, createBracket, pageLabel, resolveBracket, roundLabel } from './bracket.js?v=7';
-import { MY_SKINS } from './preset.js?v=7';
+import { estimateRemaining, looseName, normalizeName, parsePastedNames, replay, shuffle } from './sorter.js?v=8';
+import { BYE, createBracket, pageLabel, resolveBracket, roundLabel } from './bracket.js?v=8';
+import { MY_SKINS } from './preset.js?v=8';
 
 const STORAGE_KEY = 'fort-sort-progress-v1';
 const BRACKET_KEY = 'fort-sort-bracket-v1';
@@ -111,11 +111,11 @@ function saveProgress() {
 function loadTournament() {
   const saved = readJson(BRACKET_KEY);
   if (!saved || !Array.isArray(saved.entrants) || !Array.isArray(saved.history)) return null;
-  // Old saves used cross-pool drop wiring (version 1); new brackets stay pool-local (version 2).
+  // Keep each save on the bracket wiring it was started with (v1/v2/v3 drop rules differ).
   return makeTournament(saved.entrants, saved.history, saved.version ?? 1);
 }
 
-function makeTournament(entrants, history, version = 2) {
+function makeTournament(entrants, history, version = 3) {
   return { entrants, history, version, bracket: createBracket(entrants, version) };
 }
 
@@ -125,7 +125,7 @@ function saveTournament() {
     JSON.stringify({
       entrants: tournament.entrants,
       history: tournament.history,
-      version: tournament.version ?? 2,
+      version: tournament.version ?? 3,
       savedAt: Date.now(),
     }),
   );
@@ -650,7 +650,7 @@ function downloadBracketProgress() {
   if (!tournament) return;
   const payload = {
     type: 'fort-sort-bracket',
-    version: tournament.version ?? 2,
+    version: tournament.version ?? 3,
     entrants: tournament.entrants,
     history: tournament.history,
     savedAt: Date.now(),
