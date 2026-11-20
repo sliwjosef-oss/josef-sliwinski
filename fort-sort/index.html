@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FortSort</title>
+    <link rel="icon" href="../fort-hang/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="top-bar">
+      <h1>FortSort</h1>
+      <button id="restart-button" class="ghost-button" hidden>Start over</button>
+    </header>
+
+    <main>
+      <section id="import-view" hidden>
+        <h2>Paste your owned skins</h2>
+        <p class="hint">One skin name per line. Numbering like "1." is ignored and duplicates are removed.</p>
+        <textarea id="import-text" spellcheck="false" placeholder="Renegade Raider&#10;Peely&#10;Drift"></textarea>
+        <div class="import-actions">
+          <button id="check-button" class="primary-button">Check names</button>
+          <span id="import-summary"></span>
+        </div>
+        <div id="unmatched-box" hidden>
+          <h3>Not found in the catalogue</h3>
+          <p class="hint">Fix these spellings in the box above and check again, or start anyway without them.</p>
+          <ul id="unmatched-list"></ul>
+        </div>
+        <button id="start-button" class="primary-button" hidden>Start sorting</button>
+      </section>
+
+      <section id="compare-view" hidden>
+        <div class="progress">
+          <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
+          <p id="progress-text"></p>
+        </div>
+        <h2>Which skin do you like more?</h2>
+        <div class="matchup">
+          <button id="left-card" class="skin-card"></button>
+          <span class="versus">vs</span>
+          <button id="right-card" class="skin-card"></button>
+        </div>
+        <div class="compare-actions">
+          <button id="undo-button" class="ghost-button">Undo</button>
+        </div>
+        <p class="hint">Keyboard: Left / Right arrow to pick, Backspace to undo. Progress saves automatically.</p>
+      </section>
+
+      <section id="results-view" hidden>
+        <h2>Your ranking</h2>
+        <div class="results-actions">
+          <button id="copy-button" class="primary-button">Copy list</button>
+          <button id="download-button" class="ghost-button">Download .txt</button>
+          <button id="results-undo-button" class="ghost-button">Undo last pick</button>
+          <span id="copy-status"></span>
+        </div>
+        <ol id="results-list" class="results-list"></ol>
+      </section>
+
+      <p id="load-error" class="error" hidden></p>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
