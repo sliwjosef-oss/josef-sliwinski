@@ -27,6 +27,9 @@ export const TOURNAMENT_WIN_POINTS = 30;
 /** Extra weebucks on every match/tournament payout for super bet skins. */
 export const SUPER_BET_ROUND_BONUS = 1;
 export const CATALOG_COMPLETE_BONUS = 10000;
+export const BASE_DAILY_BET_RUNS = 5;
+export const DAILY_BET_RUNS_TIER1 = 7;
+export const DAILY_BET_RUNS_TIER2 = 10;
 export const BASE_STAR_BETS = 1;
 export const STAR_BETS_TIER1 = 3;
 export const STAR_BETS_TIER2 = 5;
@@ -96,6 +99,21 @@ export const SHOP_UNLOCKS = {
     label: 'Unlock Select random',
     blurb: 'Auto-pick super bet and bet skins at random from available skins.',
   },
+  betRunsTier1: {
+    id: 'betRunsTier1',
+    cost: 1000,
+    runs: DAILY_BET_RUNS_TIER1,
+    label: `Daily betting runs → ${DAILY_BET_RUNS_TIER1}`,
+    blurb: `Increase daily betting runs from ${BASE_DAILY_BET_RUNS} to ${DAILY_BET_RUNS_TIER1}.`,
+  },
+  betRunsTier2: {
+    id: 'betRunsTier2',
+    cost: 2000,
+    runs: DAILY_BET_RUNS_TIER2,
+    label: `Daily betting runs → ${DAILY_BET_RUNS_TIER2}`,
+    blurb: `Increase daily betting runs from ${DAILY_BET_RUNS_TIER1} to ${DAILY_BET_RUNS_TIER2}.`,
+    requires: 'betRunsTier1',
+  },
 };
 
 function defaultUnlocks() {
@@ -109,6 +127,7 @@ function defaultUnlocks() {
     boostDicePlus: false,
     randomSelect: false,
     catalogCompleteBonusPaid: false,
+    dailyBetRuns: BASE_DAILY_BET_RUNS,
   };
 }
 
@@ -123,6 +142,10 @@ function normalizeUnlocks(unlocks) {
     unlocks.boostSlots === BOOST_BETS_TIER2 || unlocks.boostSlots === BOOST_BETS_TIER1
       ? unlocks.boostSlots
       : BASE_BOOST_BETS;
+  const dailyBetRuns =
+    unlocks.dailyBetRuns === DAILY_BET_RUNS_TIER2 || unlocks.dailyBetRuns === DAILY_BET_RUNS_TIER1
+      ? unlocks.dailyBetRuns
+      : BASE_DAILY_BET_RUNS;
   return {
     simulateAll: !!unlocks.simulateAll,
     top8Reward: unlocks.top8Reward === 10 || unlocks.top8Reward === 5 ? unlocks.top8Reward : 0,
@@ -133,6 +156,7 @@ function normalizeUnlocks(unlocks) {
     boostDicePlus: !!unlocks.boostDicePlus,
     randomSelect: !!unlocks.randomSelect,
     catalogCompleteBonusPaid: !!unlocks.catalogCompleteBonusPaid,
+    dailyBetRuns,
   };
 }
 
@@ -188,6 +212,7 @@ function read() {
         ? parsed.ownedSidekickIds.filter((id) => typeof id === 'string')
         : [],
       daily: normalizeDaily(parsed.daily),
+      dailyBetRuns: normalizeDailyBetRuns(parsed.dailyBetRuns),
       weeklyBets: normalizeWeekly(parsed.weeklyBets),
       unlocks: normalizeUnlocks(parsed.unlocks),
     };
@@ -206,6 +231,7 @@ function defaultEconomy() {
     points: 0,
     ownedSidekickIds: [],
     daily: { dayKey: guessDayKey(), used: 0, bonus: 0 },
+    dailyBetRuns: { dayKey: guessDayKey(), used: 0 },
     weeklyBets: { weekKey: cstWeekKey(), usedIds: [] },
     unlocks: defaultUnlocks(),
   };
@@ -215,6 +241,7 @@ function withFreshMeta(economy) {
   return {
     ...economy,
     daily: normalizeDaily(economy.daily),
+    dailyBetRuns: normalizeDailyBetRuns(economy.dailyBetRuns),
     weeklyBets: normalizeWeekly(economy.weeklyBets),
     unlocks: normalizeUnlocks(economy.unlocks),
   };
@@ -277,6 +304,13 @@ export function buyShopUnlock(unlockId, economy = loadEconomy()) {
   if (item.requires === 'boostSlotsTier1' && state.unlocks.boostSlots < BOOST_BETS_TIER1) {
     return { ok: false, reason: `Buy Bet slots → ${BOOST_BETS_TIER1} first.`, economy: state };
   }
+  if (item.requires === 'betRunsTier1' && state.unlocks.dailyBetRuns < DAILY_BET_RUNS_TIER1) {
+    return {
+      ok: false,
+      reason: `Buy Daily betting runs → ${DAILY_BET_RUNS_TIER1} first.`,
+      economy: state,
+    };
+  }
 
   const already =
     (unlockId === 'simulateAll' && state.unlocks.simulateAll) ||
@@ -290,7 +324,9 @@ export function buyShopUnlock(unlockId, economy = loadEconomy()) {
     (unlockId === 'starSlotsTier1' && state.unlocks.starSlots >= STAR_BETS_TIER1) ||
     (unlockId === 'starSlotsTier2' && state.unlocks.starSlots >= STAR_BETS_TIER2) ||
     (unlockId === 'boostSlotsTier1' && state.unlocks.boostSlots >= BOOST_BETS_TIER1) ||
-    (unlockId === 'boostSlotsTier2' && state.unlocks.boostSlots >= BOOST_BETS_TIER2);
+    (unlockId === 'boostSlotsTier2' && state.unlocks.boostSlots >= BOOST_BETS_TIER2) ||
+    (unlockId === 'betRunsTier1' && state.unlocks.dailyBetRuns >= DAILY_BET_RUNS_TIER1) ||
+    (unlockId === 'betRunsTier2' && state.unlocks.dailyBetRuns >= DAILY_BET_RUNS_TIER2);
 
   if (already) return { ok: false, reason: 'Already owned.', economy: state };
   if (state.points < item.cost) {
@@ -310,6 +346,8 @@ export function buyShopUnlock(unlockId, economy = loadEconomy()) {
   if (unlockId === 'starSlotsTier2') state.unlocks.starSlots = STAR_BETS_TIER2;
   if (unlockId === 'boostSlotsTier1') state.unlocks.boostSlots = BOOST_BETS_TIER1;
   if (unlockId === 'boostSlotsTier2') state.unlocks.boostSlots = BOOST_BETS_TIER2;
+  if (unlockId === 'betRunsTier1') state.unlocks.dailyBetRuns = DAILY_BET_RUNS_TIER1;
+  if (unlockId === 'betRunsTier2') state.unlocks.dailyBetRuns = DAILY_BET_RUNS_TIER2;
 
   return { ok: true, economy: write(state) };
 }
@@ -323,6 +361,17 @@ function normalizeDaily(daily) {
     dayKey,
     used: Math.max(0, Number(daily.used) || 0),
     bonus: Math.max(0, Number(daily.bonus) || 0),
+  };
+}
+
+function normalizeDailyBetRuns(dailyBetRuns) {
+  const dayKey = guessDayKey();
+  if (!dailyBetRuns || dailyBetRuns.dayKey !== dayKey) {
+    return { dayKey, used: 0 };
+  }
+  return {
+    dayKey,
+    used: Math.max(0, Number(dailyBetRuns.used) || 0),
   };
 }
 
@@ -445,8 +494,31 @@ export function cstWeekKey(date = new Date()) {
 export function loadEconomy() {
   const state = read();
   state.daily = normalizeDaily(state.daily);
+  state.dailyBetRuns = normalizeDailyBetRuns(state.dailyBetRuns);
   state.weeklyBets = normalizeWeekly(state.weeklyBets);
   return write(state);
+}
+
+export function getDailyBetRunLimit(economy = loadEconomy()) {
+  return normalizeUnlocks(economy.unlocks).dailyBetRuns;
+}
+
+export function getDailyBetRunsRemaining(economy = loadEconomy()) {
+  const state = withFreshMeta(economy);
+  return Math.max(0, getDailyBetRunLimit(state) - state.dailyBetRuns.used);
+}
+
+export function canStartBettingRun(economy = loadEconomy()) {
+  return getDailyBetRunsRemaining(economy) > 0;
+}
+
+export function spendBettingRun(economy = loadEconomy()) {
+  const state = withFreshMeta(economy);
+  if (state.dailyBetRuns.used >= getDailyBetRunLimit(state)) {
+    return { ok: false, reason: 'No betting runs left today.', economy: state };
+  }
+  state.dailyBetRuns = { ...state.dailyBetRuns, used: state.dailyBetRuns.used + 1 };
+  return { ok: true, economy: write(state) };
 }
 
 export function getDailyGuessLimit(economy = loadEconomy()) {
@@ -510,6 +582,8 @@ export function isShopUnlockOwned(unlockId, economy = loadEconomy()) {
   if (unlockId === 'starSlotsTier2') return unlocks.starSlots >= STAR_BETS_TIER2;
   if (unlockId === 'boostSlotsTier1') return unlocks.boostSlots >= BOOST_BETS_TIER1;
   if (unlockId === 'boostSlotsTier2') return unlocks.boostSlots >= BOOST_BETS_TIER2;
+  if (unlockId === 'betRunsTier1') return unlocks.dailyBetRuns >= DAILY_BET_RUNS_TIER1;
+  if (unlockId === 'betRunsTier2') return unlocks.dailyBetRuns >= DAILY_BET_RUNS_TIER2;
   return false;
 }
 
@@ -520,6 +594,7 @@ export function isShopUnlockAvailable(unlockId, economy = loadEconomy()) {
   if (unlockId === 'top64Tier2') return unlocks.top64Reward >= 3;
   if (unlockId === 'starSlotsTier2') return unlocks.starSlots >= STAR_BETS_TIER1;
   if (unlockId === 'boostSlotsTier2') return unlocks.boostSlots >= BOOST_BETS_TIER1;
+  if (unlockId === 'betRunsTier2') return unlocks.dailyBetRuns >= DAILY_BET_RUNS_TIER1;
   return true;
 }
 

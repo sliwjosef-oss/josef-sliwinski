@@ -42,8 +42,11 @@ import {
   SUPER_BET_ROUND_BONUS,
   TOURNAMENT_WIN_POINTS,
   addPoints,
+  canStartBettingRun,
   getBetWinPointsForPhase,
   getBoostBetBonusDice,
+  getDailyBetRunLimit,
+  getDailyBetRunsRemaining,
   getLockedBetIds,
   getMaxBoostBets,
   getMaxStarBets,
@@ -53,6 +56,7 @@ import {
   hasSimulateAllUnlock,
   lockBetSkins,
   nextMondayLabel,
+  spendBettingRun,
 } from '../utils/economy';
 import { getOutfitIconFallbackSrc, getOutfitIconSrc } from '../utils/outfits';
 import { isSkinGuessed } from '../utils/progress';
@@ -324,6 +328,8 @@ function SelectScreen({
   const maxStarBets = getMaxStarBets(economy);
   const maxBoostBets = getMaxBoostBets(economy);
   const canRandomSelect = hasRandomSelectUnlock(economy);
+  const betRunsRemaining = getDailyBetRunsRemaining(economy);
+  const betRunsLimit = getDailyBetRunLimit(economy);
 
   const catalogueSorted = useMemo(() => sortOutfitsByNumber(catalogue), [catalogue]);
   const visibleOutfits = useMemo(() => {
@@ -393,7 +399,7 @@ function SelectScreen({
 
   const canStart =
     mode === 'betting'
-      ? discovered.length >= 2 && betCount > 0
+      ? discovered.length >= 2 && betCount > 0 && betRunsRemaining > 0
       : selectedIds.length >= 2;
 
   const renderPick = (outfit) => {
@@ -514,9 +520,16 @@ function SelectScreen({
       {isBetting ? (
         <>
           <p className="hint">
-            Weebucks: {economy.points} · Super bets {starBetIds.length}/{maxStarBets} · Bets{' '}
-            {boostBetIds.length}/{maxBoostBets}. Locked skins were already bet this week.
+            Weebucks: {economy.points} · Betting runs today {betRunsRemaining}/{betRunsLimit} · Super
+            bets {starBetIds.length}/{maxStarBets} · Bets {boostBetIds.length}/{maxBoostBets}. Locked
+            skins were already bet this week.
           </p>
+          {betRunsRemaining <= 0 ? (
+            <p className="hint">
+              No betting runs left today. Raise the daily cap in the Shop, or wait for the 6:00 AM CST
+              reset.
+            </p>
+          ) : null}
           <div className="import-actions" style={{ marginBottom: 12 }}>
             <button
               type="button"
@@ -782,12 +795,22 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
     } else if (mode === 'betting') {
       const entrants = discovered.map((outfit) => outfit.id);
       if (entrants.length < 2) return;
+      if (!canStartBettingRun(economy)) {
+        setStatus('No betting runs left today.');
+        return;
+      }
       const stars = starBetIds.filter((id) => discoveredIds.has(id) && !lockedBetIds.has(id));
       const boosts = boostBetIds.filter(
         (id) => discoveredIds.has(id) && !lockedBetIds.has(id) && !stars.includes(id),
       );
       if (stars.length + boosts.length === 0) return;
-      const lockedEconomy = lockBetSkins([...stars, ...boosts], economy);
+      const spent = spendBettingRun(economy);
+      if (!spent.ok) {
+        onEconomyChange(spent.economy);
+        setStatus(spent.reason || 'No betting runs left today.');
+        return;
+      }
+      const lockedEconomy = lockBetSkins([...stars, ...boosts], spent.economy);
       onEconomyChange(lockedEconomy);
       const next = {
         entrants: shuffle(entrants),
