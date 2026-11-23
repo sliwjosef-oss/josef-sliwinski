@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import FortSort from './components/FortSort';
 import HangmanGame from './components/HangmanGame';
 import SkinCatalogue from './components/SkinCatalogue';
 import { getGameOutfits } from './utils/outfits';
@@ -14,17 +15,24 @@ import './App.css';
 const VIEWS = {
   HANGMAN: 'hangman',
   CATALOGUE: 'catalogue',
+  FORTSORT: 'fortsort',
 };
 
+function initialView() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('view') === 'fortsort' || window.location.hash === '#fortsort') return VIEWS.FORTSORT;
+  return VIEWS.HANGMAN;
+}
+
 function App() {
-  const [view, setView] = useState(VIEWS.HANGMAN);
+  const [view, setView] = useState(initialView);
   const [outfits, setOutfits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [guessedSkinIds, setGuessedSkinIds] = useState(loadGuessedSkinIds);
 
   useEffect(() => {
-    fetch(`${import.meta.env.BASE_URL}outfits.json?v=2849`, { cache: 'no-store' })
+    fetch(`${import.meta.env.BASE_URL}outfits.json?v=2850`, { cache: 'no-store' })
       .then((res) => {
         if (!res.ok) throw new Error('Failed to load outfit data');
         return res.json();
@@ -72,20 +80,28 @@ function App() {
   }
 
   return (
-    <main className="app">
+    <main className={`app ${view === VIEWS.FORTSORT ? 'app-fortsort' : ''}`}>
       {view === VIEWS.HANGMAN ? (
         <HangmanGame
           outfits={outfits}
           guessedSkinIds={guessedSkinIds}
           onSkinWon={handleSkinWon}
           onOpenCatalogue={() => setView(VIEWS.CATALOGUE)}
+          onOpenFortSort={() => setView(VIEWS.FORTSORT)}
         />
-      ) : (
+      ) : view === VIEWS.CATALOGUE ? (
         <SkinCatalogue
           outfits={outfits}
           guessedSkinIds={guessedSkinIds}
           onBack={() => setView(VIEWS.HANGMAN)}
+          onOpenFortSort={() => setView(VIEWS.FORTSORT)}
           onDeleteAllData={handleDeleteAllData}
+        />
+      ) : (
+        <FortSort
+          outfits={outfits}
+          guessedSkinIds={guessedSkinIds}
+          onBack={() => setView(VIEWS.HANGMAN)}
         />
       )}
     </main>

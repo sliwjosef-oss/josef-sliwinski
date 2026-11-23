@@ -103,7 +103,7 @@ function WordDisplay({ word, guessedLetters }) {
   );
 }
 
-export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpenCatalogue }) {
+export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpenCatalogue, onOpenFortSort }) {
   const [gameState, setGameState] = useState(GAME_STATES.IDLE);
   const [currentOutfit, setCurrentOutfit] = useState(null);
   const [guessedLetters, setGuessedLetters] = useState(new Set());
@@ -209,6 +209,9 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
             <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
               Skin Catalogue
             </button>
+            <button type="button" className="secondary-button" onClick={onOpenFortSort}>
+              FortSort
+            </button>
           </div>
         )}
       </header>
@@ -282,6 +285,9 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
               <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
                 Skin Catalogue
               </button>
+              <button type="button" className="secondary-button" onClick={onOpenFortSort}>
+                FortSort
+              </button>
             </>
           ) : (
             <>
@@ -291,6 +297,9 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
               </p>
               <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
                 Skin Catalogue
+              </button>
+              <button type="button" className="secondary-button" onClick={onOpenFortSort}>
+                FortSort
               </button>
             </>
           )}
