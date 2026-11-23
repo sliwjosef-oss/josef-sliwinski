@@ -721,3 +721,99 @@
   white-space: nowrap;
   border: 0;
 }
+
+.shop-screen {
+  width: min(900px, 100%);
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.shop-card {
+  padding: 1.1rem 1rem 1.25rem;
+  border-radius: 14px;
+  border: 1px solid rgba(88, 101, 242, 0.35);
+  background: rgba(20, 24, 48, 0.85);
+}
+
+.shop-card h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+}
+
+.shop-card p {
+  margin: 0 0 0.65rem;
+  color: #c7d2fe;
+}
+
+.shop-meta {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.sidekick-avatar-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidekick-avatar {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: radial-gradient(circle at 30% 20%, #67e8f9, #2563eb 55%, #0f172a);
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.catalogue-meta {
+  margin: 0;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  text-align: center;
+}
+
+.guess-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0.35rem 0 0.15rem;
+}
+
+.guess-status-line {
+  margin: 0;
+}
+
+.guess-status-line strong {
+  color: #fbbf24;
+}
+
+.guess-reset-countdown {
+  margin: 0;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.18);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  color: #fecaca;
+  font-size: 0.95rem;
+}
+
+.guess-reset-countdown strong {
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+}
+
+.guess-reset-hint {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.8rem;
+}

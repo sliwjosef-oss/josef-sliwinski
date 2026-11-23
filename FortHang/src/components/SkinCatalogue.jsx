@@ -122,7 +122,15 @@ function CatalogueSections({ sections, guessedSkinIds, showCounts = false }) {
   );
 }
 
-export default function SkinCatalogue({ outfits, guessedSkinIds, onBack, onOpenFortSort, onDeleteAllData }) {
+export default function SkinCatalogue({
+  outfits,
+  guessedSkinIds,
+  onBack,
+  onOpenSidekicks,
+  onOpenShop,
+  onOpenFortSort,
+  onDeleteAllData,
+}) {
   const [sortMode, setSortMode] = useState(SORT_MODES.NUMBER);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -192,6 +200,12 @@ export default function SkinCatalogue({ outfits, guessedSkinIds, onBack, onOpenF
         <div className="header-actions">
           <button type="button" className="secondary-button" onClick={onBack}>
             Return to Hangman Game
+          </button>
+          <button type="button" className="secondary-button" onClick={onOpenSidekicks}>
+            Sidekick Catalogue
+          </button>
+          <button type="button" className="secondary-button" onClick={onOpenShop}>
+            Shop
           </button>
           <button type="button" className="secondary-button" onClick={onOpenFortSort}>
             FortSort

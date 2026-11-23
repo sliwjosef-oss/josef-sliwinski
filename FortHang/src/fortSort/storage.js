@@ -5,7 +5,7 @@ const MODE_KEY = 'fort-sort-mode-v1';
 const ARCHIVE_KEY = 'fort-sort-archive-v1';
 const SELECTED_KEY = 'fort-sort-selected-v1';
 
-const VALID_MODES = new Set(['rank', 'bracket', 'simulate']);
+const VALID_MODES = new Set(['rank', 'bracket', 'simulate', 'betting']);
 
 function readJson(key) {
   try {
@@ -70,7 +70,11 @@ function normalizeBracketProgress(saved, simulated) {
     history: saved.history,
     version: saved.version ?? 4,
     archiveId: saved.archiveId ?? null,
-    simulated: !!simulated,
+    simulated: !!simulated || !!saved.simulated || !!saved.betting,
+    betting: !!saved.betting,
+    starBetIds: Array.isArray(saved.starBetIds) ? saved.starBetIds : [],
+    boostBetIds: Array.isArray(saved.boostBetIds) ? saved.boostBetIds : [],
+    pointsEarned: Number(saved.pointsEarned) || 0,
     rolls: Array.isArray(saved.rolls) ? saved.rolls : [],
   };
 }
@@ -105,6 +109,11 @@ export function saveSimBracketProgress(tournament) {
     version: tournament.version ?? 4,
     archiveId: tournament.archiveId ?? null,
     rolls: tournament.rolls ?? [],
+    simulated: true,
+    betting: !!tournament.betting,
+    starBetIds: tournament.starBetIds ?? [],
+    boostBetIds: tournament.boostBetIds ?? [],
+    pointsEarned: tournament.pointsEarned ?? 0,
     savedAt: Date.now(),
   });
 }

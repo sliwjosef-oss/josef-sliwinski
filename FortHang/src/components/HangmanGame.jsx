@@ -15,8 +15,14 @@ import {
   getOutfitIconSrc,
   getOutfitSilhouetteSrc,
 } from '../utils/outfits';
+import {
+  canSpendGuess,
+  getDailyGuessesRemaining,
+  spendGuess,
+} from '../utils/economy';
 import { countDiscoveredSkins, isCollectionComplete } from '../utils/progress';
 import CollectionCompleteScreen from './CollectionCompleteScreen';
+import GuessStatus from './GuessStatus';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const GAME_STATES = {
@@ -103,12 +109,23 @@ function WordDisplay({ word, guessedLetters }) {
   );
 }
 
-export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpenCatalogue, onOpenFortSort }) {
+export default function HangmanGame({
+  outfits,
+  guessedSkinIds,
+  economy,
+  onEconomyChange,
+  onSkinWon,
+  onOpenCatalogue,
+  onOpenSidekicks,
+  onOpenShop,
+  onOpenFortSort,
+}) {
   const [gameState, setGameState] = useState(GAME_STATES.IDLE);
   const [currentOutfit, setCurrentOutfit] = useState(null);
   const [guessedLetters, setGuessedLetters] = useState(new Set());
   const [wrongGuesses, setWrongGuesses] = useState(0);
   const outfitQueueRef = useRef(null);
+  const guessesRemaining = getDailyGuessesRemaining(economy);
 
   const remainingOutfits = useMemo(
     () => getPlayableOutfits(outfits, guessedSkinIds),
@@ -126,6 +143,7 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
   const peelyStage = gameState === GAME_STATES.WON ? 0 : wrongGuesses;
 
   const startGame = useCallback(() => {
+    if (!canSpendGuess(economy)) return;
     const playableOutfits = getPlayableOutfits(outfits, guessedSkinIds);
     if (playableOutfits.length === 0) return;
 
@@ -137,12 +155,17 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
     setGuessedLetters(new Set());
     setWrongGuesses(0);
     setGameState(GAME_STATES.PLAYING);
-  }, [outfits, guessedSkinIds]);
+  }, [outfits, guessedSkinIds, economy]);
 
   const handleGuess = useCallback(
     (letter) => {
       if (gameState !== GAME_STATES.PLAYING || !currentOutfit) return;
       if (guessedLetters.has(letter)) return;
+      if (!canSpendGuess(economy)) return;
+
+      const spent = spendGuess(economy);
+      onEconomyChange(spent.economy);
+      if (!spent.ok) return;
 
       const wordLetters = getLettersInWord(currentOutfit.name);
       const nextGuessed = new Set(guessedLetters);
@@ -166,7 +189,7 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
         setGameState(GAME_STATES.WON);
       }
     },
-    [gameState, currentOutfit, guessedLetters, wrongGuesses, onSkinWon]
+    [gameState, currentOutfit, guessedLetters, wrongGuesses, onSkinWon, economy, onEconomyChange]
   );
 
   useEffect(() => {
@@ -199,6 +222,7 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
           <h1>Fortnite Hangman</h1>
         )}
         <p className="subtitle">Guess the outfit name before Peely gets bananated!</p>
+        <GuessStatus economy={economy} onEconomyChange={onEconomyChange} />
         {gameState !== GAME_STATES.IDLE && (
           <p className="discovery-count">
             Catalogue: {discoveredCount} / {outfits.length} skins discovered
@@ -208,6 +232,12 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
           <div className="header-actions">
             <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
               Skin Catalogue
+            </button>
+            <button type="button" className="secondary-button" onClick={onOpenSidekicks}>
+              Sidekicks
+            </button>
+            <button type="button" className="secondary-button" onClick={onOpenShop}>
+              Shop
             </button>
             <button type="button" className="secondary-button" onClick={onOpenFortSort}>
               FortSort
@@ -276,14 +306,30 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
           {remainingOutfits.length > 0 ? (
             <>
               <p className="prompt">Ready to guess a Fortnite outfit?</p>
-              <button type="button" className="primary-button" onClick={startGame}>
-                Start Game
-              </button>
+              {guessesRemaining > 0 ? (
+                <button type="button" className="primary-button" onClick={startGame}>
+                  Start Game
+                </button>
+              ) : (
+                <>
+                  <GuessStatus economy={economy} onEconomyChange={onEconomyChange} />
+                  <p className="prompt">Buy more guesses in the Shop with betting points, or wait for the daily reset.</p>
+                  <button type="button" className="primary-button" onClick={onOpenShop}>
+                    Open Shop
+                  </button>
+                </>
+              )}
               <p className="discovery-count">
                 Catalogue: {discoveredCount} / {outfits.length} skins discovered
               </p>
               <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
                 Skin Catalogue
+              </button>
+              <button type="button" className="secondary-button" onClick={onOpenSidekicks}>
+                Sidekick Catalogue
+              </button>
+              <button type="button" className="secondary-button" onClick={onOpenShop}>
+                Shop
               </button>
               <button type="button" className="secondary-button" onClick={onOpenFortSort}>
                 FortSort
@@ -297,6 +343,12 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
               </p>
               <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
                 Skin Catalogue
+              </button>
+              <button type="button" className="secondary-button" onClick={onOpenSidekicks}>
+                Sidekick Catalogue
+              </button>
+              <button type="button" className="secondary-button" onClick={onOpenShop}>
+                Shop
               </button>
               <button type="button" className="secondary-button" onClick={onOpenFortSort}>
                 FortSort
@@ -322,7 +374,7 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
                 type="button"
                 className={`key-button ${guessed ? (isWrong ? 'wrong' : 'correct') : ''}`}
                 onClick={() => handleGuess(letter)}
-                disabled={guessed}
+                disabled={guessed || guessesRemaining <= 0}
                 aria-label={`Letter ${letter}${guessed ? ', already guessed' : ''}`}
               >
                 {letter}
@@ -350,12 +402,22 @@ export default function HangmanGame({ outfits, guessedSkinIds, onSkinWon, onOpen
             </p>
           )}
           {remainingOutfits.length > 0 ? (
-            <>
-              <p className="play-again-prompt">Would you like to play again?</p>
-              <button type="button" className="primary-button" onClick={startGame}>
-                Play Again
-              </button>
-            </>
+            guessesRemaining > 0 ? (
+              <>
+                <p className="play-again-prompt">Would you like to play again?</p>
+                <button type="button" className="primary-button" onClick={startGame}>
+                  Play Again
+                </button>
+              </>
+            ) : (
+              <>
+                <GuessStatus economy={economy} onEconomyChange={onEconomyChange} />
+                <p className="play-again-prompt">Out of daily guesses — visit the Shop or wait for 6:00 AM CST.</p>
+                <button type="button" className="primary-button" onClick={onOpenShop}>
+                  Open Shop
+                </button>
+              </>
+            )
           ) : (
             <p className="play-again-prompt">You have discovered every outfit in the catalogue!</p>
           )}

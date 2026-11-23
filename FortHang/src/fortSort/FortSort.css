@@ -888,6 +888,38 @@
   box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.5);
 }
 
+.fort-sort .fort-sort-pick.is-star-bet {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.55);
+}
+
+.fort-sort .fort-sort-pick.is-boost-bet {
+  border-color: #34d399;
+  box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.5);
+}
+
+.fort-sort .fort-sort-pick.is-locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.fort-sort-sort-tabs {
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.fort-sort-select-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.fort-sort-section-heading {
+  margin: 0 0 10px;
+  font-size: 1rem;
+  color: #93c5fd;
+}
+
 .fort-sort .fort-sort-check {
   position: absolute;
   top: 8px;

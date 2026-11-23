@@ -19,7 +19,7 @@ export const FIVE_STAR_NAMES = new Set([
 const THREE_DICE_SERIES = new Set(['dc', 'icon', 'other-collab-skins', 'marvel', 'gaming-legends']);
 const FOUR_DICE_SERIES = new Set(['tv-legends', 'wwe-legends', 'anime-legends', 'cartoon']);
 
-export function getDiceCount(outfit) {
+export function getBaseDiceCount(outfit) {
   if (!outfit) return 1;
   if (FIVE_STAR_NAMES.has(outfit.name)) return 5;
   const series = getCatalogueSeriesKey(outfit);
@@ -27,6 +27,12 @@ export function getDiceCount(outfit) {
   if (THREE_DICE_SERIES.has(series)) return 3;
   if (FOUR_DICE_SERIES.has(series)) return 4;
   return 2;
+}
+
+export function getDiceCount(outfit, bonusById = null) {
+  const base = getBaseDiceCount(outfit);
+  if (!outfit || !bonusById) return base;
+  return base + (Number(bonusById[outfit.id]) || 0);
 }
 
 function rollOnce(diceCount) {
@@ -38,9 +44,9 @@ function rollOnce(diceCount) {
  * Each side rolls Nd100 and keeps their highest die.
  * On a tie, both sides re-roll until one best is higher.
  */
-export function resolveSimulatedMatch(outfitA, outfitB) {
-  const diceA = getDiceCount(outfitA);
-  const diceB = getDiceCount(outfitB);
+export function resolveSimulatedMatch(outfitA, outfitB, bonusById = null) {
+  const diceA = getDiceCount(outfitA, bonusById);
+  const diceB = getDiceCount(outfitB, bonusById);
   let attempts = 0;
   let sideA;
   let sideB;
@@ -64,18 +70,19 @@ export function resolveSimulatedMatch(outfitA, outfitB) {
 }
 
 /** Resolve the current ready match; returns null if nothing to play. */
-export function simulateNextMatch(bracket, history, outfitsById) {
+export function simulateNextMatch(bracket, history, outfitsById, bonusById = null) {
   const state = resolveBracket(bracket, Object.fromEntries(history));
   if (!state.current || state.done) return null;
 
   const match = state.current;
   const outcome = state.outcomes.get(match.id);
   const [idA, idB] = outcome.participants;
-  const roll = resolveSimulatedMatch(outfitsById.get(idA), outfitsById.get(idB));
+  const roll = resolveSimulatedMatch(outfitsById.get(idA), outfitsById.get(idB), bonusById);
 
   return {
     matchId: match.id,
     winnerSlot: roll.winnerSlot,
+    winnerId: roll.winnerSlot === 0 ? idA : idB,
     roll: {
       matchId: match.id,
       label: roundLabel(bracket, match),
@@ -91,41 +98,45 @@ export function simulateNextMatch(bracket, history, outfitsById) {
  * Resolve every remaining match that shares the current round label,
  * walking play order so dependencies unlock as we go.
  */
-export function simulateCurrentRound(bracket, history, outfitsById) {
+export function simulateCurrentRound(bracket, history, outfitsById, bonusById = null) {
   const start = resolveBracket(bracket, Object.fromEntries(history));
   if (!start.current || start.done) {
-    return { history, rolls: [], done: !!start.done };
+    return { history, rolls: [], wins: [], done: !!start.done };
   }
 
   const targetLabel = roundLabel(bracket, start.current);
   let nextHistory = [...history];
   const rolls = [];
+  const wins = [];
 
   while (true) {
     const state = resolveBracket(bracket, Object.fromEntries(nextHistory));
     if (!state.current || state.done) break;
     if (roundLabel(bracket, state.current) !== targetLabel) break;
 
-    const step = simulateNextMatch(bracket, nextHistory, outfitsById);
+    const step = simulateNextMatch(bracket, nextHistory, outfitsById, bonusById);
     if (!step) break;
     nextHistory = [...nextHistory, [step.matchId, step.winnerSlot]];
     rolls.push(step.roll);
+    wins.push(step.winnerId);
   }
 
   const end = resolveBracket(bracket, Object.fromEntries(nextHistory));
-  return { history: nextHistory, rolls, done: !!end.done };
+  return { history: nextHistory, rolls, wins, done: !!end.done };
 }
 
-export function simulateEntireBracket(bracket, history, outfitsById) {
+export function simulateEntireBracket(bracket, history, outfitsById, bonusById = null) {
   let nextHistory = [...history];
   const rolls = [];
+  const wins = [];
 
   while (true) {
-    const step = simulateNextMatch(bracket, nextHistory, outfitsById);
+    const step = simulateNextMatch(bracket, nextHistory, outfitsById, bonusById);
     if (!step) break;
     nextHistory = [...nextHistory, [step.matchId, step.winnerSlot]];
     rolls.push(step.roll);
+    wins.push(step.winnerId);
   }
 
-  return { history: nextHistory, rolls, done: true };
+  return { history: nextHistory, rolls, wins, done: true };
 }
