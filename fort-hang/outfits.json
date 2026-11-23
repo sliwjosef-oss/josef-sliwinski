@@ -39884,5 +39884,19 @@
     "series": "Gaming Legends Series",
     "icon": "https://fortnite-api.com/images/cosmetics/br/character_shonestays/icon.png",
     "number": 2849
+  },
+  {
+    "id": "Character_YarnPuzzling",
+    "name": "Solid Gold Kasane Teto",
+    "description": "Your favorite chimera, all in gold!",
+    "added": "2026-11-22T13:30:46Z",
+    "chapter": "7",
+    "season": "5",
+    "introductionText": "Introduced in Chapter 7, Season 5.",
+    "setText": "Part of the Teto's Here! set.",
+    "setName": "Teto's Here!",
+    "series": null,
+    "icon": "https://fortnite-api.com/images/cosmetics/br/character_yarnpuzzling/icon.png",
+    "number": 2850
   }
 ]

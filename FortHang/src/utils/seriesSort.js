@@ -346,6 +346,7 @@ const TV_OUTFIT_NAMES = new Set([
 ]);
 
 const OTHER_COLLAB_SKINS_OUTFIT_NAMES = new Set([
+  'The Slender Man',
   'Tung Tung Tung Sahur',
   'Ballerina Cappuccina',
   'Plungerman',
@@ -494,7 +495,6 @@ const GENERAL_COLLABORATIONS_OUTFIT_NAMES = new Set([
   'Star Striker',
   'The Finisher',
   'The Mastermind',
-  'The Slender Man',
 ]);
 
 const NFL_OUTFIT_NAMES = new Set([
@@ -998,6 +998,7 @@ const ICON_OUTFIT_NAMES = new Set([
   'Solid Gold Rugahand',
   'Solid Gold Lil Uzi Vert',
   'Solid Gold Miku',
+  'Solid Gold Kasane Teto',
 ]);
 
 const THE_UNSEEN_OUTFIT_NAMES = new Set([
