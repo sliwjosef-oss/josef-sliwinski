@@ -54,6 +54,7 @@ import {
   getTournamentWinPoints,
   hasRandomSelectUnlock,
   hasSimulateAllUnlock,
+  hasSuperBetExtraLifeUnlock,
   lockBetSkins,
   nextMondayLabel,
   spendBettingRun,
@@ -127,15 +128,25 @@ function BettingStatusPanel({ tournament, bracketState, standings, outfitsById }
         statusLabel = 'In losers';
         lane = 'losers';
       }
+      const hasExtraLife = !!tournament.extraLifeById?.[id];
       return {
         id,
         outfit,
         statusLabel,
         lane,
         isStar: starSet.has(id),
+        hasExtraLife,
       };
     });
-  }, [betIds, bracketState, outfitsById, standings, starSet, tournament.bracket]);
+  }, [
+    betIds,
+    bracketState,
+    outfitsById,
+    standings,
+    starSet,
+    tournament.bracket,
+    tournament.extraLifeById,
+  ]);
 
   const detail = detailId
     ? (() => {
@@ -161,9 +172,15 @@ function BettingStatusPanel({ tournament, bracketState, standings, outfitsById }
           >
             <SkinIcon outfit={row.outfit} />
             <div className="bet-status-text">
-              <strong>{row.outfit?.name ?? row.id}</strong>
+              <strong>
+                {row.outfit?.name ?? row.id}
+                {row.hasExtraLife ? ' 💖' : ''}
+              </strong>
               <span>{row.statusLabel}</span>
-              <span className="bet-status-tier">{row.isStar ? 'Super bet' : 'Bet'}</span>
+              <span className="bet-status-tier">
+                {row.isStar ? 'Super bet' : 'Bet'}
+                {row.hasExtraLife ? ' · extra life' : ''}
+              </span>
             </div>
           </button>
         ))}
@@ -269,11 +286,13 @@ function SkinCard({ outfit, onPick, placeLabel, showDice = false, bonusDice = 0 
 function RollBreakdown({ roll, outfitsById }) {
   if (!roll) return null;
   const winner = outfitsById.get(roll.participants[roll.winnerSlot]);
+  const saved = roll.extraLifeSavedId ? outfitsById.get(roll.extraLifeSavedId) : null;
   return (
     <div className="sim-roll-panel">
       <p className="sim-roll-title">
         {roll.label}
         {roll.attempts > 1 ? ` · ${roll.attempts} rolls (ties)` : ''}
+        {saved ? ` · 💖 ${saved.name} extra life` : ''}
       </p>
       <div className="sim-roll-sides">
         {roll.sides.map((side, index) => {
@@ -854,6 +873,9 @@ export default function FortSort({
         pointsEarned: 0,
         championBonusPaid: false,
         xpAwarded: false,
+        extraLifeById: hasSuperBetExtraLifeUnlock(economy)
+          ? Object.fromEntries(stars.map((id) => [id, true]))
+          : {},
         bracket: null,
       };
       next.bracket = createBracket(next.entrants, 4);
@@ -876,6 +898,7 @@ export default function FortSort({
         pointsEarned: 0,
         championBonusPaid: false,
         xpAwarded: false,
+        extraLifeById: {},
         bracket: null,
       };
       next.bracket = createBracket(next.entrants, 4);
@@ -925,11 +948,15 @@ export default function FortSort({
     setFollowPage(true);
   };
 
-  const applySimResult = (result) => {
+  const applySimResult = (result, nextExtraLifeById = null) => {
     if (!tournament || !result) return;
     let pointsGain = 0;
     let championBonusPaid = !!tournament.championBonusPaid;
     let xpAwarded = !!tournament.xpAwarded;
+    const extraLifeById =
+      nextExtraLifeById != null
+        ? { ...nextExtraLifeById }
+        : { ...(tournament.extraLifeById ?? {}) };
     if (tournament.betting) {
       for (const win of result.wins ?? []) {
         const winnerId = typeof win === 'string' ? win : win?.winnerId;
@@ -982,47 +1009,82 @@ export default function FortSort({
       pointsEarned: (tournament.pointsEarned ?? 0) + pointsGain,
       championBonusPaid,
       xpAwarded,
+      extraLifeById,
     };
     setTournament(next);
     persistTournament(next);
     setFollowPage(true);
   };
 
+  const withExtraLives = () => ({ ...(tournament.extraLifeById ?? {}) });
+
   const simNextMatch = () => {
     if (!tournament || archiveReadOnly || !tournament.simulated) return;
+    const lives = withExtraLives();
     const step = simulateNextMatch(
       tournament.bracket,
       tournament.history,
       outfitsById,
       bonusById,
       minRollById,
+      lives,
     );
     if (!step) return;
-    applySimResult({
-      history: [...tournament.history, [step.matchId, step.winnerSlot]],
-      rolls: [step.roll],
-      wins: [{ winnerId: step.winnerId, matchId: step.matchId }],
-    });
+    applySimResult(
+      {
+        history: [...tournament.history, [step.matchId, step.winnerSlot]],
+        rolls: [step.roll],
+        wins: [{ winnerId: step.winnerId, matchId: step.matchId }],
+      },
+      lives,
+    );
   };
 
   const simNextRound = () => {
     if (!tournament || archiveReadOnly || !tournament.simulated) return;
+    const lives = withExtraLives();
     applySimResult(
-      simulateCurrentRound(tournament.bracket, tournament.history, outfitsById, bonusById, minRollById),
+      simulateCurrentRound(
+        tournament.bracket,
+        tournament.history,
+        outfitsById,
+        bonusById,
+        minRollById,
+        lives,
+      ),
+      lives,
     );
   };
 
   const simRound1Pools = () => {
     if (!tournament || archiveReadOnly || !tournament.simulated) return;
+    const lives = withExtraLives();
     applySimResult(
-      simulateRound1Pools(tournament.bracket, tournament.history, outfitsById, bonusById, minRollById),
+      simulateRound1Pools(
+        tournament.bracket,
+        tournament.history,
+        outfitsById,
+        bonusById,
+        minRollById,
+        lives,
+      ),
+      lives,
     );
   };
 
   const simAll = () => {
     if (!tournament || archiveReadOnly || !tournament.simulated || !canSimulateAll) return;
+    const lives = withExtraLives();
     applySimResult(
-      simulateEntireBracket(tournament.bracket, tournament.history, outfitsById, bonusById, minRollById),
+      simulateEntireBracket(
+        tournament.bracket,
+        tournament.history,
+        outfitsById,
+        bonusById,
+        minRollById,
+        lives,
+      ),
+      lives,
     );
   };
 

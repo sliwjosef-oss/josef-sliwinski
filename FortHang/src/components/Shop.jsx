@@ -30,6 +30,7 @@ function formatRollResults(results) {
 const BETTING_UNLOCK_ORDER = [
   'simulateAll',
   'randomSelect',
+  'superBetExtraLife',
   'betRunsTier1',
   'betRunsTier2',
   'starSlotsTier1',

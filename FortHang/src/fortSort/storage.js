@@ -77,6 +77,8 @@ function normalizeBracketProgress(saved, simulated) {
     pointsEarned: Number(saved.pointsEarned) || 0,
     championBonusPaid: !!saved.championBonusPaid,
     xpAwarded: !!saved.xpAwarded,
+    extraLifeById:
+      saved.extraLifeById && typeof saved.extraLifeById === 'object' ? saved.extraLifeById : {},
     rolls: Array.isArray(saved.rolls) ? saved.rolls : [],
   };
 }
@@ -118,6 +120,7 @@ export function saveSimBracketProgress(tournament) {
     pointsEarned: tournament.pointsEarned ?? 0,
     championBonusPaid: !!tournament.championBonusPaid,
     xpAwarded: !!tournament.xpAwarded,
+    extraLifeById: tournament.extraLifeById ?? {},
     savedAt: Date.now(),
   });
 }

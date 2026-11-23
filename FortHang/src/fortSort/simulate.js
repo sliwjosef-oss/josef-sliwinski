@@ -76,8 +76,18 @@ export function resolveSimulatedMatch(outfitA, outfitB, bonusById = null, minRol
   };
 }
 
-/** Resolve the current ready match; returns null if nothing to play. */
-export function simulateNextMatch(bracket, history, outfitsById, bonusById = null, minRollById = null) {
+/**
+ * Resolve the current ready match; returns null if nothing to play.
+ * `extraLifeById` is a mutable map of skinId -> true while a save remains.
+ */
+export function simulateNextMatch(
+  bracket,
+  history,
+  outfitsById,
+  bonusById = null,
+  minRollById = null,
+  extraLifeById = null,
+) {
   const state = resolveBracket(bracket, Object.fromEntries(history));
   if (!state.current || state.done) return null;
 
@@ -91,17 +101,32 @@ export function simulateNextMatch(bracket, history, outfitsById, bonusById = nul
     minRollById,
   );
 
+  let winnerSlot = roll.winnerSlot;
+  let extraLifeUsed = false;
+  let extraLifeSavedId = null;
+  const rolledLoserId = winnerSlot === 0 ? idB : idA;
+  if (extraLifeById && extraLifeById[rolledLoserId]) {
+    winnerSlot = 1 - winnerSlot;
+    extraLifeById[rolledLoserId] = false;
+    extraLifeUsed = true;
+    extraLifeSavedId = rolledLoserId;
+  }
+
   return {
     matchId: match.id,
-    winnerSlot: roll.winnerSlot,
-    winnerId: roll.winnerSlot === 0 ? idA : idB,
+    winnerSlot,
+    winnerId: winnerSlot === 0 ? idA : idB,
+    extraLifeUsed,
+    extraLifeSavedId,
     roll: {
       matchId: match.id,
       label: roundLabel(bracket, match),
       participants: [idA, idB],
-      winnerSlot: roll.winnerSlot,
+      winnerSlot,
       attempts: roll.attempts,
       sides: roll.sides,
+      extraLifeUsed,
+      extraLifeSavedId,
     },
   };
 }
@@ -110,7 +135,14 @@ export function simulateNextMatch(bracket, history, outfitsById, bonusById = nul
  * Resolve every remaining match that shares the current round label,
  * walking play order so dependencies unlock as we go.
  */
-export function simulateCurrentRound(bracket, history, outfitsById, bonusById = null, minRollById = null) {
+export function simulateCurrentRound(
+  bracket,
+  history,
+  outfitsById,
+  bonusById = null,
+  minRollById = null,
+  extraLifeById = null,
+) {
   const start = resolveBracket(bracket, Object.fromEntries(history));
   if (!start.current || start.done) {
     return { history, rolls: [], wins: [], done: !!start.done };
@@ -126,7 +158,14 @@ export function simulateCurrentRound(bracket, history, outfitsById, bonusById = 
     if (!state.current || state.done) break;
     if (roundLabel(bracket, state.current) !== targetLabel) break;
 
-    const step = simulateNextMatch(bracket, nextHistory, outfitsById, bonusById, minRollById);
+    const step = simulateNextMatch(
+      bracket,
+      nextHistory,
+      outfitsById,
+      bonusById,
+      minRollById,
+      extraLifeById,
+    );
     if (!step) break;
     nextHistory = [...nextHistory, [step.matchId, step.winnerSlot]];
     rolls.push(step.roll);
@@ -138,7 +177,14 @@ export function simulateCurrentRound(bracket, history, outfitsById, bonusById = 
 }
 
 /** Resolve every remaining Round 1 Pools match, then stop. */
-export function simulateRound1Pools(bracket, history, outfitsById, bonusById = null, minRollById = null) {
+export function simulateRound1Pools(
+  bracket,
+  history,
+  outfitsById,
+  bonusById = null,
+  minRollById = null,
+  extraLifeById = null,
+) {
   let nextHistory = [...history];
   const rolls = [];
   const wins = [];
@@ -149,7 +195,14 @@ export function simulateRound1Pools(bracket, history, outfitsById, bonusById = n
     const pageIndex = bracket.pageOf.get(state.current.id);
     if (bracket.pages[pageIndex]?.phase !== 'Round 1 Pools') break;
 
-    const step = simulateNextMatch(bracket, nextHistory, outfitsById, bonusById, minRollById);
+    const step = simulateNextMatch(
+      bracket,
+      nextHistory,
+      outfitsById,
+      bonusById,
+      minRollById,
+      extraLifeById,
+    );
     if (!step) break;
     nextHistory = [...nextHistory, [step.matchId, step.winnerSlot]];
     rolls.push(step.roll);
@@ -167,13 +220,27 @@ export function hasRound1PoolsPending(bracket, history) {
   return bracket.pages[pageIndex]?.phase === 'Round 1 Pools';
 }
 
-export function simulateEntireBracket(bracket, history, outfitsById, bonusById = null, minRollById = null) {
+export function simulateEntireBracket(
+  bracket,
+  history,
+  outfitsById,
+  bonusById = null,
+  minRollById = null,
+  extraLifeById = null,
+) {
   let nextHistory = [...history];
   const rolls = [];
   const wins = [];
 
   while (true) {
-    const step = simulateNextMatch(bracket, nextHistory, outfitsById, bonusById, minRollById);
+    const step = simulateNextMatch(
+      bracket,
+      nextHistory,
+      outfitsById,
+      bonusById,
+      minRollById,
+      extraLifeById,
+    );
     if (!step) break;
     nextHistory = [...nextHistory, [step.matchId, step.winnerSlot]];
     rolls.push(step.roll);
