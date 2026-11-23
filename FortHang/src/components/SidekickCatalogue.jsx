@@ -37,7 +37,7 @@ export default function SidekickCatalogue({
       <header className="catalogue-header">
         <h1>Sidekick Catalogue</h1>
         <p className="discovery-count">
-          {ownedCount} / {sidekicks.length} sidekicks unlocked · {economy.points} points
+          {ownedCount} / {sidekicks.length} sidekicks unlocked · {economy.points} weebucks
         </p>
         <div className="header-actions">
           <button type="button" className="secondary-button" onClick={onBack}>
@@ -56,7 +56,7 @@ export default function SidekickCatalogue({
       </header>
 
       <p className="hint">
-        Unlock sidekicks in the Shop by spending 100 betting points on a random roll.
+        Unlock sidekicks in the Shop by spending 100 weebucks on a random roll.
       </p>
 
       <div className="catalogue-grid">

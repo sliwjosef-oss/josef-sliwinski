@@ -313,7 +313,7 @@ export default function HangmanGame({
               ) : (
                 <>
                   <GuessStatus economy={economy} onEconomyChange={onEconomyChange} />
-                  <p className="prompt">Buy more guesses in the Shop with betting points, or wait for the daily reset.</p>
+                  <p className="prompt">Buy more guesses in the Shop with weebucks, or wait for the daily reset.</p>
                   <button type="button" className="primary-button" onClick={onOpenShop}>
                     Open Shop
                   </button>

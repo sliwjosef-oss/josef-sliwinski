@@ -29,7 +29,7 @@ export default function GuessStatus({ economy, onEconomyChange, className = '' }
     <div className={`guess-status ${className}`.trim()}>
       <p className="discovery-count guess-status-line">
         Guesses left today: <strong>{remaining}</strong> / {limit}
-        {economy.points ? ` · ${economy.points} points` : ''}
+        {economy.points ? ` · ${economy.points} weebucks` : ''}
       </p>
       {remaining <= 0 ? (
         <p className="guess-reset-countdown" role="status">

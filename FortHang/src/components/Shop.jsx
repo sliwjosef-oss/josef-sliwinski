@@ -59,15 +59,15 @@ export default function Shop({
       </header>
 
       <p className="hint">
-        Earn points in FortSort Betting mode. Spend them on extra hangman guesses or a random sidekick —
-        not both at once from the same stack of points.
+        Earn weebucks in FortSort Betting mode. Spend them on extra hangman guesses or a random sidekick —
+        not both at once from the same stack of weebucks.
       </p>
 
       <div className="shop-grid">
         <article className="shop-card">
           <h2>Extra guesses</h2>
           <p>
-            +{GUESS_PACK_AMOUNT} letter guesses today for {GUESS_PACK_COST} points.
+            +{GUESS_PACK_AMOUNT} letter guesses today for {GUESS_PACK_COST} weebucks.
           </p>
           <p className="shop-meta">Daily base is 50. Bonus packs stack until the 6:00 AM CST reset.</p>
           <button
@@ -76,13 +76,13 @@ export default function Shop({
             onClick={buyGuesses}
             disabled={economy.points < GUESS_PACK_COST}
           >
-            Buy for {GUESS_PACK_COST} pts
+            Buy for {GUESS_PACK_COST} weebucks
           </button>
         </article>
 
         <article className="shop-card">
           <h2>Random sidekick</h2>
-          <p>Spend {SIDEKICK_ROLL_COST} points to unlock one random undiscovered sidekick.</p>
+          <p>Spend {SIDEKICK_ROLL_COST} weebucks to unlock one random undiscovered sidekick.</p>
           <p className="shop-meta">
             {sidekicks.length - ownedCount} still locked in the sidekick catalogue.
           </p>
@@ -92,7 +92,7 @@ export default function Shop({
             onClick={buySidekick}
             disabled={economy.points < SIDEKICK_ROLL_COST || ownedCount >= sidekicks.length}
           >
-            Roll for {SIDEKICK_ROLL_COST} pts
+            Roll for {SIDEKICK_ROLL_COST} weebucks
           </button>
         </article>
       </div>

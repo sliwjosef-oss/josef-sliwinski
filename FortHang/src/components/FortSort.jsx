@@ -334,7 +334,7 @@ function SelectScreen({
           : mode === 'simulate'
             ? 'Pick discovered skins for a dice-simulated double-elim bracket. Each side rolls Nd100 and keeps the highest — series and star skins set N.'
             : mode === 'betting'
-              ? `All discovered skins enter. Pick up to ${MAX_STAR_BETS} skins for +${STAR_BET_BONUS_DICE} dice and up to ${MAX_BOOST_BETS} more for +${BOOST_BET_BONUS_DICE} dice. Each match a bet skin wins earns ${BET_WIN_POINTS} points. Bet skins lock until Monday CST (${nextMondayLabel()}).`
+              ? `All discovered skins enter. Pick up to ${MAX_STAR_BETS} skins for +${STAR_BET_BONUS_DICE} dice and up to ${MAX_BOOST_BETS} more for +${BOOST_BET_BONUS_DICE} dice. Each match a bet skin wins earns ${BET_WIN_POINTS} weebucks. Bet skins lock until Monday CST (${nextMondayLabel()}).`
               : 'Pick discovered skins, then run a double-elimination bracket.'}{' '}
         Only skins you have discovered in FortHang can be used.
       </p>
@@ -348,7 +348,7 @@ function SelectScreen({
       {isBetting ? (
         <>
           <p className="hint">
-            Points: {economy.points} · Star bets {starBetIds.length}/{MAX_STAR_BETS} · Boost bets{' '}
+            Weebucks: {economy.points} · Star bets {starBetIds.length}/{MAX_STAR_BETS} · Boost bets{' '}
             {boostBetIds.length}/{MAX_BOOST_BETS}. Locked skins were already bet this week.
           </p>
           <div className="import-actions" style={{ marginBottom: 12 }}>
@@ -847,7 +847,7 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
                   <strong>
                     {outfitsById.get(entry.championId)?.name ?? 'Tournament'} · {entry.entrants.length} skins
                     {entry.betting ? ' · Betting' : entry.simulated ? ' · Simulated' : ''}
-                    {entry.pointsEarned ? ` · +${entry.pointsEarned} pts` : ''}
+                    {entry.pointsEarned ? ` · +${entry.pointsEarned} weebucks` : ''}
                   </strong>
                   <span className="hint">{new Date(entry.savedAt).toLocaleString()}</span>
                 </div>
@@ -1130,7 +1130,8 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
             </div>
             {tournament.betting ? (
               <p className="hint">
-                Betting haul: +{tournament.pointsEarned ?? 0} points this run · Bank {economy.points} points
+                Betting haul: +{tournament.pointsEarned ?? 0} weebucks this run · Bank {economy.points}{' '}
+                weebucks
               </p>
             ) : null}
             {tournament.simulated && lastRoll ? (
@@ -1244,7 +1245,7 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
             <div className="progress">
               <p>
                 {tournament.history.length} picks · {tournament.entrants.length} skins · {pageLabel(page)}
-                {tournament.betting ? ` · +${tournament.pointsEarned ?? 0} pts` : ''}
+                {tournament.betting ? ` · +${tournament.pointsEarned ?? 0} weebucks` : ''}
               </p>
             </div>
             {bracketState.current ? (

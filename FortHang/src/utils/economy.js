@@ -220,7 +220,7 @@ export function buyGuessPack(economy = loadEconomy()) {
     weeklyBets: normalizeWeekly(economy.weeklyBets),
   };
   if (state.points < GUESS_PACK_COST) {
-    return { ok: false, reason: `Need ${GUESS_PACK_COST} points.`, economy: state };
+    return { ok: false, reason: `Need ${GUESS_PACK_COST} weebucks.`, economy: state };
   }
   state.points -= GUESS_PACK_COST;
   state.daily = { ...state.daily, bonus: state.daily.bonus + GUESS_PACK_AMOUNT };
@@ -235,7 +235,7 @@ export function rollRandomSidekick(sidekicks, economy = loadEconomy()) {
     weeklyBets: normalizeWeekly(economy.weeklyBets),
   };
   if (state.points < SIDEKICK_ROLL_COST) {
-    return { ok: false, reason: `Need ${SIDEKICK_ROLL_COST} points.`, economy: state };
+    return { ok: false, reason: `Need ${SIDEKICK_ROLL_COST} weebucks.`, economy: state };
   }
   const owned = new Set(state.ownedSidekickIds);
   const pool = sidekicks.filter((sidekick) => !owned.has(sidekick.id));
