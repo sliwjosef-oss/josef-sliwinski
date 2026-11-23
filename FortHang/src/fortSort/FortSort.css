@@ -823,6 +823,98 @@
   opacity: 0.4;
 }
 
+@media (max-width: 720px) {
+  .fort-sort .top-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .fort-sort .top-bar h1 {
+    text-align: center;
+    font-size: 1.25rem;
+  }
+
+  .fort-sort .mode-tabs {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    padding: 6px;
+  }
+
+  .fort-sort .mode-tab {
+    width: 100%;
+    min-height: 42px;
+    padding: 8px 6px;
+    font-size: 0.88rem;
+    text-align: center;
+  }
+
+  .fort-sort .top-bar > .ghost-button,
+  .fort-sort .top-bar > .primary-button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .fort-sort .import-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .fort-sort .import-actions .primary-button,
+  .fort-sort .import-actions .ghost-button {
+    flex: 1 1 calc(50% - 8px);
+    min-height: 44px;
+  }
+
+  .fort-sort-sort-tabs {
+    display: grid !important;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .fort-sort-sort-tabs .mode-tab {
+    width: 100%;
+    min-height: 42px;
+  }
+
+  .fort-sort .compare-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .fort-sort .compare-actions .primary-button,
+  .fort-sort .compare-actions .ghost-button {
+    flex: 1 1 100%;
+    min-height: 44px;
+  }
+
+  .fort-sort .hint,
+  .fort-sort .sim-rules {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  .sim-roll-sides {
+    grid-template-columns: 1fr;
+  }
+
+  .page-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+  }
+
+  .page-tab {
+    flex: 0 0 auto;
+    min-height: 40px;
+  }
+}
+
 @media (max-width: 680px) {
   .matchup {
     flex-direction: column;
