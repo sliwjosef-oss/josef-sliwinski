@@ -106,7 +106,10 @@ function DeleteAllDataConfirm({ onConfirm, onCancel }) {
         onClick={(event) => event.stopPropagation()}
       >
         <h2 id="delete-all-data-title">Are you sure?</h2>
-        <p>This will permanently delete all of your discovered skins and progress.</p>
+        <p>
+          This permanently deletes everything: discovered skins, weebucks, shop unlocks, sidekicks, skin
+          levels, FortSort saves, and resets daily hangman attempts and betting runs.
+        </p>
         <div className="modal-actions">
           <button type="button" className="secondary-button" onClick={onCancel}>
             No

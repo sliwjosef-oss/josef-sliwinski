@@ -499,6 +499,11 @@ export function loadEconomy() {
   return write(state);
 }
 
+/** Wipe weebucks, unlocks, sidekicks, and reset daily attempts / betting runs. */
+export function resetEconomy() {
+  return write(defaultEconomy());
+}
+
 export function getDailyBetRunLimit(economy = loadEconomy()) {
   return normalizeUnlocks(economy.unlocks).dailyBetRuns;
 }

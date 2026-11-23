@@ -1,5 +1,3 @@
-import { CATALOG_COMPLETE_BONUS } from '../utils/economy';
-
 const COMPLETE_IMAGE = `${import.meta.env.BASE_URL}collection-complete.png`;
 
 export default function CollectionCompleteScreen({
@@ -18,9 +16,6 @@ export default function CollectionCompleteScreen({
       <h2 id="collection-complete-heading" className="collection-complete-sr-only">
         Wow! You collected them all! Congratulations, Peely is proud!
       </h2>
-      <p className="hint">
-        First-time catalogue clear bonus: {CATALOG_COMPLETE_BONUS.toLocaleString()} weebucks
-      </p>
       <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
         Skin Catalogue
       </button>

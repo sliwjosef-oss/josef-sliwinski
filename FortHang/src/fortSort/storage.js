@@ -126,6 +126,15 @@ export function clearSimBracketProgress() {
   localStorage.removeItem(SIM_BRACKET_KEY);
 }
 
+export function clearAllFortSortData() {
+  localStorage.removeItem(RANK_KEY);
+  localStorage.removeItem(BRACKET_KEY);
+  localStorage.removeItem(SIM_BRACKET_KEY);
+  localStorage.removeItem(MODE_KEY);
+  localStorage.removeItem(ARCHIVE_KEY);
+  localStorage.removeItem(SELECTED_KEY);
+}
+
 export function loadArchive() {
   const saved = readJson(ARCHIVE_KEY);
   return Array.isArray(saved) ? saved : [];

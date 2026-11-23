@@ -9,7 +9,9 @@ import {
   awardCatalogCompleteBonus,
   loadEconomy,
   migrateOwnedSidekickIds,
+  resetEconomy,
 } from './utils/economy';
+import { clearAllFortSortData } from './fortSort/storage';
 import { getGameOutfits } from './utils/outfits';
 import {
   addGuessedSkinId,
@@ -118,6 +120,8 @@ function App() {
   const handleDeleteAllData = useCallback(() => {
     setGuessedSkinIds(clearGuessedSkinIds());
     setSkinLevels(clearSkinLevels());
+    setEconomy(resetEconomy());
+    clearAllFortSortData();
   }, []);
 
   const handleSkinLevelsChange = useCallback((next) => {
