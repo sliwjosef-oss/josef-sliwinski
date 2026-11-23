@@ -35,26 +35,33 @@ export function getDiceCount(outfit, bonusById = null) {
   return base + (Number(bonusById[outfit.id]) || 0);
 }
 
-function rollOnce(diceCount) {
-  const rolls = Array.from({ length: Math.max(1, diceCount) }, () => 1 + Math.floor(Math.random() * 100));
-  return { rolls, best: Math.max(...rolls), dice: diceCount };
+function rollOnce(diceCount, minRoll = 1) {
+  const floor = Math.min(100, Math.max(1, Number(minRoll) || 1));
+  const span = 100 - floor + 1;
+  const rolls = Array.from(
+    { length: Math.max(1, diceCount) },
+    () => floor + Math.floor(Math.random() * span),
+  );
+  return { rolls, best: Math.max(...rolls), dice: diceCount, minRoll: floor };
 }
 
 /**
  * Each side rolls Nd100 and keeps their highest die.
  * On a tie, both sides re-roll until one best is higher.
  */
-export function resolveSimulatedMatch(outfitA, outfitB, bonusById = null) {
+export function resolveSimulatedMatch(outfitA, outfitB, bonusById = null, minRollById = null) {
   const diceA = getDiceCount(outfitA, bonusById);
   const diceB = getDiceCount(outfitB, bonusById);
+  const minA = outfitA && minRollById ? Number(minRollById[outfitA.id]) || 1 : 1;
+  const minB = outfitB && minRollById ? Number(minRollById[outfitB.id]) || 1 : 1;
   let attempts = 0;
   let sideA;
   let sideB;
 
   do {
     attempts += 1;
-    sideA = rollOnce(diceA);
-    sideB = rollOnce(diceB);
+    sideA = rollOnce(diceA, minA);
+    sideB = rollOnce(diceB, minB);
   } while (sideA.best === sideB.best && attempts < 100);
 
   let winnerSlot = sideA.best > sideB.best ? 0 : 1;
@@ -70,14 +77,19 @@ export function resolveSimulatedMatch(outfitA, outfitB, bonusById = null) {
 }
 
 /** Resolve the current ready match; returns null if nothing to play. */
-export function simulateNextMatch(bracket, history, outfitsById, bonusById = null) {
+export function simulateNextMatch(bracket, history, outfitsById, bonusById = null, minRollById = null) {
   const state = resolveBracket(bracket, Object.fromEntries(history));
   if (!state.current || state.done) return null;
 
   const match = state.current;
   const outcome = state.outcomes.get(match.id);
   const [idA, idB] = outcome.participants;
-  const roll = resolveSimulatedMatch(outfitsById.get(idA), outfitsById.get(idB), bonusById);
+  const roll = resolveSimulatedMatch(
+    outfitsById.get(idA),
+    outfitsById.get(idB),
+    bonusById,
+    minRollById,
+  );
 
   return {
     matchId: match.id,
@@ -98,7 +110,7 @@ export function simulateNextMatch(bracket, history, outfitsById, bonusById = nul
  * Resolve every remaining match that shares the current round label,
  * walking play order so dependencies unlock as we go.
  */
-export function simulateCurrentRound(bracket, history, outfitsById, bonusById = null) {
+export function simulateCurrentRound(bracket, history, outfitsById, bonusById = null, minRollById = null) {
   const start = resolveBracket(bracket, Object.fromEntries(history));
   if (!start.current || start.done) {
     return { history, rolls: [], wins: [], done: !!start.done };
@@ -114,7 +126,7 @@ export function simulateCurrentRound(bracket, history, outfitsById, bonusById = 
     if (!state.current || state.done) break;
     if (roundLabel(bracket, state.current) !== targetLabel) break;
 
-    const step = simulateNextMatch(bracket, nextHistory, outfitsById, bonusById);
+    const step = simulateNextMatch(bracket, nextHistory, outfitsById, bonusById, minRollById);
     if (!step) break;
     nextHistory = [...nextHistory, [step.matchId, step.winnerSlot]];
     rolls.push(step.roll);
@@ -126,7 +138,7 @@ export function simulateCurrentRound(bracket, history, outfitsById, bonusById = 
 }
 
 /** Resolve every remaining Round 1 Pools match, then stop. */
-export function simulateRound1Pools(bracket, history, outfitsById, bonusById = null) {
+export function simulateRound1Pools(bracket, history, outfitsById, bonusById = null, minRollById = null) {
   let nextHistory = [...history];
   const rolls = [];
   const wins = [];
@@ -137,7 +149,7 @@ export function simulateRound1Pools(bracket, history, outfitsById, bonusById = n
     const pageIndex = bracket.pageOf.get(state.current.id);
     if (bracket.pages[pageIndex]?.phase !== 'Round 1 Pools') break;
 
-    const step = simulateNextMatch(bracket, nextHistory, outfitsById, bonusById);
+    const step = simulateNextMatch(bracket, nextHistory, outfitsById, bonusById, minRollById);
     if (!step) break;
     nextHistory = [...nextHistory, [step.matchId, step.winnerSlot]];
     rolls.push(step.roll);
@@ -155,13 +167,13 @@ export function hasRound1PoolsPending(bracket, history) {
   return bracket.pages[pageIndex]?.phase === 'Round 1 Pools';
 }
 
-export function simulateEntireBracket(bracket, history, outfitsById, bonusById = null) {
+export function simulateEntireBracket(bracket, history, outfitsById, bonusById = null, minRollById = null) {
   let nextHistory = [...history];
   const rolls = [];
   const wins = [];
 
   while (true) {
-    const step = simulateNextMatch(bracket, nextHistory, outfitsById, bonusById);
+    const step = simulateNextMatch(bracket, nextHistory, outfitsById, bonusById, minRollById);
     if (!step) break;
     nextHistory = [...nextHistory, [step.matchId, step.winnerSlot]];
     rolls.push(step.roll);

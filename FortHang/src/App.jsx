@@ -19,6 +19,7 @@ import {
   normalizeGuessedSkinIds,
   saveGuessedSkinIds,
 } from './utils/progress';
+import { clearSkinLevels, loadSkinLevels } from './utils/skinLevels';
 import './App.css';
 
 const VIEWS = {
@@ -46,6 +47,7 @@ function App() {
   const [loadError, setLoadError] = useState(null);
   const [guessedSkinIds, setGuessedSkinIds] = useState(loadGuessedSkinIds);
   const [economy, setEconomy] = useState(loadEconomy);
+  const [skinLevels, setSkinLevels] = useState(loadSkinLevels);
 
   useEffect(() => {
     Promise.all([
@@ -115,6 +117,11 @@ function App() {
 
   const handleDeleteAllData = useCallback(() => {
     setGuessedSkinIds(clearGuessedSkinIds());
+    setSkinLevels(clearSkinLevels());
+  }, []);
+
+  const handleSkinLevelsChange = useCallback((next) => {
+    setSkinLevels(next);
   }, []);
 
   if (loading) {
@@ -151,6 +158,7 @@ function App() {
         <SkinCatalogue
           outfits={outfits}
           guessedSkinIds={guessedSkinIds}
+          skinLevels={skinLevels}
           onBack={() => setView(VIEWS.HANGMAN)}
           onOpenSidekicks={() => setView(VIEWS.SIDEKICKS)}
           onOpenShop={() => setView(VIEWS.SHOP)}
@@ -182,6 +190,8 @@ function App() {
           guessedSkinIds={guessedSkinIds}
           economy={economy}
           onEconomyChange={setEconomy}
+          skinLevels={skinLevels}
+          onSkinLevelsChange={handleSkinLevelsChange}
           onBack={() => setView(VIEWS.HANGMAN)}
           onOpenShop={() => setView(VIEWS.SHOP)}
         />

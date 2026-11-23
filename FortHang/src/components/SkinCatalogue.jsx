@@ -12,6 +12,7 @@ import {
   sortOutfitsByNumber,
 } from '../utils/seasonSort';
 import { groupOutfitsBySeries } from '../utils/seriesSort';
+import { MAX_SKIN_LEVEL, getSkinLevel, getSkinXp, xpProgress } from '../utils/skinLevels';
 
 const SORT_MODES = {
   NUMBER: 'number',
@@ -50,25 +51,45 @@ function CatalogueImage({ outfit, silhouette = false }) {
   );
 }
 
-function CatalogueCard({ outfit, guessedSkinIds }) {
+function CatalogueCard({ outfit, guessedSkinIds, skinLevels }) {
   const isRevealed = isSkinGuessed(guessedSkinIds, outfit);
+  const level = isRevealed ? getSkinLevel(skinLevels, outfit.id) : 0;
+  const progress = isRevealed ? xpProgress(skinLevels, outfit.id) : null;
 
   return (
-    <article key={outfit.id} className={`catalogue-card ${isRevealed ? 'revealed' : 'hidden'}`}>
+    <article
+      key={outfit.id}
+      className={`catalogue-card ${isRevealed ? 'revealed' : 'hidden'} ${
+        level >= MAX_SKIN_LEVEL ? 'level-max' : ''
+      }`}
+    >
       <span className="catalogue-number">{outfit.number}.</span>
       <div className="catalogue-image-wrap">
         <CatalogueImage outfit={outfit} silhouette={!isRevealed} />
       </div>
       <p className="catalogue-name">{isRevealed ? outfit.name : '?'}</p>
+      {isRevealed ? (
+        <p className="skin-level-badge" title={`${getSkinXp(skinLevels, outfit.id)} XP`}>
+          Lv {level}
+          {progress?.next != null
+            ? ` · ${progress.intoLevel}/${progress.needed} XP`
+            : ' · MAX'}
+        </p>
+      ) : null}
     </article>
   );
 }
 
-function CatalogueGrid({ outfits, guessedSkinIds }) {
+function CatalogueGrid({ outfits, guessedSkinIds, skinLevels }) {
   return (
     <div className="catalogue-grid">
       {outfits.map((outfit) => (
-        <CatalogueCard key={outfit.id} outfit={outfit} guessedSkinIds={guessedSkinIds} />
+        <CatalogueCard
+          key={outfit.id}
+          outfit={outfit}
+          guessedSkinIds={guessedSkinIds}
+          skinLevels={skinLevels}
+        />
       ))}
     </div>
   );
@@ -99,7 +120,7 @@ function DeleteAllDataConfirm({ onConfirm, onCancel }) {
   );
 }
 
-function CatalogueSections({ sections, guessedSkinIds, showCounts = false }) {
+function CatalogueSections({ sections, guessedSkinIds, skinLevels, showCounts = false }) {
   return (
     <div className="catalogue-season-sections">
       {sections.map((section) => {
@@ -114,7 +135,11 @@ function CatalogueSections({ sections, guessedSkinIds, showCounts = false }) {
               <span className="catalogue-season-label">{label}</span>
               <span className="catalogue-season-underline" aria-hidden="true" />
             </h2>
-            <CatalogueGrid outfits={section.outfits} guessedSkinIds={guessedSkinIds} />
+            <CatalogueGrid
+              outfits={section.outfits}
+              guessedSkinIds={guessedSkinIds}
+              skinLevels={skinLevels}
+            />
           </section>
         );
       })}
@@ -125,6 +150,7 @@ function CatalogueSections({ sections, guessedSkinIds, showCounts = false }) {
 export default function SkinCatalogue({
   outfits,
   guessedSkinIds,
+  skinLevels = {},
   onBack,
   onOpenSidekicks,
   onOpenShop,
@@ -214,19 +240,37 @@ export default function SkinCatalogue({
       </header>
 
       {sortMode === SORT_MODES.NUMBER && (
-        <CatalogueGrid outfits={catalogueOutfits} guessedSkinIds={guessedSkinIds} />
+        <CatalogueGrid
+          outfits={catalogueOutfits}
+          guessedSkinIds={guessedSkinIds}
+          skinLevels={skinLevels}
+        />
       )}
 
       {sortMode === SORT_MODES.ALPHABETICAL && (
-        <CatalogueGrid outfits={alphabeticalOutfits} guessedSkinIds={guessedSkinIds} />
+        <CatalogueGrid
+          outfits={alphabeticalOutfits}
+          guessedSkinIds={guessedSkinIds}
+          skinLevels={skinLevels}
+        />
       )}
 
       {sortMode === SORT_MODES.SEASON && (
-        <CatalogueSections sections={seasonSections} guessedSkinIds={guessedSkinIds} showCounts />
+        <CatalogueSections
+          sections={seasonSections}
+          guessedSkinIds={guessedSkinIds}
+          skinLevels={skinLevels}
+          showCounts
+        />
       )}
 
       {sortMode === SORT_MODES.SERIES && (
-        <CatalogueSections sections={seriesSections} guessedSkinIds={guessedSkinIds} showCounts />
+        <CatalogueSections
+          sections={seriesSections}
+          guessedSkinIds={guessedSkinIds}
+          skinLevels={skinLevels}
+          showCounts
+        />
       )}
 
       <footer className="catalogue-footer">

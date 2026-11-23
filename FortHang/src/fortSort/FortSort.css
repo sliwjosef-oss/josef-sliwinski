@@ -1051,6 +1051,20 @@
   justify-content: flex-start;
 }
 
+.fort-sort .fort-sort-pick.level-max {
+  border: 2px solid #facc15;
+  box-shadow:
+    0 0 0 1px rgba(250, 204, 21, 0.35),
+    0 0 14px rgba(250, 204, 21, 0.4);
+}
+
+.fort-sort .skin-level-badge {
+  margin: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fde68a;
+}
+
 .fort-sort .fort-sort-pick.unowned {
   opacity: 0.45;
   filter: grayscale(1);

@@ -506,6 +506,22 @@
   background: rgba(46, 204, 113, 0.16);
 }
 
+.catalogue-card.level-max {
+  border: 2px solid #facc15;
+  box-shadow:
+    0 0 0 1px rgba(250, 204, 21, 0.35),
+    0 0 18px rgba(250, 204, 21, 0.45);
+  background: linear-gradient(160deg, rgba(250, 204, 21, 0.22), rgba(46, 204, 113, 0.12));
+}
+
+.skin-level-badge {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #fde68a;
+}
+
 .catalogue-card.hidden .catalogue-name {
   opacity: 0.7;
 }

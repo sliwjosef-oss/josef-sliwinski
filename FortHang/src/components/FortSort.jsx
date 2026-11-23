@@ -62,6 +62,12 @@ import { getOutfitIconFallbackSrc, getOutfitIconSrc } from '../utils/outfits';
 import { isSkinGuessed } from '../utils/progress';
 import { groupOutfitsBySeason, sortOutfitsByNumber } from '../utils/seasonSort';
 import { groupOutfitsBySeries } from '../utils/seriesSort';
+import {
+  MAX_SKIN_LEVEL,
+  awardPlacementXp,
+  getMinRollForLevel,
+  getSkinLevel,
+} from '../utils/skinLevels';
 import '../fortSort/FortSort.css';
 
 const SELECT_SORT = {
@@ -310,6 +316,7 @@ function SelectScreen({
   setBoostBetIds,
   lockedBetIds,
   economy,
+  skinLevels,
   onStart,
   onOpenArchive,
   onOpenShop,
@@ -409,11 +416,15 @@ function SelectScreen({
     const isStar = starSet.has(outfit.id);
     const isBoost = boostSet.has(outfit.id);
     const bonus = isStar ? starBonus : isBoost ? boostBonus : 0;
+    const level = owned ? getSkinLevel(skinLevels, outfit.id) : 0;
+    const minRoll = getMinRollForLevel(level);
     return (
       <button
         key={outfit.id}
         type="button"
         className={`catalogue-card fort-sort-pick ${owned ? 'revealed' : 'unowned'} ${
+          level >= MAX_SKIN_LEVEL ? 'level-max' : ''
+        } ${
           isBetting
             ? `${isStar ? 'is-star-bet' : ''} ${isBoost ? 'is-boost-bet' : ''} ${locked ? 'is-locked' : ''}`
             : selected
@@ -428,6 +439,7 @@ function SelectScreen({
           <SkinIcon outfit={outfit} className="catalogue-image" />
         </div>
         <p className="catalogue-name">{owned ? outfit.name : '???'}</p>
+        {owned ? <p className="skin-level-badge">Lv {level}{minRoll > 1 ? ` · min ${minRoll}` : ''}</p> : null}
         {owned && (mode === 'simulate' || mode === 'betting') ? (
           <DiceBadge outfit={outfit} bonus={bonus} />
         ) : null}
@@ -506,7 +518,7 @@ function SelectScreen({
           : mode === 'simulate'
             ? 'Pick discovered skins for a dice-simulated double-elim bracket. Each side rolls Nd100 and keeps the highest — series and star skins set N.'
             : mode === 'betting'
-              ? `All discovered skins enter. Pick up to ${maxStarBets} super bet skins (+${starBonus} dice, +${SUPER_BET_ROUND_BONUS} weebuck on every round payout) and up to ${maxBoostBets} bet skins (+${boostBonus} dice). Base payout is ${BET_WIN_POINTS} weebucks per bet win (shop upgrades raise slots, Top 64 / Top 8, and Select random). Winning the tournament pays ${TOURNAMENT_WIN_POINTS} weebucks. Bets lock until Monday CST (${nextMondayLabel()}).`
+              ? `All discovered skins enter. Pick up to ${maxStarBets} super bet skins (+${starBonus} dice, +${SUPER_BET_ROUND_BONUS} weebuck on every round payout, 2× XP) and up to ${maxBoostBets} bet skins (+${boostBonus} dice). Placement XP: 1st 200 · 2nd–4th 100 · 5th–7th 50 · else 25. Levels raise roll floors (Lv1: no 1–5, Lv3: no 1–10, Lv5: no 1–20). Base payout is ${BET_WIN_POINTS} weebucks per bet win. Winning the tournament pays ${TOURNAMENT_WIN_POINTS} weebucks. Bets lock until Monday CST (${nextMondayLabel()}).`
               : 'Pick discovered skins, then run a double-elimination bracket.'}{' '}
         Only skins you have discovered in FortHang can enter.
       </p>
@@ -654,7 +666,16 @@ function SelectScreen({
   );
 }
 
-export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyChange, onBack, onOpenShop }) {
+export default function FortSort({
+  outfits,
+  guessedSkinIds,
+  economy,
+  onEconomyChange,
+  skinLevels = {},
+  onSkinLevelsChange,
+  onBack,
+  onOpenShop,
+}) {
   const outfitsById = useMemo(() => new Map(outfits.map((outfit) => [outfit.id, outfit])), [outfits]);
   const discovered = useMemo(
     () => sortOutfitsByNumber(outfits.filter((outfit) => isSkinGuessed(guessedSkinIds, outfit))),
@@ -767,6 +788,14 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
     if (!tournament?.betting) return null;
     return buildBonusById(tournament.starBetIds ?? [], tournament.boostBetIds ?? [], economy);
   }, [tournament, economy]);
+  const minRollById = useMemo(() => {
+    if (!tournament?.betting) return null;
+    const map = {};
+    for (const id of [...(tournament.starBetIds ?? []), ...(tournament.boostBetIds ?? [])]) {
+      map[id] = getMinRollForLevel(getSkinLevel(skinLevels, id));
+    }
+    return map;
+  }, [tournament, skinLevels]);
   const betIdSet = useMemo(() => {
     if (!tournament?.betting) return new Set();
     return new Set([...(tournament.starBetIds ?? []), ...(tournament.boostBetIds ?? [])]);
@@ -824,6 +853,7 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
         boostBetIds: boosts,
         pointsEarned: 0,
         championBonusPaid: false,
+        xpAwarded: false,
         bracket: null,
       };
       next.bracket = createBracket(next.entrants, 4);
@@ -845,6 +875,7 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
         betting: false,
         pointsEarned: 0,
         championBonusPaid: false,
+        xpAwarded: false,
         bracket: null,
       };
       next.bracket = createBracket(next.entrants, 4);
@@ -898,6 +929,7 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
     if (!tournament || !result) return;
     let pointsGain = 0;
     let championBonusPaid = !!tournament.championBonusPaid;
+    let xpAwarded = !!tournament.xpAwarded;
     if (tournament.betting) {
       for (const win of result.wins ?? []) {
         const winnerId = typeof win === 'string' ? win : win?.winnerId;
@@ -922,6 +954,25 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
         });
         championBonusPaid = true;
       }
+      if (!wasDone && nextState.done && !xpAwarded) {
+        const finalStandings = computeStandings(
+          tournament.bracket,
+          nextState.outcomes,
+          nextState,
+        );
+        const awards = [...betIdSet].map((id) => ({
+          id,
+          place: finalStandings.placeById.get(id) ?? 999,
+          superBet: superBetIdSet.has(id),
+        }));
+        const xpResult = awardPlacementXp(skinLevels, awards);
+        onSkinLevelsChange?.(xpResult.levels);
+        const totalXp = xpResult.gained.reduce((sum, entry) => sum + entry.amount, 0);
+        if (totalXp > 0) {
+          setStatus(`Betting XP awarded: +${totalXp} across your selected skins.`);
+        }
+        xpAwarded = true;
+      }
     }
     if (pointsGain > 0) onEconomyChange(addPoints(pointsGain, economy));
     const next = {
@@ -930,6 +981,7 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
       rolls: [...(tournament.rolls ?? []), ...result.rolls],
       pointsEarned: (tournament.pointsEarned ?? 0) + pointsGain,
       championBonusPaid,
+      xpAwarded,
     };
     setTournament(next);
     persistTournament(next);
@@ -938,7 +990,13 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
 
   const simNextMatch = () => {
     if (!tournament || archiveReadOnly || !tournament.simulated) return;
-    const step = simulateNextMatch(tournament.bracket, tournament.history, outfitsById, bonusById);
+    const step = simulateNextMatch(
+      tournament.bracket,
+      tournament.history,
+      outfitsById,
+      bonusById,
+      minRollById,
+    );
     if (!step) return;
     applySimResult({
       history: [...tournament.history, [step.matchId, step.winnerSlot]],
@@ -949,17 +1007,23 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
 
   const simNextRound = () => {
     if (!tournament || archiveReadOnly || !tournament.simulated) return;
-    applySimResult(simulateCurrentRound(tournament.bracket, tournament.history, outfitsById, bonusById));
+    applySimResult(
+      simulateCurrentRound(tournament.bracket, tournament.history, outfitsById, bonusById, minRollById),
+    );
   };
 
   const simRound1Pools = () => {
     if (!tournament || archiveReadOnly || !tournament.simulated) return;
-    applySimResult(simulateRound1Pools(tournament.bracket, tournament.history, outfitsById, bonusById));
+    applySimResult(
+      simulateRound1Pools(tournament.bracket, tournament.history, outfitsById, bonusById, minRollById),
+    );
   };
 
   const simAll = () => {
     if (!tournament || archiveReadOnly || !tournament.simulated || !canSimulateAll) return;
-    applySimResult(simulateEntireBracket(tournament.bracket, tournament.history, outfitsById, bonusById));
+    applySimResult(
+      simulateEntireBracket(tournament.bracket, tournament.history, outfitsById, bonusById, minRollById),
+    );
   };
 
   const saveFinishedTournament = (quiet = false) => {
@@ -1066,6 +1130,8 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
       starBetIds: entry.starBetIds ?? [],
       boostBetIds: entry.boostBetIds ?? [],
       pointsEarned: entry.pointsEarned ?? 0,
+      championBonusPaid: true,
+      xpAwarded: true,
       bracket: createBracket(entry.entrants, entry.version ?? 4),
     });
     setMode(entry.betting ? 'betting' : entry.simulated ? 'simulate' : 'bracket');
@@ -1153,6 +1219,7 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
           setBoostBetIds={setBoostBetIds}
           lockedBetIds={lockedBetIds}
           economy={economy}
+          skinLevels={skinLevels}
           onStart={start}
           onOpenArchive={() => setScreen('archive')}
           onOpenShop={onOpenShop}
