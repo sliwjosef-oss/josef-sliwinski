@@ -1,8 +1,12 @@
 import {
   GUESS_PACKS,
+  SHOP_UNLOCKS,
   SIDEKICK_ROLLS,
   buyGuessPack,
+  buyShopUnlock,
   countOwnedSidekickKinds,
+  isShopUnlockAvailable,
+  isShopUnlockOwned,
   rollRandomSidekick,
 } from '../utils/economy';
 import GuessStatus from './GuessStatus';
@@ -22,6 +26,16 @@ function formatRollResults(results) {
     })
     .join('\n');
 }
+
+const BETTING_UNLOCK_ORDER = [
+  'simulateAll',
+  'top8Tier1',
+  'top8Tier2',
+  'top64Tier1',
+  'top64Tier2',
+  'starDicePlus',
+  'boostDicePlus',
+];
 
 export default function Shop({
   economy,
@@ -50,6 +64,18 @@ export default function Shop({
     }
     window.alert(`You rolled:\n${formatRollResults(result.results)}`);
   };
+
+  const buyUnlock = (unlockId) => {
+    const result = buyShopUnlock(unlockId, economy);
+    onEconomyChange(result.economy);
+    if (!result.ok) window.alert(result.reason);
+  };
+
+  const unlockCards = BETTING_UNLOCK_ORDER.map((id) => SHOP_UNLOCKS[id]).filter((item) => {
+    if (!item) return false;
+    if (isShopUnlockOwned(item.id, economy)) return true;
+    return isShopUnlockAvailable(item.id, economy);
+  });
 
   return (
     <div className="shop-screen">
@@ -85,9 +111,7 @@ export default function Shop({
         {GUESS_PACKS.map((pack) => (
           <article key={pack.id} className="shop-card">
             <h2>+{pack.amount} guesses</h2>
-            <p>
-              Add {pack.amount} letter guesses for today.
-            </p>
+            <p>Add {pack.amount} letter guesses for today.</p>
             <p className="shop-meta">Stacks until the 6:00 AM CST reset.</p>
             <button
               type="button"
@@ -99,6 +123,37 @@ export default function Shop({
             </button>
           </article>
         ))}
+      </div>
+
+      <h2 className="shop-section-title">Betting upgrades</h2>
+      <div className="shop-grid">
+        {unlockCards.map((item) => {
+          const owned = isShopUnlockOwned(item.id, economy);
+          const available = isShopUnlockAvailable(item.id, economy);
+          return (
+            <article key={item.id} className={`shop-card ${owned ? 'is-owned' : ''}`}>
+              <h2>{item.label}</h2>
+              <p>{item.blurb}</p>
+              <p className="shop-meta">
+                {owned ? 'Owned' : available ? 'Available' : 'Locked'}
+              </p>
+              {owned ? (
+                <button type="button" className="ghost-button" disabled>
+                  Owned
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={() => buyUnlock(item.id)}
+                  disabled={!available || economy.points < item.cost}
+                >
+                  Buy for {item.cost} weebucks
+                </button>
+              )}
+            </article>
+          );
+        })}
       </div>
 
       <h2 className="shop-section-title">Sidekick rolls</h2>

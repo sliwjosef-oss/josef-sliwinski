@@ -867,6 +867,11 @@
   background: rgba(20, 24, 48, 0.85);
 }
 
+.shop-card.is-owned {
+  border-color: rgba(74, 222, 128, 0.45);
+  opacity: 0.9;
+}
+
 .shop-card h2 {
   margin: 0 0 0.5rem;
   font-size: 1.2rem;

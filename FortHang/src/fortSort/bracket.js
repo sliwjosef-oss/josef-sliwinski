@@ -107,6 +107,13 @@ export function pageLabel(page) {
   return page.pool ? `${page.phase} · ${page.pool}` : page.phase;
 }
 
+export function matchPhase(bracket, matchId) {
+  if (!bracket?.pageOf || matchId == null) return '';
+  const pageIndex = bracket.pageOf.get(matchId);
+  if (pageIndex == null) return '';
+  return bracket.pages[pageIndex]?.phase ?? '';
+}
+
 export function shortPageLabel(page) {
   return page.pool ?? page.phase;
 }

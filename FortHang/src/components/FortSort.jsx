@@ -5,6 +5,7 @@ import {
   computeStandings,
   createBracket,
   formatPlace,
+  matchPhase,
   pageLabel,
   resolveBracket,
   roundLabel,
@@ -30,18 +31,23 @@ import {
 } from '../fortSort/storage';
 import {
   getDiceCount,
+  hasRound1PoolsPending,
   simulateCurrentRound,
   simulateEntireBracket,
   simulateNextMatch,
+  simulateRound1Pools,
 } from '../fortSort/simulate';
 import {
   BET_WIN_POINTS,
-  BOOST_BET_BONUS_DICE,
   MAX_BOOST_BETS,
   MAX_STAR_BETS,
-  STAR_BET_BONUS_DICE,
+  TOURNAMENT_WIN_POINTS,
   addPoints,
+  getBetWinPointsForPhase,
+  getBoostBetBonusDice,
   getLockedBetIds,
+  getStarBetBonusDice,
+  hasSimulateAllUnlock,
   lockBetSkins,
   nextMondayLabel,
 } from '../utils/economy';
@@ -57,11 +63,126 @@ const SELECT_SORT = {
   SERIES: 'series',
 };
 
-function buildBonusById(starBetIds, boostBetIds) {
+function buildBonusById(starBetIds, boostBetIds, economy) {
+  const starBonus = getStarBetBonusDice(economy);
+  const boostBonus = getBoostBetBonusDice(economy);
   const bonus = {};
-  for (const id of starBetIds) bonus[id] = STAR_BET_BONUS_DICE;
-  for (const id of boostBetIds) bonus[id] = BOOST_BET_BONUS_DICE;
+  for (const id of starBetIds) bonus[id] = starBonus;
+  for (const id of boostBetIds) bonus[id] = boostBonus;
   return bonus;
+}
+
+function countLosses(bracket, outcomes, skinId) {
+  let losses = 0;
+  for (const match of bracket.matches) {
+    const outcome = outcomes.get(match.id);
+    if (!outcome || outcome.winnerSlot == null || outcome.skipped) continue;
+    if (outcome.auto && outcome.participants.includes(BYE)) continue;
+    if (outcome.loser === skinId) losses += 1;
+  }
+  return losses;
+}
+
+function BettingStatusPanel({ tournament, bracketState, standings, outfitsById }) {
+  const [detailId, setDetailId] = useState(null);
+  const betIds = useMemo(
+    () => [...(tournament.starBetIds ?? []), ...(tournament.boostBetIds ?? [])],
+    [tournament.starBetIds, tournament.boostBetIds],
+  );
+  const starSet = useMemo(() => new Set(tournament.starBetIds ?? []), [tournament.starBetIds]);
+
+  const rows = useMemo(() => {
+    return betIds.map((id) => {
+      const outfit = outfitsById.get(id);
+      const losses = countLosses(tournament.bracket, bracketState.outcomes, id);
+      const place = standings?.placeById?.get(id) ?? null;
+      const isChampion = bracketState.champion === id;
+      const isRunnerUp = bracketState.runnerUp === id;
+      const eliminated = losses >= 2 || isRunnerUp || (bracketState.done && !isChampion);
+      let statusLabel = 'Still in';
+      if (isChampion) statusLabel = 'Champion · 1st';
+      else if (eliminated) {
+        statusLabel =
+          bracketState.done && place != null
+            ? `Eliminated · ${formatPlace(place)}`
+            : 'Eliminated';
+      }
+      return {
+        id,
+        outfit,
+        statusLabel,
+        eliminated,
+        isStar: starSet.has(id),
+      };
+    });
+  }, [betIds, bracketState, outfitsById, standings, starSet, tournament.bracket]);
+
+  const detail = detailId
+    ? (() => {
+        const outfit = outfitsById.get(detailId);
+        const run = buildPlayerRun(tournament.bracket, bracketState.outcomes, detailId);
+        const rolls = (tournament.rolls ?? []).filter((roll) => roll.participants?.includes(detailId));
+        return { outfit, run, rolls };
+      })()
+    : null;
+
+  if (!betIds.length) return null;
+
+  return (
+    <section className="bet-status-panel">
+      <h2 className="bet-status-title">Bet skins status</h2>
+      <div className="bet-status-grid">
+        {rows.map((row) => (
+          <button
+            key={row.id}
+            type="button"
+            className={`bet-status-card ${row.eliminated ? 'is-eliminated' : 'is-active'} ${
+              row.isStar ? 'is-star' : ''
+            }`}
+            onClick={() => setDetailId(row.id)}
+          >
+            <SkinIcon outfit={row.outfit} />
+            <div className="bet-status-text">
+              <strong>{row.outfit?.name ?? row.id}</strong>
+              <span>{row.statusLabel}</span>
+              <span className="bet-status-tier">{row.isStar ? '★ bet' : '+boost'}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {detail ? (
+        <div className="bet-status-detail" role="dialog" aria-label="Bet skin overview">
+          <div className="bet-status-detail-header">
+            <h3>{detail.outfit?.name ?? 'Skin'} overview</h3>
+            <button type="button" className="ghost-button" onClick={() => setDetailId(null)}>
+              Close
+            </button>
+          </div>
+          {detail.run.length === 0 ? (
+            <p className="hint">No matches played yet.</p>
+          ) : (
+            <ul className="bet-status-run">
+              {detail.run.map((entry) => (
+                <li key={entry.matchId}>
+                  <strong>{entry.label}</strong> — {entry.result === 'win' ? 'Won' : 'Lost'} vs{' '}
+                  {outfitsById.get(entry.opponentId)?.name ?? '—'}
+                </li>
+              ))}
+            </ul>
+          )}
+          {detail.rolls.length ? (
+            <div className="bet-status-rolls">
+              <h4>Dice rolls</h4>
+              {detail.rolls.map((roll) => (
+                <RollBreakdown key={roll.matchId} roll={roll} outfitsById={outfitsById} />
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+    </section>
+  );
 }
 
 const PREVIEW_PLACE_LIMIT = 49;
@@ -165,6 +286,8 @@ function RollBreakdown({ roll, outfitsById }) {
 
 function SelectScreen({
   discovered,
+  catalogue,
+  discoveredIds,
   selectedIds,
   setSelectedIds,
   mode,
@@ -183,24 +306,40 @@ function SelectScreen({
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const starSet = useMemo(() => new Set(starBetIds), [starBetIds]);
   const boostSet = useMemo(() => new Set(boostBetIds), [boostBetIds]);
-  const allSelected = discovered.length > 0 && selectedIds.length === discovered.length;
   const isBetting = mode === 'betting';
   const betCount = starBetIds.length + boostBetIds.length;
   const [betTier, setBetTier] = useState('star'); // star | boost
   const [selectSort, setSelectSort] = useState(SELECT_SORT.NUMBER);
+  const [hideUnowned, setHideUnowned] = useState(true);
+  const starBonus = getStarBetBonusDice(economy);
+  const boostBonus = getBoostBetBonusDice(economy);
 
-  const seasonSections = useMemo(() => groupOutfitsBySeason(discovered), [discovered]);
-  const seriesSections = useMemo(() => groupOutfitsBySeries(discovered), [discovered]);
+  const catalogueSorted = useMemo(() => sortOutfitsByNumber(catalogue), [catalogue]);
+  const visibleOutfits = useMemo(() => {
+    if (hideUnowned) return discovered;
+    return catalogueSorted;
+  }, [hideUnowned, discovered, catalogueSorted]);
+
+  const allSelected =
+    discovered.length > 0 && selectedIds.length === discovered.length && hideUnowned
+      ? true
+      : discovered.length > 0 &&
+        discovered.every((outfit) => selectedIds.includes(outfit.id)) &&
+        selectedIds.length === discovered.length;
+
+  const seasonSections = useMemo(() => groupOutfitsBySeason(visibleOutfits), [visibleOutfits]);
+  const seriesSections = useMemo(() => groupOutfitsBySeries(visibleOutfits), [visibleOutfits]);
 
   const toggle = (id) => {
     if (isBetting) return;
+    if (!discoveredIds.has(id)) return;
     setSelectedIds((current) =>
       current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
     );
   };
 
   const toggleBet = (id) => {
-    if (!isBetting || lockedBetIds.has(id)) return;
+    if (!isBetting || lockedBetIds.has(id) || !discoveredIds.has(id)) return;
     if (starSet.has(id) || boostSet.has(id)) {
       setStarBetIds((current) => current.filter((item) => item !== id));
       setBoostBetIds((current) => current.filter((item) => item !== id));
@@ -221,7 +360,7 @@ function SelectScreen({
     if (mode === 'rank') return `Start ranking ${selectedIds.length} skins`;
     if (mode === 'simulate') return `Simulate bracket with ${selectedIds.length} skins`;
     if (mode === 'betting') {
-      return `Start betting sim (${discovered.length} skins · ${starBetIds.length}★ · ${boostBetIds.length}+2)`;
+      return `Start betting sim (${discovered.length} skins · ${starBetIds.length}★ · ${boostBetIds.length}+${boostBonus})`;
     }
     return `Start bracket with ${selectedIds.length} skins`;
   })();
@@ -232,16 +371,17 @@ function SelectScreen({
       : selectedIds.length >= 2;
 
   const renderPick = (outfit) => {
+    const owned = discoveredIds.has(outfit.id);
     const selected = selectedSet.has(outfit.id);
     const locked = lockedBetIds.has(outfit.id);
     const isStar = starSet.has(outfit.id);
     const isBoost = boostSet.has(outfit.id);
-    const bonus = isStar ? STAR_BET_BONUS_DICE : isBoost ? BOOST_BET_BONUS_DICE : 0;
+    const bonus = isStar ? starBonus : isBoost ? boostBonus : 0;
     return (
       <button
         key={outfit.id}
         type="button"
-        className={`catalogue-card revealed fort-sort-pick ${
+        className={`catalogue-card fort-sort-pick ${owned ? 'revealed' : 'unowned'} ${
           isBetting
             ? `${isStar ? 'is-star-bet' : ''} ${isBoost ? 'is-boost-bet' : ''} ${locked ? 'is-locked' : ''}`
             : selected
@@ -249,18 +389,18 @@ function SelectScreen({
               : ''
         }`}
         onClick={() => (isBetting ? toggleBet(outfit.id) : toggle(outfit.id))}
-        disabled={isBetting && locked}
+        disabled={!owned || (isBetting && locked)}
       >
         <span className="catalogue-number">{outfit.number}.</span>
         <div className="catalogue-image-wrap">
           <SkinIcon outfit={outfit} className="catalogue-image" />
         </div>
-        <p className="catalogue-name">{outfit.name}</p>
-        {mode === 'simulate' || mode === 'betting' ? (
+        <p className="catalogue-name">{owned ? outfit.name : '???'}</p>
+        {owned && (mode === 'simulate' || mode === 'betting') ? (
           <DiceBadge outfit={outfit} bonus={bonus} />
         ) : null}
         <span className="fort-sort-check" aria-hidden="true">
-          {locked ? '🔒' : isStar ? '★★' : isBoost ? '+2' : selected && !isBetting ? '✓' : ''}
+          {locked ? '🔒' : isStar ? '★★' : isBoost ? `+${boostBonus}` : selected && !isBetting ? '✓' : ''}
         </span>
       </button>
     );
@@ -334,9 +474,9 @@ function SelectScreen({
           : mode === 'simulate'
             ? 'Pick discovered skins for a dice-simulated double-elim bracket. Each side rolls Nd100 and keeps the highest — series and star skins set N.'
             : mode === 'betting'
-              ? `All discovered skins enter. Pick up to ${MAX_STAR_BETS} skins for +${STAR_BET_BONUS_DICE} dice and up to ${MAX_BOOST_BETS} more for +${BOOST_BET_BONUS_DICE} dice. Each match a bet skin wins earns ${BET_WIN_POINTS} weebucks. Bet skins lock until Monday CST (${nextMondayLabel()}).`
+              ? `All discovered skins enter. Pick up to ${MAX_STAR_BETS} skins for +${starBonus} dice and up to ${MAX_BOOST_BETS} more for +${boostBonus} dice. Base payout is ${BET_WIN_POINTS} weebucks per bet win (shop upgrades raise Top 64 / Top 8). Winning the tournament pays ${TOURNAMENT_WIN_POINTS} weebucks. Bet skins lock until Monday CST (${nextMondayLabel()}).`
               : 'Pick discovered skins, then run a double-elimination bracket.'}{' '}
-        Only skins you have discovered in FortHang can be used.
+        Only skins you have discovered in FortHang can enter.
       </p>
       {mode === 'simulate' || mode === 'betting' ? (
         <p className="hint sim-rules">
@@ -357,14 +497,14 @@ function SelectScreen({
               className={`mode-tab ${betTier === 'star' ? 'is-active' : ''}`}
               onClick={() => setBetTier('star')}
             >
-              Pick ★ +{STAR_BET_BONUS_DICE} dice
+              Pick ★ +{starBonus} dice
             </button>
             <button
               type="button"
               className={`mode-tab ${betTier === 'boost' ? 'is-active' : ''}`}
               onClick={() => setBetTier('boost')}
             >
-              Pick +{BOOST_BET_BONUS_DICE} dice
+              Pick +{boostBonus} dice
             </button>
           </div>
         </>
@@ -413,7 +553,7 @@ function SelectScreen({
         </div>
       )}
 
-      {discovered.length > 0 ? (
+      {catalogue.length > 0 ? (
         <div className="import-actions fort-sort-sort-tabs" role="group" aria-label="Sort skins">
           <button
             type="button"
@@ -436,17 +576,26 @@ function SelectScreen({
           >
             Sort by Series
           </button>
+          <button
+            type="button"
+            className={`mode-tab ${hideUnowned ? 'is-active' : ''}`}
+            onClick={() => setHideUnowned((current) => !current)}
+          >
+            {hideUnowned ? 'Hide unowned: On' : 'Hide unowned: Off'}
+          </button>
         </div>
       ) : null}
 
-      {discovered.length === 0 ? (
+      {discovered.length === 0 && hideUnowned ? (
         <p className="hint">Discover skins in hangman first, then come back to FortSort.</p>
+      ) : visibleOutfits.length === 0 ? (
+        <p className="hint">No skins to show.</p>
       ) : selectSort === SELECT_SORT.SEASON ? (
         renderSections(seasonSections)
       ) : selectSort === SELECT_SORT.SERIES ? (
         renderSections(seriesSections)
       ) : (
-        renderPickGrid(discovered)
+        renderPickGrid(visibleOutfits)
       )}
     </div>
   );
@@ -548,7 +697,7 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
   }, [tournament]);
 
   const standings = useMemo(() => {
-    if (!tournament || !bracketState?.done) return null;
+    if (!tournament || !bracketState) return null;
     return computeStandings(tournament.bracket, bracketState.outcomes, bracketState);
   }, [tournament, bracketState]);
 
@@ -556,12 +705,17 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
   const isSimMode = mode === 'simulate' || mode === 'betting' || !!tournament?.simulated;
   const bonusById = useMemo(() => {
     if (!tournament?.betting) return null;
-    return buildBonusById(tournament.starBetIds ?? [], tournament.boostBetIds ?? []);
-  }, [tournament]);
+    return buildBonusById(tournament.starBetIds ?? [], tournament.boostBetIds ?? [], economy);
+  }, [tournament, economy]);
   const betIdSet = useMemo(() => {
     if (!tournament?.betting) return new Set();
     return new Set([...(tournament.starBetIds ?? []), ...(tournament.boostBetIds ?? [])]);
   }, [tournament]);
+  const canSimulateAll = hasSimulateAllUnlock(economy);
+  const round1Pending =
+    tournament?.simulated && tournament.bracket
+      ? hasRound1PoolsPending(tournament.bracket, tournament.history)
+      : false;
 
   const start = () => {
     setArchiveReadOnly(false);
@@ -595,6 +749,7 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
         starBetIds: stars,
         boostBetIds: boosts,
         pointsEarned: 0,
+        championBonusPaid: false,
         bracket: null,
       };
       next.bracket = createBracket(next.entrants, 4);
@@ -615,6 +770,7 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
         simulated,
         betting: false,
         pointsEarned: 0,
+        championBonusPaid: false,
         bracket: null,
       };
       next.bracket = createBracket(next.entrants, 4);
@@ -667,9 +823,26 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
   const applySimResult = (result) => {
     if (!tournament || !result) return;
     let pointsGain = 0;
+    let championBonusPaid = !!tournament.championBonusPaid;
     if (tournament.betting) {
-      for (const winnerId of result.wins ?? []) {
-        if (betIdSet.has(winnerId)) pointsGain += BET_WIN_POINTS;
+      for (const win of result.wins ?? []) {
+        const winnerId = typeof win === 'string' ? win : win?.winnerId;
+        const matchId = typeof win === 'string' ? null : win?.matchId;
+        if (!winnerId || !betIdSet.has(winnerId)) continue;
+        const phase = matchId ? matchPhase(tournament.bracket, matchId) : '';
+        pointsGain += getBetWinPointsForPhase(phase, economy);
+      }
+      const wasDone = !!resolveBracket(tournament.bracket, Object.fromEntries(tournament.history)).done;
+      const nextState = resolveBracket(tournament.bracket, Object.fromEntries(result.history));
+      if (
+        !wasDone &&
+        nextState.done &&
+        nextState.champion &&
+        betIdSet.has(nextState.champion) &&
+        !championBonusPaid
+      ) {
+        pointsGain += TOURNAMENT_WIN_POINTS;
+        championBonusPaid = true;
       }
     }
     if (pointsGain > 0) onEconomyChange(addPoints(pointsGain, economy));
@@ -678,6 +851,7 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
       history: result.history,
       rolls: [...(tournament.rolls ?? []), ...result.rolls],
       pointsEarned: (tournament.pointsEarned ?? 0) + pointsGain,
+      championBonusPaid,
     };
     setTournament(next);
     persistTournament(next);
@@ -691,7 +865,7 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
     applySimResult({
       history: [...tournament.history, [step.matchId, step.winnerSlot]],
       rolls: [step.roll],
-      wins: [step.winnerId],
+      wins: [{ winnerId: step.winnerId, matchId: step.matchId }],
     });
   };
 
@@ -700,8 +874,13 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
     applySimResult(simulateCurrentRound(tournament.bracket, tournament.history, outfitsById, bonusById));
   };
 
-  const simAll = () => {
+  const simRound1Pools = () => {
     if (!tournament || archiveReadOnly || !tournament.simulated) return;
+    applySimResult(simulateRound1Pools(tournament.bracket, tournament.history, outfitsById, bonusById));
+  };
+
+  const simAll = () => {
+    if (!tournament || archiveReadOnly || !tournament.simulated || !canSimulateAll) return;
     applySimResult(simulateEntireBracket(tournament.bracket, tournament.history, outfitsById, bonusById));
   };
 
@@ -881,6 +1060,8 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
       <div className="fort-sort">
         <SelectScreen
           discovered={discovered}
+          catalogue={outfits}
+          discoveredIds={discoveredIds}
           selectedIds={selectedIds}
           setSelectedIds={setSelectedIds}
           mode={mode}
@@ -1099,6 +1280,11 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
       <div className="fort-sort">
         <header className="top-bar">
           <h1>FortSort</h1>
+          {onOpenShop ? (
+            <button type="button" className="ghost-button" onClick={onOpenShop}>
+              Shop
+            </button>
+          ) : null}
           <button type="button" className="ghost-button" onClick={() => setScreen('archive')}>
             Saved
           </button>
@@ -1109,6 +1295,15 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
             Back to FortHang
           </button>
         </header>
+
+        {tournament.betting ? (
+          <BettingStatusPanel
+            tournament={tournament}
+            bracketState={bracketState}
+            standings={standings}
+            outfitsById={outfitsById}
+          />
+        ) : null}
 
         {bracketState.done ? (
           <section className="champion-view-inline">
@@ -1286,8 +1481,23 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
                       <button type="button" className="primary-button" onClick={simNextRound}>
                         Simulate round
                       </button>
-                      <button type="button" className="ghost-button" onClick={simAll}>
-                        Simulate all
+                      {round1Pending ? (
+                        <button type="button" className="primary-button" onClick={simRound1Pools}>
+                          Finish Round 1 pools
+                        </button>
+                      ) : null}
+                      <button
+                        type="button"
+                        className="ghost-button"
+                        onClick={simAll}
+                        disabled={!canSimulateAll}
+                        title={
+                          canSimulateAll
+                            ? 'Simulate the entire bracket'
+                            : 'Unlock in the Shop for 1000 weebucks'
+                        }
+                      >
+                        {canSimulateAll ? 'Simulate all' : 'Simulate all (locked · 1000)'}
                       </button>
                     </>
                   ) : (

@@ -23,10 +23,45 @@ export const RARE_ROLL_CHANCE = 0.1;
 export const ULTRA_RARE_ROLL_CHANCE = 0.01;
 
 export const BET_WIN_POINTS = 2;
+export const TOURNAMENT_WIN_POINTS = 30;
 export const MAX_STAR_BETS = 3;
 export const MAX_BOOST_BETS = 10;
 export const STAR_BET_BONUS_DICE = 4;
 export const BOOST_BET_BONUS_DICE = 2;
+export const STAR_BET_BONUS_DICE_UPGRADED = 5;
+export const BOOST_BET_BONUS_DICE_UPGRADED = 3;
+
+export const SHOP_UNLOCKS = {
+  simulateAll: { id: 'simulateAll', cost: 1000, label: 'Unlock Simulate all', blurb: 'Unlock the Simulate all button in FortSort.' },
+  top8Tier1: { id: 'top8Tier1', cost: 50, reward: 5, label: 'Top 8 wins → 5 weebucks', blurb: 'Bet-skin wins in Top 8 pay 5 weebucks.' },
+  top8Tier2: { id: 'top8Tier2', cost: 500, reward: 10, label: 'Top 8 wins → 10 weebucks', blurb: 'Upgrade Top 8 bet wins to 10 weebucks.', requires: 'top8Tier1' },
+  top64Tier1: { id: 'top64Tier1', cost: 100, reward: 3, label: 'Top 64 wins → 3 weebucks', blurb: 'Bet-skin wins in Top 64 pay 3 weebucks.' },
+  top64Tier2: { id: 'top64Tier2', cost: 1000, reward: 5, label: 'Top 64 wins → 5 weebucks', blurb: 'Upgrade Top 64 bet wins to 5 weebucks.', requires: 'top64Tier1' },
+  starDicePlus: { id: 'starDicePlus', cost: 150, label: '★ bets +5 dice', blurb: 'Star bets grant +5 dice instead of +4.' },
+  boostDicePlus: { id: 'boostDicePlus', cost: 250, label: 'Boost bets +3 dice', blurb: 'Boost bets grant +3 dice instead of +2.' },
+};
+
+function defaultUnlocks() {
+  return {
+    simulateAll: false,
+    top8Reward: 0,
+    top64Reward: 0,
+    starDicePlus: false,
+    boostDicePlus: false,
+  };
+}
+
+function normalizeUnlocks(unlocks) {
+  const base = defaultUnlocks();
+  if (!unlocks || typeof unlocks !== 'object') return base;
+  return {
+    simulateAll: !!unlocks.simulateAll,
+    top8Reward: unlocks.top8Reward === 10 || unlocks.top8Reward === 5 ? unlocks.top8Reward : 0,
+    top64Reward: unlocks.top64Reward === 5 || unlocks.top64Reward === 3 ? unlocks.top64Reward : 0,
+    starDicePlus: !!unlocks.starDicePlus,
+    boostDicePlus: !!unlocks.boostDicePlus,
+  };
+}
 
 /** Collab / rare sidekicks (10% roll tier). */
 export const RARE_SIDEKICK_NAMES = new Set([
@@ -81,6 +116,7 @@ function read() {
         : [],
       daily: normalizeDaily(parsed.daily),
       weeklyBets: normalizeWeekly(parsed.weeklyBets),
+      unlocks: normalizeUnlocks(parsed.unlocks),
     };
   } catch {
     return defaultEconomy();
@@ -98,7 +134,77 @@ function defaultEconomy() {
     ownedSidekickIds: [],
     daily: { dayKey: guessDayKey(), used: 0, bonus: 0 },
     weeklyBets: { weekKey: cstWeekKey(), usedIds: [] },
+    unlocks: defaultUnlocks(),
   };
+}
+
+function withFreshMeta(economy) {
+  return {
+    ...economy,
+    daily: normalizeDaily(economy.daily),
+    weeklyBets: normalizeWeekly(economy.weeklyBets),
+    unlocks: normalizeUnlocks(economy.unlocks),
+  };
+}
+
+export function getStarBetBonusDice(economy = loadEconomy()) {
+  return normalizeUnlocks(economy.unlocks).starDicePlus ? STAR_BET_BONUS_DICE_UPGRADED : STAR_BET_BONUS_DICE;
+}
+
+export function getBoostBetBonusDice(economy = loadEconomy()) {
+  return normalizeUnlocks(economy.unlocks).boostDicePlus
+    ? BOOST_BET_BONUS_DICE_UPGRADED
+    : BOOST_BET_BONUS_DICE;
+}
+
+export function getBetWinPointsForPhase(phase, economy = loadEconomy()) {
+  const unlocks = normalizeUnlocks(economy.unlocks);
+  const label = String(phase || '');
+  if (label.startsWith('Top 8') && unlocks.top8Reward) return unlocks.top8Reward;
+  if (label.startsWith('Top 64') && unlocks.top64Reward) return unlocks.top64Reward;
+  return BET_WIN_POINTS;
+}
+
+export function hasSimulateAllUnlock(economy = loadEconomy()) {
+  return normalizeUnlocks(economy.unlocks).simulateAll;
+}
+
+export function buyShopUnlock(unlockId, economy = loadEconomy()) {
+  const state = withFreshMeta(economy);
+  const item = Object.values(SHOP_UNLOCKS).find((entry) => entry.id === unlockId);
+  if (!item) return { ok: false, reason: 'Unknown shop item.', economy: state };
+
+  if (item.requires === 'top8Tier1' && state.unlocks.top8Reward < 5) {
+    return { ok: false, reason: 'Buy the Top 8 → 5 weebucks upgrade first.', economy: state };
+  }
+  if (item.requires === 'top64Tier1' && state.unlocks.top64Reward < 3) {
+    return { ok: false, reason: 'Buy the Top 64 → 3 weebucks upgrade first.', economy: state };
+  }
+
+  const already =
+    (unlockId === 'simulateAll' && state.unlocks.simulateAll) ||
+    (unlockId === 'starDicePlus' && state.unlocks.starDicePlus) ||
+    (unlockId === 'boostDicePlus' && state.unlocks.boostDicePlus) ||
+    (unlockId === 'top8Tier1' && state.unlocks.top8Reward >= 5) ||
+    (unlockId === 'top8Tier2' && state.unlocks.top8Reward >= 10) ||
+    (unlockId === 'top64Tier1' && state.unlocks.top64Reward >= 3) ||
+    (unlockId === 'top64Tier2' && state.unlocks.top64Reward >= 5);
+
+  if (already) return { ok: false, reason: 'Already owned.', economy: state };
+  if (state.points < item.cost) {
+    return { ok: false, reason: `Need ${item.cost} weebucks.`, economy: state };
+  }
+
+  state.points -= item.cost;
+  if (unlockId === 'simulateAll') state.unlocks.simulateAll = true;
+  if (unlockId === 'starDicePlus') state.unlocks.starDicePlus = true;
+  if (unlockId === 'boostDicePlus') state.unlocks.boostDicePlus = true;
+  if (unlockId === 'top8Tier1') state.unlocks.top8Reward = 5;
+  if (unlockId === 'top8Tier2') state.unlocks.top8Reward = 10;
+  if (unlockId === 'top64Tier1') state.unlocks.top64Reward = 3;
+  if (unlockId === 'top64Tier2') state.unlocks.top64Reward = 5;
+
+  return { ok: true, economy: write(state) };
 }
 
 function normalizeDaily(daily) {
@@ -267,8 +373,29 @@ export function addPoints(amount, economy = loadEconomy()) {
     points: Math.max(0, (Number(economy.points) || 0) + amount),
     daily: normalizeDaily(economy.daily),
     weeklyBets: normalizeWeekly(economy.weeklyBets),
+    unlocks: normalizeUnlocks(economy.unlocks),
   };
   return write(state);
+}
+
+export function isShopUnlockOwned(unlockId, economy = loadEconomy()) {
+  const unlocks = normalizeUnlocks(economy.unlocks);
+  if (unlockId === 'simulateAll') return unlocks.simulateAll;
+  if (unlockId === 'starDicePlus') return unlocks.starDicePlus;
+  if (unlockId === 'boostDicePlus') return unlocks.boostDicePlus;
+  if (unlockId === 'top8Tier1') return unlocks.top8Reward >= 5;
+  if (unlockId === 'top8Tier2') return unlocks.top8Reward >= 10;
+  if (unlockId === 'top64Tier1') return unlocks.top64Reward >= 3;
+  if (unlockId === 'top64Tier2') return unlocks.top64Reward >= 5;
+  return false;
+}
+
+export function isShopUnlockAvailable(unlockId, economy = loadEconomy()) {
+  const unlocks = normalizeUnlocks(economy.unlocks);
+  if (isShopUnlockOwned(unlockId, economy)) return false;
+  if (unlockId === 'top8Tier2') return unlocks.top8Reward >= 5;
+  if (unlockId === 'top64Tier2') return unlocks.top64Reward >= 3;
+  return true;
 }
 
 export function buyGuessPack(economy = loadEconomy(), pack = GUESS_PACKS[0]) {

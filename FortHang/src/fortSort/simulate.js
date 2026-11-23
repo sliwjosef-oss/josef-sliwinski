@@ -118,11 +118,41 @@ export function simulateCurrentRound(bracket, history, outfitsById, bonusById = 
     if (!step) break;
     nextHistory = [...nextHistory, [step.matchId, step.winnerSlot]];
     rolls.push(step.roll);
-    wins.push(step.winnerId);
+    wins.push({ winnerId: step.winnerId, matchId: step.matchId });
   }
 
   const end = resolveBracket(bracket, Object.fromEntries(nextHistory));
   return { history: nextHistory, rolls, wins, done: !!end.done };
+}
+
+/** Resolve every remaining Round 1 Pools match, then stop. */
+export function simulateRound1Pools(bracket, history, outfitsById, bonusById = null) {
+  let nextHistory = [...history];
+  const rolls = [];
+  const wins = [];
+
+  while (true) {
+    const state = resolveBracket(bracket, Object.fromEntries(nextHistory));
+    if (!state.current || state.done) break;
+    const pageIndex = bracket.pageOf.get(state.current.id);
+    if (bracket.pages[pageIndex]?.phase !== 'Round 1 Pools') break;
+
+    const step = simulateNextMatch(bracket, nextHistory, outfitsById, bonusById);
+    if (!step) break;
+    nextHistory = [...nextHistory, [step.matchId, step.winnerSlot]];
+    rolls.push(step.roll);
+    wins.push({ winnerId: step.winnerId, matchId: step.matchId });
+  }
+
+  const end = resolveBracket(bracket, Object.fromEntries(nextHistory));
+  return { history: nextHistory, rolls, wins, done: !!end.done };
+}
+
+export function hasRound1PoolsPending(bracket, history) {
+  const state = resolveBracket(bracket, Object.fromEntries(history));
+  if (!state.current || state.done) return false;
+  const pageIndex = bracket.pageOf.get(state.current.id);
+  return bracket.pages[pageIndex]?.phase === 'Round 1 Pools';
 }
 
 export function simulateEntireBracket(bracket, history, outfitsById, bonusById = null) {
@@ -135,7 +165,7 @@ export function simulateEntireBracket(bracket, history, outfitsById, bonusById =
     if (!step) break;
     nextHistory = [...nextHistory, [step.matchId, step.winnerSlot]];
     rolls.push(step.roll);
-    wins.push(step.winnerId);
+    wins.push({ winnerId: step.winnerId, matchId: step.matchId });
   }
 
   return { history: nextHistory, rolls, wins, done: true };

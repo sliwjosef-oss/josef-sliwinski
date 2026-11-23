@@ -75,6 +75,7 @@ function normalizeBracketProgress(saved, simulated) {
     starBetIds: Array.isArray(saved.starBetIds) ? saved.starBetIds : [],
     boostBetIds: Array.isArray(saved.boostBetIds) ? saved.boostBetIds : [],
     pointsEarned: Number(saved.pointsEarned) || 0,
+    championBonusPaid: !!saved.championBonusPaid,
     rolls: Array.isArray(saved.rolls) ? saved.rolls : [],
   };
 }
@@ -114,6 +115,7 @@ export function saveSimBracketProgress(tournament) {
     starBetIds: tournament.starBetIds ?? [],
     boostBetIds: tournament.boostBetIds ?? [],
     pointsEarned: tournament.pointsEarned ?? 0,
+    championBonusPaid: !!tournament.championBonusPaid,
     savedAt: Date.now(),
   });
 }
