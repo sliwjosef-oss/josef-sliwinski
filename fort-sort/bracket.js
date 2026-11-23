@@ -377,3 +377,118 @@ export function roundLabel(bracket, match) {
   }
   return match.round === bracket.losers.length ? 'Losers Final' : `Losers Round ${match.round}`;
 }
+
+export function formatPlace(place) {
+  const mod100 = place % 100;
+  if (mod100 >= 11 && mod100 <= 13) return `${place}th`;
+  switch (place % 10) {
+    case 1:
+      return `${place}st`;
+    case 2:
+      return `${place}nd`;
+    case 3:
+      return `${place}rd`;
+    default:
+      return `${place}th`;
+  }
+}
+
+// Double-elim standings: same-round eliminations share a place (5th, 7th, 9th…).
+export function computeStandings(bracket, outcomes, { champion, runnerUp }) {
+  const losses = new Map();
+  const eliminated = []; // { id, order, roundKey }
+
+  const bumpLoss = (id, match, order) => {
+    if (!id || id === BYE) return;
+    const next = (losses.get(id) ?? 0) + 1;
+    losses.set(id, next);
+    if (next >= 2) {
+      const roundKey =
+        match.bracket === 'L'
+          ? `L${String(match.round).padStart(3, '0')}`
+          : match.bracket === 'GF'
+            ? `GF${match.round}`
+            : `W${String(match.round).padStart(3, '0')}`;
+      eliminated.push({ id, order, roundKey });
+    }
+  };
+
+  let order = 0;
+  for (const match of bracket.matches) {
+    const outcome = outcomes.get(match.id);
+    if (!outcome || outcome.winnerSlot == null || outcome.skipped) continue;
+    order += 1;
+    // Byes advance someone without eliminating a real skin.
+    if (outcome.auto && outcome.participants.includes(BYE)) continue;
+    bumpLoss(outcome.loser, match, order);
+  }
+
+  const placeById = new Map();
+  if (champion) placeById.set(champion, 1);
+  if (runnerUp) placeById.set(runnerUp, 2);
+
+  const groups = new Map();
+  for (const entry of eliminated) {
+    if (placeById.has(entry.id)) continue;
+    if (!groups.has(entry.roundKey)) groups.set(entry.roundKey, []);
+    groups.get(entry.roundKey).push(entry);
+  }
+
+  // Later eliminations place higher: sort by last loss order descending, then round key.
+  const rankedGroups = [...groups.entries()].sort((a, b) => {
+    const aOrder = Math.max(...a[1].map((entry) => entry.order));
+    const bOrder = Math.max(...b[1].map((entry) => entry.order));
+    return bOrder - aOrder || b[0].localeCompare(a[0]);
+  });
+
+  let nextPlace = 3;
+  for (const [, entries] of rankedGroups) {
+    const ids = [...new Set(entries.map((entry) => entry.id))];
+    for (const id of ids) placeById.set(id, nextPlace);
+    nextPlace += ids.length;
+  }
+
+  // Any unfinished leftovers (shouldn't happen when done) get the remaining places.
+  for (const id of bracket.matches.flatMap((match) => {
+    const outcome = outcomes.get(match.id);
+    return outcome?.participants?.filter((participant) => participant && participant !== BYE) ?? [];
+  })) {
+    if (!placeById.has(id)) {
+      placeById.set(id, nextPlace);
+      nextPlace += 1;
+    }
+  }
+
+  const byPlace = new Map();
+  for (const [id, place] of placeById) {
+    if (!byPlace.has(place)) byPlace.set(place, []);
+    byPlace.get(place).push(id);
+  }
+
+  const placements = [...byPlace.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([place, ids]) => ({ place, ids }));
+
+  return { placeById, placements };
+}
+
+export function buildPlayerRun(bracket, outcomes, playerId) {
+  const run = [];
+  for (const match of bracket.matches) {
+    const outcome = outcomes.get(match.id);
+    if (!outcome || outcome.winnerSlot == null || outcome.skipped) continue;
+    const [first, second] = outcome.participants;
+    if (first !== playerId && second !== playerId) continue;
+    if (first === BYE || second === BYE) continue;
+    const won = outcome.winner === playerId;
+    const opponent = won ? outcome.loser : outcome.winner;
+    if (!opponent || opponent === BYE) continue;
+    run.push({
+      matchId: match.id,
+      label: roundLabel(bracket, match),
+      result: won ? 'win' : 'loss',
+      opponentId: opponent,
+    });
+  }
+  return run;
+}

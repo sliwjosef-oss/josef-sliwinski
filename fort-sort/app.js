@@ -1,11 +1,22 @@
-import { estimateRemaining, looseName, normalizeName, parsePastedNames, replay, shuffle } from './sorter.js?v=9';
-import { BYE, createBracket, pageLabel, resolveBracket, roundLabel } from './bracket.js?v=9';
-import { MY_SKINS } from './preset.js?v=9';
+import { estimateRemaining, looseName, normalizeName, parsePastedNames, replay, shuffle } from './sorter.js?v=10';
+import {
+  BYE,
+  buildPlayerRun,
+  computeStandings,
+  createBracket,
+  formatPlace,
+  pageLabel,
+  resolveBracket,
+  roundLabel,
+} from './bracket.js?v=10';
+import { MY_SKINS } from './preset.js?v=10';
 
 const STORAGE_KEY = 'fort-sort-progress-v1';
 const BRACKET_KEY = 'fort-sort-bracket-v1';
 const DRAFT_KEY = 'fort-sort-draft-v1';
 const MODE_KEY = 'fort-sort-mode-v1';
+const ARCHIVE_KEY = 'fort-sort-archive-v1';
+const PREVIEW_PLACE_LIMIT = 49;
 const FORT_HANG_PATH = '../fort-hang';
 
 // Mirrors getGameOutfits in FortHang/src/utils/outfits.js so "every skin" matches the game.
@@ -35,6 +46,9 @@ let pageIndex = 0;
 let followCurrentPage = true;
 let pendingJumpMatchId = null;
 let html2canvasPromise = null;
+let archiveReadOnly = false;
+let showingArchiveList = false;
+let selectedPlayerId = null;
 
 function isDuplicateVariant(id) {
   return /_NPC|_LOD(?![A-Za-z])|CINE|ForSwitch|TBD_Athena/i.test(id);
@@ -111,12 +125,14 @@ function saveProgress() {
 function loadTournament() {
   const saved = readJson(BRACKET_KEY);
   if (!saved || !Array.isArray(saved.entrants) || !Array.isArray(saved.history)) return null;
-  // Keep each save on the bracket wiring it was started with (v1/v2/v3 drop rules differ).
-  return makeTournament(saved.entrants, saved.history, saved.version ?? 1);
+  // Keep each save on the bracket wiring it was started with (v1/v2/v3/v4 drop rules differ).
+  const loaded = makeTournament(saved.entrants, saved.history, saved.version ?? 1);
+  loaded.archiveId = saved.archiveId ?? null;
+  return loaded;
 }
 
 function makeTournament(entrants, history, version = 4) {
-  return { entrants, history, version, bracket: createBracket(entrants, version) };
+  return { entrants, history, version, archiveId: null, bracket: createBracket(entrants, version) };
 }
 
 function saveTournament() {
@@ -126,6 +142,7 @@ function saveTournament() {
       entrants: tournament.entrants,
       history: tournament.history,
       version: tournament.version ?? 4,
+      archiveId: tournament.archiveId ?? null,
       savedAt: Date.now(),
     }),
   );
@@ -159,10 +176,187 @@ function seasonLabel(outfit) {
 }
 
 function showView(...names) {
-  for (const view of ['import', 'compare', 'results', 'champion', 'bracket']) {
+  for (const view of ['import', 'compare', 'results', 'champion', 'bracket', 'archive']) {
     $(`${view}-view`).hidden = !names.includes(view);
   }
-  $('restart-button').hidden = names.includes('import');
+  $('restart-button').hidden = names.includes('import') || names.includes('archive');
+  showingArchiveList = names.includes('archive');
+}
+
+function readArchive() {
+  const saved = readJson(ARCHIVE_KEY);
+  return Array.isArray(saved) ? saved : [];
+}
+
+function writeArchive(entries) {
+  writeStorage(ARCHIVE_KEY, JSON.stringify(entries));
+}
+
+function archiveTitle(entry) {
+  const when = new Date(entry.savedAt).toLocaleString();
+  const champ = outfitsById.get(entry.championId)?.name ?? 'Tournament';
+  return `${champ} · ${entry.entrants.length} skins · ${when}`;
+}
+
+function currentArchivePayload() {
+  if (!tournament) return null;
+  const state = tournamentState();
+  if (!state.done) return null;
+  return {
+    id: tournament.archiveId ?? crypto.randomUUID(),
+    savedAt: Date.now(),
+    entrants: tournament.entrants,
+    history: tournament.history,
+    version: tournament.version ?? 4,
+    championId: state.champion,
+    runnerUpId: state.runnerUp,
+  };
+}
+
+function saveTournamentToArchive({ quiet = false } = {}) {
+  const payload = currentArchivePayload();
+  if (!payload) return null;
+  tournament.archiveId = payload.id;
+  const entries = readArchive().filter((entry) => entry.id !== payload.id);
+  entries.unshift(payload);
+  writeArchive(entries.slice(0, 40));
+  saveTournament();
+  if (!quiet) $('archive-status').textContent = 'Saved on this device.';
+  return payload;
+}
+
+function openArchiveEntry(entry) {
+  if (!entry?.entrants?.every((id) => outfitsById.has(id))) {
+    $('load-error').hidden = false;
+    $('load-error').textContent = 'That saved tournament uses skins missing from the catalogue.';
+    return;
+  }
+  archiveReadOnly = true;
+  showingArchiveList = false;
+  selectedPlayerId = null;
+  tournament = makeTournament(entry.entrants, entry.history, entry.version ?? 4);
+  tournament.archiveId = entry.id;
+  board = null;
+  pageIndex = 0;
+  followCurrentPage = false;
+  mode = 'bracket';
+  writeStorage(MODE_KEY, mode);
+  $('resume-note').hidden = true;
+  render();
+}
+
+function renderArchiveList() {
+  const entries = readArchive();
+  const list = $('archive-list');
+  $('archive-empty').hidden = entries.length > 0;
+  list.replaceChildren(
+    ...entries.map((entry) => {
+      const row = document.createElement('li');
+      row.className = 'archive-row';
+      const meta = document.createElement('div');
+      meta.className = 'archive-row-meta';
+      meta.append(
+        Object.assign(document.createElement('strong'), { textContent: archiveTitle(entry) }),
+        Object.assign(document.createElement('span'), {
+          className: 'hint',
+          textContent: `Champion: ${outfitsById.get(entry.championId)?.name ?? 'Unknown'}`,
+        }),
+      );
+      const actions = document.createElement('div');
+      actions.className = 'archive-row-actions';
+      const open = Object.assign(document.createElement('button'), {
+        className: 'primary-button',
+        type: 'button',
+        textContent: 'Open',
+      });
+      open.addEventListener('click', () => openArchiveEntry(entry));
+      const remove = Object.assign(document.createElement('button'), {
+        className: 'ghost-button',
+        type: 'button',
+        textContent: 'Delete',
+      });
+      remove.addEventListener('click', () => {
+        if (!confirm('Delete this saved tournament?')) return;
+        writeArchive(readArchive().filter((item) => item.id !== entry.id));
+        renderArchiveList();
+      });
+      actions.append(open, remove);
+      row.append(meta, actions);
+      return row;
+    }),
+  );
+}
+
+function skinChip(id) {
+  const outfit = outfitsById.get(id);
+  const chip = document.createElement('span');
+  chip.className = 'placement-skin';
+  if (outfit) chip.append(renderIcon(outfit));
+  chip.append(Object.assign(document.createElement('span'), { textContent: outfit?.name ?? id }));
+  return chip;
+}
+
+function renderPlacements(state) {
+  const { placements, placeById } = computeStandings(tournament.bracket, state.outcomes, state);
+  const preview = placements.filter((entry) => entry.place <= PREVIEW_PLACE_LIMIT);
+
+  $('placements-list').replaceChildren(
+    ...preview.map(({ place, ids }) => {
+      const row = document.createElement('li');
+      row.className = 'placement-row';
+      row.append(
+        Object.assign(document.createElement('span'), { className: 'placement-rank', textContent: formatPlace(place) }),
+        Object.assign(document.createElement('div'), { className: 'placement-names' }),
+      );
+      row.lastChild.append(...ids.map(skinChip));
+      return row;
+    }),
+  );
+
+  $('full-results-list').replaceChildren(
+    ...placements.flatMap(({ place, ids }) =>
+      ids.map((id) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'full-result-row';
+        button.append(
+          Object.assign(document.createElement('span'), { className: 'placement-rank', textContent: formatPlace(place) }),
+          skinChip(id),
+        );
+        button.addEventListener('click', () => showPlayerRun(id, placeById.get(id), state));
+        return button;
+      }),
+    ),
+  );
+
+  return placeById;
+}
+
+function showPlayerRun(playerId, place, state) {
+  selectedPlayerId = playerId;
+  const outfit = outfitsById.get(playerId);
+  const run = buildPlayerRun(tournament.bracket, state.outcomes, playerId);
+  $('player-run-panel').hidden = false;
+  $('player-run-title').textContent = `${outfit?.name ?? playerId} · ${formatPlace(place)}`;
+  $('player-run-list').replaceChildren(
+    ...run.map((step) => {
+      const item = document.createElement('li');
+      item.className = `player-run-item is-${step.result}`;
+      item.append(
+        Object.assign(document.createElement('span'), {
+          className: 'run-result',
+          textContent: step.result === 'win' ? 'Beat' : 'Lost to',
+        }),
+        Object.assign(document.createElement('span'), { className: 'run-label', textContent: step.label }),
+      );
+      const opponent = document.createElement('div');
+      opponent.className = 'run-opponent';
+      opponent.append(skinChip(step.opponentId));
+      item.append(opponent);
+      return item;
+    }),
+  );
+  $('player-run-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function checkPastedNames() {
@@ -207,6 +401,8 @@ function start() {
     progress = { order: shuffle(pendingIds), decisions: [] };
     saveProgress();
   } else {
+    archiveReadOnly = false;
+    selectedPlayerId = null;
     tournament = makeTournament(shuffle(pendingIds), []);
     board = null;
     pageIndex = 0;
@@ -214,10 +410,12 @@ function start() {
     saveTournament();
   }
   $('resume-note').hidden = true;
+  $('archive-status').textContent = '';
   render();
 }
 
 function choose(firstWins) {
+  if (archiveReadOnly) return;
   if (mode === 'rank') {
     progress.decisions.push(firstWins);
     saveProgress();
@@ -233,6 +431,7 @@ function choose(firstWins) {
 }
 
 function undo() {
+  if (archiveReadOnly) return;
   if (mode === 'rank') {
     if (!progress?.decisions.length) return;
     progress.decisions.pop();
@@ -674,9 +873,24 @@ function renderBracket() {
     showView('champion', 'bracket');
     fillCard($('champion-card'), outfitsById.get(state.champion));
     fillCard($('runner-up-card'), outfitsById.get(state.runnerUp));
-    $('champion-card').prepend(Object.assign(document.createElement('p'), { className: 'podium-place', textContent: '🏆 Champion' }));
-    $('runner-up-card').prepend(Object.assign(document.createElement('p'), { className: 'podium-place', textContent: 'Runner-up' }));
+    $('champion-card').prepend(Object.assign(document.createElement('p'), { className: 'podium-place', textContent: '1st' }));
+    $('runner-up-card').prepend(Object.assign(document.createElement('p'), { className: 'podium-place', textContent: '2nd' }));
+    $('champion-title').textContent = archiveReadOnly ? 'Saved tournament' : 'Tournament complete';
+    $('archive-banner').hidden = !archiveReadOnly;
+    $('archive-banner').textContent = archiveReadOnly
+      ? 'Viewing a saved tournament. Your active in-progress bracket is unchanged until you start over or start a new one.'
+      : '';
+    $('champion-undo-button').hidden = archiveReadOnly;
     $('champion-undo-button').disabled = tournament.history.length === 0;
+    $('save-archive-button').hidden = archiveReadOnly;
+    $('restart-button').hidden = false;
+    $('restart-button').textContent = archiveReadOnly ? 'Close saved tournament' : 'Start over';
+    $('full-results-panel').hidden = true;
+    $('placements-panel').hidden = false;
+    $('player-run-panel').hidden = true;
+    selectedPlayerId = null;
+    renderPlacements(state);
+    if (!archiveReadOnly && !tournament.archiveId) saveTournamentToArchive({ quiet: true });
     return;
   }
 
@@ -703,11 +917,17 @@ function renderModeTabs() {
   }
   $('mode-description').textContent = MODE_DESCRIPTIONS[mode];
   $('compare-title').textContent = mode === 'rank' ? 'Which skin do you like more?' : 'Which skin advances?';
+  if (!archiveReadOnly) $('restart-button').textContent = 'Start over';
   updateStartButton();
 }
 
 function render() {
   renderModeTabs();
+  if (showingArchiveList) {
+    showView('archive');
+    renderArchiveList();
+    return;
+  }
   if (mode === 'bracket') {
     if (tournament) renderBracket();
     else showView('import');
@@ -730,7 +950,16 @@ function render() {
 }
 
 function switchMode(nextMode) {
-  if (nextMode === mode) return;
+  if (nextMode === mode && !showingArchiveList && !archiveReadOnly) return;
+  showingArchiveList = false;
+  if (archiveReadOnly) {
+    archiveReadOnly = false;
+    selectedPlayerId = null;
+    tournament = loadTournament();
+    board = null;
+    pageIndex = 0;
+    followCurrentPage = true;
+  }
   mode = nextMode;
   writeStorage(MODE_KEY, mode);
   $('resume-note').hidden = true;
@@ -764,9 +993,45 @@ function wireEvents() {
   });
   $('download-page-button').addEventListener('click', downloadBracketPage);
   $('download-progress-button').addEventListener('click', downloadBracketProgress);
+  $('full-results-button').addEventListener('click', () => {
+    $('placements-panel').hidden = true;
+    $('full-results-panel').hidden = false;
+  });
+  $('close-full-results-button').addEventListener('click', () => {
+    $('full-results-panel').hidden = true;
+    $('placements-panel').hidden = false;
+    $('player-run-panel').hidden = true;
+    selectedPlayerId = null;
+  });
+  $('close-player-run-button').addEventListener('click', () => {
+    $('player-run-panel').hidden = true;
+    selectedPlayerId = null;
+  });
+  $('save-archive-button').addEventListener('click', () => saveTournamentToArchive());
+  $('archive-button').addEventListener('click', () => {
+    showingArchiveList = true;
+    render();
+  });
+  $('close-archive-button').addEventListener('click', () => {
+    showingArchiveList = false;
+    render();
+  });
   $('restart-button').addEventListener('click', () => {
+    if (archiveReadOnly) {
+      archiveReadOnly = false;
+      selectedPlayerId = null;
+      tournament = loadTournament();
+      board = null;
+      pageIndex = 0;
+      followCurrentPage = true;
+      $('archive-status').textContent = '';
+      render();
+      return;
+    }
     const what = mode === 'rank' ? 'ranking' : 'bracket';
-    if (!confirm(`Start over? This erases all your ${what} picks.`)) return;
+    const state = mode === 'bracket' && tournament ? tournamentState() : null;
+    if (state?.done) saveTournamentToArchive({ quiet: true });
+    if (!confirm(`Start over? This clears your current ${what}. Saved tournaments are kept.`)) return;
     if (mode === 'rank') {
       localStorage.removeItem(STORAGE_KEY);
       progress = null;
@@ -776,9 +1041,12 @@ function wireEvents() {
       board = null;
       pageIndex = 0;
       followCurrentPage = true;
+      archiveReadOnly = false;
+      selectedPlayerId = null;
     }
     $('copy-status').textContent = '';
     $('download-status').textContent = '';
+    $('archive-status').textContent = '';
     $('resume-note').hidden = true;
     render();
     if ($('import-text').value.trim()) checkPastedNames();

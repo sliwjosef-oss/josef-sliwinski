@@ -293,6 +293,176 @@ main {
   color: #facc15;
 }
 
+.placements-panel,
+.full-results-panel {
+  margin: 28px auto 0;
+  max-width: 560px;
+}
+
+.placements-panel h3,
+.full-results-panel h3,
+.player-run-panel h3 {
+  margin: 0 0 10px;
+}
+
+.placements-list {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.placement-row,
+.full-result-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  background: #1e293b;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  width: 100%;
+}
+
+.full-result-row {
+  cursor: pointer;
+}
+
+.full-result-row:hover {
+  border-color: #38bdf8;
+}
+
+.placement-rank {
+  flex: none;
+  min-width: 3.2rem;
+  font-weight: 700;
+  color: #93c5fd;
+}
+
+.placement-names {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.placement-skin {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.placement-skin img,
+.placement-skin .icon-placeholder,
+.full-result-row img,
+.full-result-row .icon-placeholder {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: contain;
+  background: #0f172a;
+}
+
+.full-results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.player-run-panel {
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  background: #0b1222;
+}
+
+.player-run-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.player-run-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #1e293b;
+}
+
+.player-run-item .run-result {
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+}
+
+.player-run-item.is-win .run-result {
+  color: #86efac;
+}
+
+.player-run-item.is-loss .run-result {
+  color: #fca5a5;
+}
+
+.player-run-item .run-label {
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+
+.player-run-item .run-opponent {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.archive-list {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.archive-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  background: #1e293b;
+}
+
+.archive-row-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.archive-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .bracket-view {
   padding: 0 24px 48px;
 }

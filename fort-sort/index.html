@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FortSort</title>
     <link rel="icon" href="../fort-hang/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="style.css?v=9" />
+    <link rel="stylesheet" href="style.css?v=10" />
   </head>
   <body>
     <header class="top-bar">
@@ -14,6 +14,7 @@
         <button id="mode-rank" class="mode-tab" data-mode="rank">Ranking</button>
         <button id="mode-bracket" class="mode-tab" data-mode="bracket">Bracket</button>
       </nav>
+      <button id="archive-button" class="ghost-button">Saved</button>
       <button id="restart-button" class="ghost-button" hidden>Start over</button>
     </header>
 
@@ -69,14 +70,45 @@
       </section>
 
       <section id="champion-view" hidden>
-        <h2>Tournament champion</h2>
+        <h2 id="champion-title">Tournament complete</h2>
+        <p id="archive-banner" class="resume-note" hidden></p>
         <div class="podium">
           <div id="champion-card" class="skin-card podium-card champion"></div>
           <div id="runner-up-card" class="skin-card podium-card"></div>
         </div>
+        <div id="placements-panel" class="placements-panel">
+          <h3>Placements</h3>
+          <ol id="placements-list" class="placements-list"></ol>
+          <button id="full-results-button" class="primary-button" type="button">Full results</button>
+        </div>
+        <div id="full-results-panel" class="full-results-panel" hidden>
+          <div class="full-results-header">
+            <h3>Full results</h3>
+            <button id="close-full-results-button" class="ghost-button" type="button">Back</button>
+          </div>
+          <p class="hint">Tap a skin to see who they beat and lost to.</p>
+          <ol id="full-results-list" class="placements-list full-results-list"></ol>
+          <div id="player-run-panel" class="player-run-panel" hidden>
+            <div class="full-results-header">
+              <h3 id="player-run-title"></h3>
+              <button id="close-player-run-button" class="ghost-button" type="button">Close</button>
+            </div>
+            <ol id="player-run-list" class="player-run-list"></ol>
+          </div>
+        </div>
         <div class="compare-actions">
+          <button id="save-archive-button" class="primary-button" type="button">Save tournament</button>
           <button id="champion-undo-button" class="ghost-button">Undo last pick</button>
         </div>
+        <span id="archive-status" class="hint"></span>
+      </section>
+
+      <section id="archive-view" hidden>
+        <h2>Saved tournaments</h2>
+        <p class="hint">Open a past bracket without erasing your current one. Starting over only clears the active tournament.</p>
+        <ul id="archive-list" class="archive-list"></ul>
+        <p id="archive-empty" class="hint" hidden>No saved tournaments yet. Finish one and hit Save tournament.</p>
+        <button id="close-archive-button" class="ghost-button" type="button">Back</button>
       </section>
 
       <p id="load-error" class="error" hidden></p>
@@ -93,6 +125,6 @@
       <div id="bracket-board" class="bracket-board"></div>
     </section>
 
-    <script type="module" src="app.js?v=9"></script>
+    <script type="module" src="app.js?v=10"></script>
   </body>
 </html>
