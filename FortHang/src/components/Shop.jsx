@@ -1,11 +1,27 @@
 import {
-  GUESS_PACK_AMOUNT,
-  GUESS_PACK_COST,
-  SIDEKICK_ROLL_COST,
+  GUESS_PACKS,
+  SIDEKICK_ROLLS,
   buyGuessPack,
+  countOwnedSidekickKinds,
   rollRandomSidekick,
 } from '../utils/economy';
 import GuessStatus from './GuessStatus';
+
+function rarityLabel(rarity) {
+  if (rarity === 'ultra') return 'Ultra Rare';
+  if (rarity === 'rare') return 'Rare';
+  return 'Common';
+}
+
+function formatRollResults(results) {
+  return results
+    .map((result) => {
+      const tag = rarityLabel(result.rarity);
+      const dupe = result.duplicate ? ' (duplicate)' : '';
+      return `${result.sidekick.name} [${tag}]${dupe}`;
+    })
+    .join('\n');
+}
 
 export default function Shop({
   economy,
@@ -16,22 +32,23 @@ export default function Shop({
   onOpenCatalogue,
   onOpenFortSort,
 }) {
-  const ownedCount = economy.ownedSidekickIds?.length ?? 0;
+  const ownedKinds = countOwnedSidekickKinds(economy);
+  const totalOwned = economy.ownedSidekickIds?.length ?? 0;
 
-  const buyGuesses = () => {
-    const result = buyGuessPack(economy);
+  const buyGuesses = (pack) => {
+    const result = buyGuessPack(economy, pack);
     onEconomyChange(result.economy);
     if (!result.ok) window.alert(result.reason);
   };
 
-  const buySidekick = () => {
-    const result = rollRandomSidekick(sidekicks, economy);
+  const buySidekicks = (pack) => {
+    const result = rollRandomSidekick(sidekicks, economy, { count: pack.count, cost: pack.cost });
     onEconomyChange(result.economy);
     if (!result.ok) {
       window.alert(result.reason);
       return;
     }
-    window.alert(`You unlocked ${result.sidekick.name}!`);
+    window.alert(`You rolled:\n${formatRollResults(result.results)}`);
   };
 
   return (
@@ -40,7 +57,7 @@ export default function Shop({
         <h1>Shop</h1>
         <GuessStatus economy={economy} onEconomyChange={onEconomyChange} />
         <p className="discovery-count">
-          {ownedCount}/{sidekicks.length} sidekicks unlocked
+          {ownedKinds}/{sidekicks.length} unique sidekicks · {totalOwned} total copies
         </p>
         <div className="header-actions">
           <button type="button" className="secondary-button" onClick={onBack}>
@@ -59,42 +76,52 @@ export default function Shop({
       </header>
 
       <p className="hint">
-        Earn weebucks in FortSort Betting mode. Spend them on extra hangman guesses or a random sidekick —
-        not both at once from the same stack of weebucks.
+        Earn weebucks in FortSort Betting mode. Sidekick rolls can duplicate. Each roll has a 10% rare and 1%
+        ultra-rare chance (SpongeBob, PAC-MAN, The Knight).
       </p>
 
+      <h2 className="shop-section-title">Guess packs</h2>
       <div className="shop-grid">
-        <article className="shop-card">
-          <h2>Extra guesses</h2>
-          <p>
-            +{GUESS_PACK_AMOUNT} letter guesses today for {GUESS_PACK_COST} weebucks.
-          </p>
-          <p className="shop-meta">Daily base is 50. Bonus packs stack until the 6:00 AM CST reset.</p>
-          <button
-            type="button"
-            className="primary-button"
-            onClick={buyGuesses}
-            disabled={economy.points < GUESS_PACK_COST}
-          >
-            Buy for {GUESS_PACK_COST} weebucks
-          </button>
-        </article>
+        {GUESS_PACKS.map((pack) => (
+          <article key={pack.id} className="shop-card">
+            <h2>+{pack.amount} guesses</h2>
+            <p>
+              Add {pack.amount} letter guesses for today.
+            </p>
+            <p className="shop-meta">Stacks until the 6:00 AM CST reset.</p>
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => buyGuesses(pack)}
+              disabled={economy.points < pack.cost}
+            >
+              Buy for {pack.cost} weebucks
+            </button>
+          </article>
+        ))}
+      </div>
 
-        <article className="shop-card">
-          <h2>Random sidekick</h2>
-          <p>Spend {SIDEKICK_ROLL_COST} weebucks to unlock one random undiscovered sidekick.</p>
-          <p className="shop-meta">
-            {sidekicks.length - ownedCount} still locked in the sidekick catalogue.
-          </p>
-          <button
-            type="button"
-            className="primary-button"
-            onClick={buySidekick}
-            disabled={economy.points < SIDEKICK_ROLL_COST || ownedCount >= sidekicks.length}
-          >
-            Roll for {SIDEKICK_ROLL_COST} weebucks
-          </button>
-        </article>
+      <h2 className="shop-section-title">Sidekick rolls</h2>
+      <div className="shop-grid">
+        {SIDEKICK_ROLLS.map((pack) => (
+          <article key={pack.id} className="shop-card">
+            <h2>
+              {pack.count} sidekick{pack.count === 1 ? '' : 's'}
+            </h2>
+            <p>
+              Roll {pack.count} random sidekick{pack.count === 1 ? '' : 's'}. Duplicates allowed.
+            </p>
+            <p className="shop-meta">10% rare · 1% ultra rare per roll.</p>
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => buySidekicks(pack)}
+              disabled={economy.points < pack.cost || sidekicks.length === 0}
+            >
+              Roll for {pack.cost} weebucks
+            </button>
+          </article>
+        ))}
       </div>
     </div>
   );

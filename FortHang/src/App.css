@@ -556,6 +556,16 @@
   filter: brightness(0);
 }
 
+/* Sidekicks use color icons darkened into silhouettes; invert so they stay visible on dark cards. */
+.catalogue-silhouette.sidekick-silhouette {
+  filter: brightness(0) invert(1);
+  opacity: 0.72;
+}
+
+.catalogue-card.hidden .catalogue-image-wrap:has(.sidekick-silhouette) {
+  background: rgba(15, 23, 42, 0.55);
+}
+
 .catalogue-placeholder {
   font-size: 2.2rem;
   font-weight: 700;
@@ -726,11 +736,16 @@
   width: min(900px, 100%);
 }
 
+.shop-section-title {
+  margin: 1.4rem 0 0.65rem;
+  font-size: 1.15rem;
+}
+
 .shop-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1rem;
-  margin-top: 1rem;
+  margin-top: 0.35rem;
 }
 
 .shop-card {
@@ -772,6 +787,37 @@
   color: #fff;
   font-size: 2rem;
   font-weight: 800;
+}
+
+.catalogue-card.sidekick-rarity-rare.revealed {
+  border-color: rgba(96, 165, 250, 0.75);
+}
+
+.catalogue-card.sidekick-rarity-ultra.revealed {
+  border-color: rgba(251, 191, 36, 0.9);
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.35);
+}
+
+.sidekick-rarity-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  padding: 0.15rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.sidekick-rarity-badge.is-rare {
+  background: rgba(37, 99, 235, 0.9);
+  color: #eff6ff;
+}
+
+.sidekick-rarity-badge.is-ultra {
+  background: rgba(217, 119, 6, 0.95);
+  color: #fffbeb;
 }
 
 .catalogue-meta {

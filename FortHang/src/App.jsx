@@ -4,7 +4,7 @@ import HangmanGame from './components/HangmanGame';
 import Shop from './components/Shop';
 import SidekickCatalogue from './components/SidekickCatalogue';
 import SkinCatalogue from './components/SkinCatalogue';
-import { loadEconomy } from './utils/economy';
+import { loadEconomy, migrateOwnedSidekickIds } from './utils/economy';
 import { getGameOutfits } from './utils/outfits';
 import {
   addGuessedSkinId,
@@ -47,7 +47,7 @@ function App() {
         if (!res.ok) throw new Error('Failed to load outfit data');
         return res.json();
       }),
-      fetch(`${import.meta.env.BASE_URL}sidekicks.json?v=1`, { cache: 'no-store' }).then((res) => {
+      fetch(`${import.meta.env.BASE_URL}sidekicks.json?v=3`, { cache: 'no-store' }).then((res) => {
         if (!res.ok) throw new Error('Failed to load sidekick data');
         return res.json();
       }),
@@ -55,7 +55,8 @@ function App() {
       .then(([outfitData, sidekickData]) => {
         const gameOutfits = getGameOutfits(outfitData);
         setOutfits(gameOutfits);
-        setSidekicks(Array.isArray(sidekickData) ? sidekickData : []);
+        const nextSidekicks = Array.isArray(sidekickData) ? sidekickData : [];
+        setSidekicks(nextSidekicks);
         setGuessedSkinIds((current) => {
           const normalized = normalizeGuessedSkinIds(current, gameOutfits);
           if (normalized.length !== current.length || normalized.some((id, i) => id !== current[i])) {
@@ -63,7 +64,16 @@ function App() {
           }
           return normalized;
         });
-        setEconomy(loadEconomy());
+        setEconomy(() => {
+          const current = loadEconomy();
+          const ownedSidekickIds = migrateOwnedSidekickIds(current.ownedSidekickIds, nextSidekicks);
+          if (ownedSidekickIds.some((id, index) => id !== current.ownedSidekickIds[index])) {
+            const next = { ...current, ownedSidekickIds };
+            localStorage.setItem('fort-hang-economy-v1', JSON.stringify(next));
+            return next;
+          }
+          return current;
+        });
         setLoading(false);
       })
       .catch((err) => {

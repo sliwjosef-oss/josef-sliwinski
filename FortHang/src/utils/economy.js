@@ -1,14 +1,72 @@
 const STORAGE_KEY = 'fort-hang-economy-v1';
 
 export const DAILY_GUESS_BASE = 50;
-export const GUESS_PACK_COST = 10;
-export const GUESS_PACK_AMOUNT = 5;
-export const SIDEKICK_ROLL_COST = 100;
+export const GUESS_PACKS = [
+  { id: 'guess-5', amount: 5, cost: 10 },
+  { id: 'guess-50', amount: 50, cost: 50 },
+  { id: 'guess-125', amount: 125, cost: 100 },
+];
+/** @deprecated use GUESS_PACKS[0] */
+export const GUESS_PACK_COST = GUESS_PACKS[0].cost;
+/** @deprecated use GUESS_PACKS[0] */
+export const GUESS_PACK_AMOUNT = GUESS_PACKS[0].amount;
+
+export const SIDEKICK_ROLLS = [
+  { id: 'sidekick-1', count: 1, cost: 100 },
+  { id: 'sidekick-3', count: 3, cost: 200 },
+  { id: 'sidekick-5', count: 5, cost: 300 },
+];
+/** @deprecated use SIDEKICK_ROLLS[0] */
+export const SIDEKICK_ROLL_COST = SIDEKICK_ROLLS[0].cost;
+
+export const RARE_ROLL_CHANCE = 0.1;
+export const ULTRA_RARE_ROLL_CHANCE = 0.01;
+
 export const BET_WIN_POINTS = 2;
 export const MAX_STAR_BETS = 3;
 export const MAX_BOOST_BETS = 10;
 export const STAR_BET_BONUS_DICE = 4;
 export const BOOST_BET_BONUS_DICE = 2;
+
+/** Collab / rare sidekicks (10% roll tier). */
+export const RARE_SIDEKICK_NAMES = new Set([
+  'Tony Tony Chopper',
+  'The Knight',
+  'Morgana (P5R)',
+  'PAC-MAN',
+  'Rush (Mega Man)',
+  'Spyro the Dragon',
+  'Tails',
+  'Patrick Star',
+  'SpongeBob SquarePants',
+  'Ace the Bat-Hound',
+  'Krypto',
+  'BDX Droid',
+  'Aisha',
+  'Dart Monkey',
+  'Groot',
+  'Towelie',
+  'Itchy',
+  'Rigby',
+  'Peppermint Butler',
+  'Toy Story Alien',
+  'Super Meat Boy',
+  'Dante',
+]);
+
+/** Ultra rare sidekicks (1% roll tier). */
+export const ULTRA_RARE_SIDEKICK_NAMES = new Set([
+  'SpongeBob SquarePants',
+  'PAC-MAN',
+  'The Knight',
+]);
+
+export function getSidekickRarity(sidekick) {
+  if (!sidekick) return 'common';
+  if (ULTRA_RARE_SIDEKICK_NAMES.has(sidekick.name)) return 'ultra';
+  if (RARE_SIDEKICK_NAMES.has(sidekick.name)) return 'rare';
+  return 'common';
+}
 
 const CST = 'America/Chicago';
 
@@ -213,43 +271,134 @@ export function addPoints(amount, economy = loadEconomy()) {
   return write(state);
 }
 
-export function buyGuessPack(economy = loadEconomy()) {
+export function buyGuessPack(economy = loadEconomy(), pack = GUESS_PACKS[0]) {
   const state = {
     ...economy,
     daily: normalizeDaily(economy.daily),
     weeklyBets: normalizeWeekly(economy.weeklyBets),
   };
-  if (state.points < GUESS_PACK_COST) {
-    return { ok: false, reason: `Need ${GUESS_PACK_COST} weebucks.`, economy: state };
+  const cost = Number(pack?.cost) || 0;
+  const amount = Number(pack?.amount) || 0;
+  if (!cost || !amount) {
+    return { ok: false, reason: 'Invalid guess pack.', economy: state };
   }
-  state.points -= GUESS_PACK_COST;
-  state.daily = { ...state.daily, bonus: state.daily.bonus + GUESS_PACK_AMOUNT };
-  return { ok: true, economy: write(state) };
+  if (state.points < cost) {
+    return { ok: false, reason: `Need ${cost} weebucks.`, economy: state };
+  }
+  state.points -= cost;
+  state.daily = { ...state.daily, bonus: state.daily.bonus + amount };
+  return { ok: true, economy: write(state), amount };
 }
 
-export function rollRandomSidekick(sidekicks, economy = loadEconomy()) {
+function pickFromPool(pool) {
+  if (!pool.length) return null;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function rollOneSidekick(sidekicks) {
+  const ultraPool = sidekicks.filter((sidekick) => ULTRA_RARE_SIDEKICK_NAMES.has(sidekick.name));
+  const rarePool = sidekicks.filter((sidekick) => RARE_SIDEKICK_NAMES.has(sidekick.name));
+  const commonPool = sidekicks.filter((sidekick) => !RARE_SIDEKICK_NAMES.has(sidekick.name));
+
+  const roll = Math.random();
+  let rarity = 'common';
+  let pick = null;
+
+  if (roll < ULTRA_RARE_ROLL_CHANCE) {
+    pick = pickFromPool(ultraPool);
+    rarity = 'ultra';
+  } else if (roll < ULTRA_RARE_ROLL_CHANCE + RARE_ROLL_CHANCE) {
+    pick = pickFromPool(rarePool);
+    rarity = 'rare';
+  }
+
+  if (!pick) {
+    pick = pickFromPool(commonPool) ?? pickFromPool(sidekicks);
+    rarity = pick ? getSidekickRarity(pick) : 'common';
+  }
+
+  return pick ? { sidekick: pick, rarity } : null;
+}
+
+/**
+ * Roll one or more sidekicks. Duplicates are allowed and counted.
+ * Each roll: 1% ultra rare, 10% rare, otherwise common.
+ */
+export function rollRandomSidekick(sidekicks, economy = loadEconomy(), options = {}) {
+  const count = Math.max(1, Number(options.count) || 1);
+  const cost = Number(options.cost) || SIDEKICK_ROLLS.find((pack) => pack.count === count)?.cost || count * 100;
   const state = {
     ...economy,
     ownedSidekickIds: [...(economy.ownedSidekickIds || [])],
     daily: normalizeDaily(economy.daily),
     weeklyBets: normalizeWeekly(economy.weeklyBets),
   };
-  if (state.points < SIDEKICK_ROLL_COST) {
-    return { ok: false, reason: `Need ${SIDEKICK_ROLL_COST} weebucks.`, economy: state };
+  if (!sidekicks.length) {
+    return { ok: false, reason: 'No sidekicks available.', economy: state };
   }
-  const owned = new Set(state.ownedSidekickIds);
-  const pool = sidekicks.filter((sidekick) => !owned.has(sidekick.id));
-  if (pool.length === 0) {
-    return { ok: false, reason: 'You already own every sidekick.', economy: state };
+  if (state.points < cost) {
+    return { ok: false, reason: `Need ${cost} weebucks.`, economy: state };
   }
-  const pick = pool[Math.floor(Math.random() * pool.length)];
-  state.points -= SIDEKICK_ROLL_COST;
-  state.ownedSidekickIds.push(pick.id);
-  return { ok: true, sidekick: pick, economy: write(state) };
+
+  const results = [];
+  for (let i = 0; i < count; i += 1) {
+    const rolled = rollOneSidekick(sidekicks);
+    if (!rolled) break;
+    const alreadyOwned = state.ownedSidekickIds.includes(rolled.sidekick.id);
+    state.ownedSidekickIds.push(rolled.sidekick.id);
+    results.push({
+      sidekick: rolled.sidekick,
+      rarity: rolled.rarity,
+      duplicate: alreadyOwned,
+    });
+  }
+
+  if (!results.length) {
+    return { ok: false, reason: 'Could not roll a sidekick.', economy: state };
+  }
+
+  state.points -= cost;
+  return {
+    ok: true,
+    sidekick: results[0].sidekick,
+    results,
+    economy: write(state),
+  };
 }
 
 export function isSidekickOwned(economy, sidekickId) {
   return (economy.ownedSidekickIds || []).includes(sidekickId);
+}
+
+/** Remap legacy `sidekick-*` ids onto current Fortnite API companion ids. */
+export function migrateOwnedSidekickIds(ownedIds, sidekicks) {
+  if (!Array.isArray(ownedIds) || !sidekicks?.length) return ownedIds || [];
+  const byId = new Set(sidekicks.map((sidekick) => sidekick.id));
+  const byName = new Map(
+    sidekicks.map((sidekick) => [String(sidekick.name).trim().toLowerCase(), sidekick.id]),
+  );
+
+  return ownedIds.map((id) => {
+    if (byId.has(id)) return id;
+    const slug = String(id)
+      .replace(/^sidekick-/i, '')
+      .replace(/-/g, ' ')
+      .trim()
+      .toLowerCase();
+    if (byName.has(slug)) return byName.get(slug);
+    for (const [name, nextId] of byName) {
+      if (name.includes(slug) || slug.includes(name)) return nextId;
+    }
+    return id;
+  });
+}
+
+export function getSidekickCount(economy, sidekickId) {
+  return (economy.ownedSidekickIds || []).filter((id) => id === sidekickId).length;
+}
+
+export function countOwnedSidekickKinds(economy) {
+  return new Set(economy.ownedSidekickIds || []).size;
 }
 
 export function getLockedBetIds(economy = loadEconomy()) {

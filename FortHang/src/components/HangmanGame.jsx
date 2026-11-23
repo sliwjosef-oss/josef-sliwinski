@@ -223,27 +223,25 @@ export default function HangmanGame({
         )}
         <p className="subtitle">Guess the outfit name before Peely gets bananated!</p>
         <GuessStatus economy={economy} onEconomyChange={onEconomyChange} />
-        {gameState !== GAME_STATES.IDLE && (
+        {gameState !== GAME_STATES.IDLE ? (
           <p className="discovery-count">
             Catalogue: {discoveredCount} / {outfits.length} skins discovered
           </p>
-        )}
-        {gameState !== GAME_STATES.IDLE && (
-          <div className="header-actions">
-            <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
-              Skin Catalogue
-            </button>
-            <button type="button" className="secondary-button" onClick={onOpenSidekicks}>
-              Sidekicks
-            </button>
-            <button type="button" className="secondary-button" onClick={onOpenShop}>
-              Shop
-            </button>
-            <button type="button" className="secondary-button" onClick={onOpenFortSort}>
-              FortSort
-            </button>
-          </div>
-        )}
+        ) : null}
+        <div className="header-actions">
+          <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
+            Skin Catalogue
+          </button>
+          <button type="button" className="secondary-button" onClick={onOpenSidekicks}>
+            Sidekick Catalogue
+          </button>
+          <button type="button" className="secondary-button" onClick={onOpenShop}>
+            Shop
+          </button>
+          <button type="button" className="secondary-button" onClick={onOpenFortSort}>
+            FortSort
+          </button>
+        </div>
       </header>
 
       {gameState === GAME_STATES.PLAYING && currentOutfit && (
@@ -300,7 +298,12 @@ export default function HangmanGame({
 
       {gameState === GAME_STATES.IDLE && (
         collectionComplete ? (
-          <CollectionCompleteScreen onOpenCatalogue={onOpenCatalogue} />
+          <CollectionCompleteScreen
+            onOpenCatalogue={onOpenCatalogue}
+            onOpenSidekicks={onOpenSidekicks}
+            onOpenShop={onOpenShop}
+            onOpenFortSort={onOpenFortSort}
+          />
         ) : (
         <div className="action-panel">
           {remainingOutfits.length > 0 ? (
@@ -322,18 +325,6 @@ export default function HangmanGame({
               <p className="discovery-count">
                 Catalogue: {discoveredCount} / {outfits.length} skins discovered
               </p>
-              <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
-                Skin Catalogue
-              </button>
-              <button type="button" className="secondary-button" onClick={onOpenSidekicks}>
-                Sidekick Catalogue
-              </button>
-              <button type="button" className="secondary-button" onClick={onOpenShop}>
-                Shop
-              </button>
-              <button type="button" className="secondary-button" onClick={onOpenFortSort}>
-                FortSort
-              </button>
             </>
           ) : (
             <>
@@ -341,18 +332,6 @@ export default function HangmanGame({
               <p className="discovery-count">
                 Catalogue: {discoveredCount} / {outfits.length} skins discovered
               </p>
-              <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
-                Skin Catalogue
-              </button>
-              <button type="button" className="secondary-button" onClick={onOpenSidekicks}>
-                Sidekick Catalogue
-              </button>
-              <button type="button" className="secondary-button" onClick={onOpenShop}>
-                Shop
-              </button>
-              <button type="button" className="secondary-button" onClick={onOpenFortSort}>
-                FortSort
-              </button>
             </>
           )}
         </div>
@@ -386,7 +365,12 @@ export default function HangmanGame({
 
       {(gameState === GAME_STATES.WON || gameState === GAME_STATES.LOST) && currentOutfit && (
         collectionComplete && gameState === GAME_STATES.WON ? (
-          <CollectionCompleteScreen onOpenCatalogue={onOpenCatalogue} />
+          <CollectionCompleteScreen
+            onOpenCatalogue={onOpenCatalogue}
+            onOpenSidekicks={onOpenSidekicks}
+            onOpenShop={onOpenShop}
+            onOpenFortSort={onOpenFortSort}
+          />
         ) : (
         <div className="result-panel">
           {gameState === GAME_STATES.WON ? (
