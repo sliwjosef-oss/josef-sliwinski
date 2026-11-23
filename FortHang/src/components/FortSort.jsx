@@ -13,18 +13,27 @@ import { estimateRemaining, replay, shuffle } from '../fortSort/sorter';
 import {
   clearBracketProgress,
   clearRankProgress,
+  clearSimBracketProgress,
   loadArchive,
   loadBracketProgress,
   loadRankProgress,
   loadSelectedIds,
+  loadSimBracketProgress,
   loadSortMode,
   newArchiveId,
   saveArchive,
   saveBracketProgress,
   saveRankProgress,
   saveSelectedIds,
+  saveSimBracketProgress,
   saveSortMode,
 } from '../fortSort/storage';
+import {
+  getDiceCount,
+  simulateCurrentRound,
+  simulateEntireBracket,
+  simulateNextMatch,
+} from '../fortSort/simulate';
 import { getOutfitIconFallbackSrc, getOutfitIconSrc } from '../utils/outfits';
 import { isSkinGuessed } from '../utils/progress';
 import { sortOutfitsByNumber } from '../utils/seasonSort';
@@ -58,17 +67,74 @@ function SkinIcon({ outfit, className = '' }) {
   );
 }
 
-function SkinCard({ outfit, onPick, placeLabel }) {
+function DiceBadge({ outfit }) {
   if (!outfit) return null;
+  const dice = getDiceCount(outfit);
   return (
-    <button type="button" className={`skin-card ${placeLabel ? 'podium-card' : ''}`} onClick={onPick}>
+    <p className="skin-dice" title={`${dice} × d100 — keep the highest`}>
+      {'★'.repeat(dice)}
+      <span>
+        {dice}d100
+      </span>
+    </p>
+  );
+}
+
+function SkinCard({ outfit, onPick, placeLabel, showDice = false }) {
+  if (!outfit) return null;
+  const className = `skin-card ${placeLabel ? 'podium-card' : ''} ${onPick ? '' : 'is-static'}`;
+  const body = (
+    <>
       {placeLabel ? <p className="podium-place">{placeLabel}</p> : null}
       <SkinIcon outfit={outfit} />
       <p className="skin-name">{outfit.name}</p>
+      {showDice ? <DiceBadge outfit={outfit} /> : null}
       <p className="skin-meta">
         {outfit.chapter && outfit.season ? `Chapter ${outfit.chapter} · Season ${outfit.season}` : ''}
       </p>
+    </>
+  );
+  if (!onPick) return <div className={className}>{body}</div>;
+  return (
+    <button type="button" className={className} onClick={onPick}>
+      {body}
     </button>
+  );
+}
+
+function RollBreakdown({ roll, outfitsById }) {
+  if (!roll) return null;
+  const winner = outfitsById.get(roll.participants[roll.winnerSlot]);
+  return (
+    <div className="sim-roll-panel">
+      <p className="sim-roll-title">
+        {roll.label}
+        {roll.attempts > 1 ? ` · ${roll.attempts} rolls (ties)` : ''}
+      </p>
+      <div className="sim-roll-sides">
+        {roll.sides.map((side, index) => {
+          const outfit = outfitsById.get(roll.participants[index]);
+          const won = roll.winnerSlot === index;
+          return (
+            <div key={roll.participants[index]} className={`sim-roll-side ${won ? 'is-winner' : ''}`}>
+              <strong>{outfit?.name ?? '—'}</strong>
+              <span className="sim-roll-dice">
+                {side.rolls.map((value, rollIndex) => (
+                  <span
+                    key={`${roll.participants[index]}-${rollIndex}`}
+                    className={`sim-die ${value === side.best ? 'is-best' : ''}`}
+                  >
+                    {value}
+                  </span>
+                ))}
+              </span>
+              <span className="sim-roll-best">Best {side.best}</span>
+            </div>
+          );
+        })}
+      </div>
+      <p className="sim-roll-winner">{winner?.name ?? '—'} advances</p>
+    </div>
   );
 }
 
@@ -110,6 +176,13 @@ function SelectScreen({
           >
             Bracket
           </button>
+          <button
+            type="button"
+            className={`mode-tab ${mode === 'simulate' ? 'is-active' : ''}`}
+            onClick={() => setMode('simulate')}
+          >
+            Simulate
+          </button>
         </nav>
         <button type="button" className="ghost-button" onClick={onOpenArchive}>
           Saved
@@ -122,9 +195,33 @@ function SelectScreen({
       <p className="hint">
         {mode === 'rank'
           ? 'Pick discovered skins, then rank them favorite to least favorite.'
-          : 'Pick discovered skins, then run a double-elimination bracket.'}{' '}
+          : mode === 'simulate'
+            ? 'Pick discovered skins for a dice-simulated double-elim bracket. Each side rolls Nd100 and keeps the highest — series and star skins set N.'
+            : 'Pick discovered skins, then run a double-elimination bracket.'}{' '}
         Only skins you have discovered in FortHang can be used.
       </p>
+      {mode === 'simulate' ? (
+        <p className="hint sim-rules">
+          Dice: Other 1 · default 2 · DC / Icon / Other Collab / Marvel 3 · TV / WWE / Anime / Cartoon Legends 4 ·
+          star skins (Peter Griffin, Spider-Man, Peely, Son Goku, Naruto Uzumaki, Monkey D. Luffy, Homer Simpson,
+          Hatsune Miku, John Cena, Batman (Pen &amp; Ink)) 5.
+        </p>
+      ) : null}
+
+      <div className="import-actions" style={{ marginBottom: 12 }}>
+        <button
+          type="button"
+          className="primary-button"
+          disabled={selectedIds.length < 2}
+          onClick={onStart}
+        >
+          {mode === 'rank'
+            ? `Start ranking ${selectedIds.length} skins`
+            : mode === 'simulate'
+              ? `Simulate bracket with ${selectedIds.length} skins`
+              : `Start bracket with ${selectedIds.length} skins`}
+        </button>
+      </div>
 
       <div className="import-actions" style={{ marginBottom: 16 }}>
         <button
@@ -164,6 +261,7 @@ function SelectScreen({
                   <SkinIcon outfit={outfit} className="catalogue-image" />
                 </div>
                 <p className="catalogue-name">{outfit.name}</p>
+                {mode === 'simulate' ? <DiceBadge outfit={outfit} /> : null}
                 <span className="fort-sort-check" aria-hidden="true">
                   {selected ? '✓' : ''}
                 </span>
@@ -172,19 +270,6 @@ function SelectScreen({
           })}
         </div>
       )}
-
-      <div className="import-actions" style={{ marginTop: 20 }}>
-        <button
-          type="button"
-          className="primary-button"
-          disabled={selectedIds.length < 2}
-          onClick={onStart}
-        >
-          {mode === 'rank'
-            ? `Start ranking ${selectedIds.length} skins`
-            : `Start bracket with ${selectedIds.length} skins`}
-        </button>
-      </div>
     </div>
   );
 }
@@ -236,16 +321,31 @@ export default function FortSort({ outfits, guessedSkinIds, onBack }) {
       if (mode === 'rank') setScreen('play');
     }
     const savedBracket = loadBracketProgress();
-    if (savedBracket?.entrants.every((id) => discoveredIds.has(id))) {
+    if (savedBracket?.entrants.every((id) => discoveredIds.has(id)) && mode === 'bracket') {
       setTournament({
         ...savedBracket,
+        simulated: false,
         bracket: createBracket(savedBracket.entrants, savedBracket.version ?? 4),
       });
-      if (mode === 'bracket') setScreen('play');
+      setScreen('play');
+    }
+    const savedSim = loadSimBracketProgress();
+    if (savedSim?.entrants.every((id) => discoveredIds.has(id)) && mode === 'simulate') {
+      setTournament({
+        ...savedSim,
+        simulated: true,
+        bracket: createBracket(savedSim.entrants, savedSim.version ?? 4),
+      });
+      setScreen('play');
     }
     // Only on mount / discovery set identity.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const persistTournament = (next) => {
+    if (next.simulated) saveSimBracketProgress(next);
+    else saveBracketProgress(next);
+  };
 
   const rankState = useMemo(
     () => (rankProgress ? replay(rankProgress.order, rankProgress.decisions) : null),
@@ -262,6 +362,9 @@ export default function FortSort({ outfits, guessedSkinIds, onBack }) {
     return computeStandings(tournament.bracket, bracketState.outcomes, bracketState);
   }, [tournament, bracketState]);
 
+  const lastRoll = tournament?.rolls?.length ? tournament.rolls[tournament.rolls.length - 1] : null;
+  const isSimMode = mode === 'simulate' || !!tournament?.simulated;
+
   const start = () => {
     if (selectedIds.length < 2) return;
     setArchiveReadOnly(false);
@@ -274,16 +377,19 @@ export default function FortSort({ outfits, guessedSkinIds, onBack }) {
       saveRankProgress(progress);
       setTournament(null);
     } else {
+      const simulated = mode === 'simulate';
       const next = {
         entrants: shuffle(selectedIds),
         history: [],
+        rolls: [],
         version: 4,
         archiveId: null,
+        simulated,
         bracket: null,
       };
       next.bracket = createBracket(next.entrants, 4);
       setTournament(next);
-      saveBracketProgress(next);
+      persistTournament(next);
       setRankProgress(null);
       setPageIndex(0);
       setFollowPage(true);
@@ -306,22 +412,58 @@ export default function FortSort({ outfits, guessedSkinIds, onBack }) {
   };
 
   const chooseBracket = (firstWins) => {
-    if (!tournament || archiveReadOnly || !bracketState?.current) return;
+    if (!tournament || archiveReadOnly || tournament.simulated || !bracketState?.current) return;
     const next = {
       ...tournament,
       history: [...tournament.history, [bracketState.current.id, firstWins ? 0 : 1]],
     };
     setTournament(next);
-    saveBracketProgress(next);
+    persistTournament(next);
     setFollowPage(true);
   };
 
   const undoBracket = () => {
     if (!tournament?.history.length || archiveReadOnly) return;
-    const next = { ...tournament, history: tournament.history.slice(0, -1) };
+    const next = {
+      ...tournament,
+      history: tournament.history.slice(0, -1),
+      rolls: tournament.rolls?.length ? tournament.rolls.slice(0, -1) : [],
+    };
     setTournament(next);
-    saveBracketProgress(next);
+    persistTournament(next);
     setFollowPage(true);
+  };
+
+  const applySimResult = (result) => {
+    if (!tournament || !result) return;
+    const next = {
+      ...tournament,
+      history: result.history,
+      rolls: [...(tournament.rolls ?? []), ...result.rolls],
+    };
+    setTournament(next);
+    persistTournament(next);
+    setFollowPage(true);
+  };
+
+  const simNextMatch = () => {
+    if (!tournament || archiveReadOnly || !tournament.simulated) return;
+    const step = simulateNextMatch(tournament.bracket, tournament.history, outfitsById);
+    if (!step) return;
+    applySimResult({
+      history: [...tournament.history, [step.matchId, step.winnerSlot]],
+      rolls: [step.roll],
+    });
+  };
+
+  const simNextRound = () => {
+    if (!tournament || archiveReadOnly || !tournament.simulated) return;
+    applySimResult(simulateCurrentRound(tournament.bracket, tournament.history, outfitsById));
+  };
+
+  const simAll = () => {
+    if (!tournament || archiveReadOnly || !tournament.simulated) return;
+    applySimResult(simulateEntireBracket(tournament.bracket, tournament.history, outfitsById));
   };
 
   const saveFinishedTournament = (quiet = false) => {
@@ -333,7 +475,9 @@ export default function FortSort({ outfits, guessedSkinIds, onBack }) {
         savedAt: Date.now(),
         entrants: tournament.entrants,
         history: tournament.history,
+        rolls: tournament.rolls ?? [],
         version: tournament.version ?? 4,
+        simulated: !!tournament.simulated,
         championId: bracketState.champion,
         runnerUpId: bracketState.runnerUp,
       };
@@ -342,7 +486,7 @@ export default function FortSort({ outfits, guessedSkinIds, onBack }) {
       saveArchive(entries);
       const next = { ...tournament, archiveId: id };
       setTournament(next);
-      if (!archiveReadOnly) saveBracketProgress(next);
+      if (!archiveReadOnly) persistTournament(next);
       if (!quiet) setStatus('Saved on this device.');
     } catch (error) {
       if (!quiet) setStatus(`Could not save: ${error.message}`);
@@ -350,7 +494,14 @@ export default function FortSort({ outfits, guessedSkinIds, onBack }) {
   };
 
   useEffect(() => {
-    if (screen === 'play' && mode === 'bracket' && bracketState?.done && !archiveReadOnly && tournament && !tournament.archiveId) {
+    if (
+      screen === 'play' &&
+      (mode === 'bracket' || mode === 'simulate') &&
+      bracketState?.done &&
+      !archiveReadOnly &&
+      tournament &&
+      !tournament.archiveId
+    ) {
       saveFinishedTournament(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -359,9 +510,13 @@ export default function FortSort({ outfits, guessedSkinIds, onBack }) {
   const startOver = () => {
     if (archiveReadOnly) {
       setArchiveReadOnly(false);
-      const saved = loadBracketProgress();
+      const saved = isSimMode ? loadSimBracketProgress() : loadBracketProgress();
       if (saved?.entrants.every((id) => discoveredIds.has(id))) {
-        setTournament({ ...saved, bracket: createBracket(saved.entrants, saved.version ?? 4) });
+        setTournament({
+          ...saved,
+          simulated: isSimMode,
+          bracket: createBracket(saved.entrants, saved.version ?? 4),
+        });
         setScreen('play');
       } else {
         setTournament(null);
@@ -370,13 +525,17 @@ export default function FortSort({ outfits, guessedSkinIds, onBack }) {
       setStatus('');
       return;
     }
-    if (!confirm(`Start over? This clears your current ${mode === 'rank' ? 'ranking' : 'bracket'}. Saved tournaments are kept.`)) {
+    const label = mode === 'rank' ? 'ranking' : mode === 'simulate' ? 'simulation' : 'bracket';
+    if (!confirm(`Start over? This clears your current ${label}. Saved tournaments are kept.`)) {
       return;
     }
-    if (mode === 'bracket' && bracketState?.done) saveFinishedTournament(true);
+    if ((mode === 'bracket' || mode === 'simulate') && bracketState?.done) saveFinishedTournament(true);
     if (mode === 'rank') {
       clearRankProgress();
       setRankProgress(null);
+    } else if (mode === 'simulate') {
+      clearSimBracketProgress();
+      setTournament(null);
     } else {
       clearBracketProgress();
       setTournament(null);
@@ -396,11 +555,13 @@ export default function FortSort({ outfits, guessedSkinIds, onBack }) {
     setTournament({
       entrants: entry.entrants,
       history: entry.history,
+      rolls: entry.rolls ?? [],
       version: entry.version ?? 4,
       archiveId: entry.id,
+      simulated: !!entry.simulated,
       bracket: createBracket(entry.entrants, entry.version ?? 4),
     });
-    setMode('bracket');
+    setMode(entry.simulated ? 'simulate' : 'bracket');
     setScreen('play');
     setShowFullResults(false);
     setPlayerRunId(null);
@@ -435,6 +596,7 @@ export default function FortSort({ outfits, guessedSkinIds, onBack }) {
                 <div className="archive-row-meta">
                   <strong>
                     {outfitsById.get(entry.championId)?.name ?? 'Tournament'} · {entry.entrants.length} skins
+                    {entry.simulated ? ' · Simulated' : ''}
                   </strong>
                   <span className="hint">{new Date(entry.savedAt).toLocaleString()}</span>
                 </div>
@@ -567,8 +729,8 @@ export default function FortSort({ outfits, guessedSkinIds, onBack }) {
     );
   }
 
-  // Bracket play
-  if (mode === 'bracket' && tournament && bracketState) {
+  // Bracket / simulate play
+  if ((mode === 'bracket' || mode === 'simulate') && tournament && bracketState) {
     const { bracket } = tournament;
     const currentPage = bracketState.current
       ? bracket.pageOf.get(bracketState.current.id) ?? pageIndex
@@ -602,7 +764,13 @@ export default function FortSort({ outfits, guessedSkinIds, onBack }) {
                   decided && outcome.winnerSlot !== slot ? 'is-loser' : ''
                 } ${inbound ? 'has-inbound' : ''}`}
                 onClick={() => {
-                  if (bracketState.current?.id === match.id && !archiveReadOnly) chooseBracket(slot === 0);
+                  if (
+                    !tournament.simulated &&
+                    bracketState.current?.id === match.id &&
+                    !archiveReadOnly
+                  ) {
+                    chooseBracket(slot === 0);
+                  }
                 }}
               >
                 {inbound ? (
@@ -625,7 +793,12 @@ export default function FortSort({ outfits, guessedSkinIds, onBack }) {
                 ) : outfit ? (
                   <>
                     <SkinIcon outfit={outfit} />
-                    <span>{outfit.name}</span>
+                    <span>
+                      {outfit.name}
+                      {tournament.simulated ? (
+                        <span className="bracket-dice"> · {getDiceCount(outfit)}d100</span>
+                      ) : null}
+                    </span>
                   </>
                 ) : null}
               </div>
@@ -683,9 +856,20 @@ export default function FortSort({ outfits, guessedSkinIds, onBack }) {
               <p className="resume-note">Viewing a saved tournament. Your active bracket is unchanged.</p>
             ) : null}
             <div className="podium">
-              <SkinCard outfit={outfitsById.get(bracketState.champion)} placeLabel="1st" />
-              <SkinCard outfit={outfitsById.get(bracketState.runnerUp)} placeLabel="2nd" />
+              <SkinCard
+                outfit={outfitsById.get(bracketState.champion)}
+                placeLabel="1st"
+                showDice={tournament.simulated}
+              />
+              <SkinCard
+                outfit={outfitsById.get(bracketState.runnerUp)}
+                placeLabel="2nd"
+                showDice={tournament.simulated}
+              />
             </div>
+            {tournament.simulated && lastRoll ? (
+              <RollBreakdown roll={lastRoll} outfitsById={outfitsById} />
+            ) : null}
             {standings ? (
               <div className="placements-panel">
                 {!showFullResults ? (
@@ -800,20 +984,39 @@ export default function FortSort({ outfits, guessedSkinIds, onBack }) {
               <>
                 <p className="match-label">
                   {roundLabel(bracket, bracketState.current)} · {pageLabel(bracket.pages[currentPage])}
+                  {tournament.simulated ? ' · Simulated' : ''}
                 </p>
-                <h2>Which skin advances?</h2>
+                <h2>{tournament.simulated ? 'Dice matchup' : 'Which skin advances?'}</h2>
                 <div className="matchup">
                   <SkinCard
                     outfit={outfitsById.get(bracketState.outcomes.get(bracketState.current.id).participants[0])}
-                    onPick={() => chooseBracket(true)}
+                    onPick={tournament.simulated ? undefined : () => chooseBracket(true)}
+                    showDice={tournament.simulated}
                   />
                   <span className="versus">vs</span>
                   <SkinCard
                     outfit={outfitsById.get(bracketState.outcomes.get(bracketState.current.id).participants[1])}
-                    onPick={() => chooseBracket(false)}
+                    onPick={tournament.simulated ? undefined : () => chooseBracket(false)}
+                    showDice={tournament.simulated}
                   />
                 </div>
+                {tournament.simulated && lastRoll ? (
+                  <RollBreakdown roll={lastRoll} outfitsById={outfitsById} />
+                ) : null}
                 <div className="compare-actions">
+                  {tournament.simulated ? (
+                    <>
+                      <button type="button" className="primary-button" onClick={simNextMatch}>
+                        Roll match
+                      </button>
+                      <button type="button" className="primary-button" onClick={simNextRound}>
+                        Simulate round
+                      </button>
+                      <button type="button" className="ghost-button" onClick={simAll}>
+                        Simulate all
+                      </button>
+                    </>
+                  ) : null}
                   <button
                     type="button"
                     className="ghost-button"

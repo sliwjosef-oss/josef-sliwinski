@@ -1,8 +1,11 @@
 const RANK_KEY = 'fort-sort-progress-v1';
 const BRACKET_KEY = 'fort-sort-bracket-v1';
+const SIM_BRACKET_KEY = 'fort-sort-sim-bracket-v1';
 const MODE_KEY = 'fort-sort-mode-v1';
 const ARCHIVE_KEY = 'fort-sort-archive-v1';
 const SELECTED_KEY = 'fort-sort-selected-v1';
+
+const VALID_MODES = new Set(['rank', 'bracket', 'simulate']);
 
 function readJson(key) {
   try {
@@ -22,11 +25,12 @@ function writeJson(key, value) {
 }
 
 export function loadSortMode() {
-  return localStorage.getItem(MODE_KEY) === 'bracket' ? 'bracket' : 'rank';
+  const mode = localStorage.getItem(MODE_KEY);
+  return VALID_MODES.has(mode) ? mode : 'rank';
 }
 
 export function saveSortMode(mode) {
-  localStorage.setItem(MODE_KEY, mode);
+  localStorage.setItem(MODE_KEY, VALID_MODES.has(mode) ? mode : 'rank');
 }
 
 export function loadSelectedIds() {
@@ -59,15 +63,20 @@ export function clearRankProgress() {
   localStorage.removeItem(RANK_KEY);
 }
 
-export function loadBracketProgress() {
-  const saved = readJson(BRACKET_KEY);
+function normalizeBracketProgress(saved, simulated) {
   if (!saved || !Array.isArray(saved.entrants) || !Array.isArray(saved.history)) return null;
   return {
     entrants: saved.entrants,
     history: saved.history,
     version: saved.version ?? 4,
     archiveId: saved.archiveId ?? null,
+    simulated: !!simulated,
+    rolls: Array.isArray(saved.rolls) ? saved.rolls : [],
   };
+}
+
+export function loadBracketProgress() {
+  return normalizeBracketProgress(readJson(BRACKET_KEY), false);
 }
 
 export function saveBracketProgress(tournament) {
@@ -76,12 +85,32 @@ export function saveBracketProgress(tournament) {
     history: tournament.history,
     version: tournament.version ?? 4,
     archiveId: tournament.archiveId ?? null,
+    rolls: tournament.rolls ?? [],
     savedAt: Date.now(),
   });
 }
 
 export function clearBracketProgress() {
   localStorage.removeItem(BRACKET_KEY);
+}
+
+export function loadSimBracketProgress() {
+  return normalizeBracketProgress(readJson(SIM_BRACKET_KEY), true);
+}
+
+export function saveSimBracketProgress(tournament) {
+  writeJson(SIM_BRACKET_KEY, {
+    entrants: tournament.entrants,
+    history: tournament.history,
+    version: tournament.version ?? 4,
+    archiveId: tournament.archiveId ?? null,
+    rolls: tournament.rolls ?? [],
+    savedAt: Date.now(),
+  });
+}
+
+export function clearSimBracketProgress() {
+  localStorage.removeItem(SIM_BRACKET_KEY);
 }
 
 export function loadArchive() {
