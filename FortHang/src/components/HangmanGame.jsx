@@ -119,6 +119,7 @@ export default function HangmanGame({
   onOpenSidekicks,
   onOpenShop,
   onOpenFortSort,
+  onOpenHelp,
 }) {
   const [gameState, setGameState] = useState(GAME_STATES.IDLE);
   const [currentOutfit, setCurrentOutfit] = useState(null);
@@ -240,6 +241,11 @@ export default function HangmanGame({
               <button type="button" className="secondary-button" onClick={onOpenFortSort}>
                 FortSort
               </button>
+              {onOpenHelp ? (
+                <button type="button" className="secondary-button" onClick={onOpenHelp}>
+                  Help
+                </button>
+              ) : null}
             </div>
           </>
         ) : null}
@@ -304,6 +310,7 @@ export default function HangmanGame({
             onOpenSidekicks={onOpenSidekicks}
             onOpenShop={onOpenShop}
             onOpenFortSort={onOpenFortSort}
+            onOpenHelp={onOpenHelp}
           />
         ) : (
         <div className="action-panel">
@@ -341,6 +348,11 @@ export default function HangmanGame({
               <button type="button" className="secondary-button" onClick={onOpenFortSort}>
                 FortSort
               </button>
+              {onOpenHelp ? (
+                <button type="button" className="secondary-button" onClick={onOpenHelp}>
+                  Help
+                </button>
+              ) : null}
             </>
           ) : (
             <>
@@ -360,6 +372,11 @@ export default function HangmanGame({
               <button type="button" className="secondary-button" onClick={onOpenFortSort}>
                 FortSort
               </button>
+              {onOpenHelp ? (
+                <button type="button" className="secondary-button" onClick={onOpenHelp}>
+                  Help
+                </button>
+              ) : null}
             </>
           )}
         </div>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import FortSort from './components/FortSort';
 import HangmanGame from './components/HangmanGame';
+import HelpScreen from './components/HelpScreen';
 import Shop from './components/Shop';
 import SidekickCatalogue from './components/SidekickCatalogue';
 import SkinCatalogue from './components/SkinCatalogue';
@@ -30,6 +31,7 @@ const VIEWS = {
   SIDEKICKS: 'sidekicks',
   SHOP: 'shop',
   FORTSORT: 'fortsort',
+  HELP: 'help',
 };
 
 function initialView() {
@@ -38,6 +40,7 @@ function initialView() {
   if (view === 'fortsort' || window.location.hash === '#fortsort') return VIEWS.FORTSORT;
   if (view === 'shop') return VIEWS.SHOP;
   if (view === 'sidekicks') return VIEWS.SIDEKICKS;
+  if (view === 'help') return VIEWS.HELP;
   return VIEWS.HANGMAN;
 }
 
@@ -157,6 +160,7 @@ function App() {
           onOpenSidekicks={() => setView(VIEWS.SIDEKICKS)}
           onOpenShop={() => setView(VIEWS.SHOP)}
           onOpenFortSort={() => setView(VIEWS.FORTSORT)}
+          onOpenHelp={() => setView(VIEWS.HELP)}
         />
       ) : view === VIEWS.CATALOGUE ? (
         <SkinCatalogue
@@ -188,6 +192,8 @@ function App() {
           onOpenSidekicks={() => setView(VIEWS.SIDEKICKS)}
           onOpenFortSort={() => setView(VIEWS.FORTSORT)}
         />
+      ) : view === VIEWS.HELP ? (
+        <HelpScreen onBack={() => setView(VIEWS.HANGMAN)} />
       ) : (
         <FortSort
           outfits={outfits}

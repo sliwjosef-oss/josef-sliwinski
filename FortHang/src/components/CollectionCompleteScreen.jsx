@@ -5,6 +5,7 @@ export default function CollectionCompleteScreen({
   onOpenSidekicks,
   onOpenShop,
   onOpenFortSort,
+  onOpenHelp,
 }) {
   return (
     <section className="collection-complete-screen" aria-labelledby="collection-complete-heading">
@@ -32,6 +33,11 @@ export default function CollectionCompleteScreen({
       {onOpenFortSort ? (
         <button type="button" className="secondary-button" onClick={onOpenFortSort}>
           FortSort
+        </button>
+      ) : null}
+      {onOpenHelp ? (
+        <button type="button" className="secondary-button" onClick={onOpenHelp}>
+          Help
         </button>
       ) : null}
     </section>
