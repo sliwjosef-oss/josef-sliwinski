@@ -851,15 +851,24 @@
   color: #cbd5e1;
 }
 
-.fort-sort .fort-sort-select-grid {
+.fort-sort .catalogue-grid.fort-sort-select-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
 }
 
-@media (max-width: 640px) {
-  .fort-sort .fort-sort-select-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (max-width: 520px) {
+  .fort-sort .catalogue-grid.fort-sort-select-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .fort-sort .fort-sort-pick {
+    padding: 6px;
+  }
+
+  .fort-sort .fort-sort-pick .catalogue-name {
+    font-size: 0.65rem;
   }
 }
 

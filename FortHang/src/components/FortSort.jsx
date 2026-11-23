@@ -202,9 +202,9 @@ function SelectScreen({
       </p>
       {mode === 'simulate' ? (
         <p className="hint sim-rules">
-          Dice: Other 1 · default 2 · DC / Icon / Other Collab / Marvel 3 · TV / WWE / Anime / Cartoon Legends 4 ·
-          star skins (Peter Griffin, Spider-Man, Peely, Son Goku, Naruto Uzumaki, Monkey D. Luffy, Homer Simpson,
-          Hatsune Miku, John Cena, Batman (Pen &amp; Ink)) 5.
+          Dice: Other 1 · default 2 · DC / Icon / Other Collab / Marvel / Gaming Legends 3 · TV / WWE / Anime /
+          Cartoon Legends 4 · star skins (Peter Griffin, Spider-Man, Peely, Son Goku, Naruto Uzumaki, Monkey D.
+          Luffy, Homer Simpson, Hatsune Miku, John Cena, Batman (Pen &amp; Ink), Sonic the Hedgehog) 5.
         </p>
       ) : null}
 

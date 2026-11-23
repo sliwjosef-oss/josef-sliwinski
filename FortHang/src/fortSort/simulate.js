@@ -13,9 +13,10 @@ export const FIVE_STAR_NAMES = new Set([
   'Hatsune Miku',
   'John Cena',
   'Batman (Pen & Ink)',
+  'Sonic the Hedgehog',
 ]);
 
-const THREE_DICE_SERIES = new Set(['dc', 'icon', 'other-collab-skins', 'marvel']);
+const THREE_DICE_SERIES = new Set(['dc', 'icon', 'other-collab-skins', 'marvel', 'gaming-legends']);
 const FOUR_DICE_SERIES = new Set(['tv-legends', 'wwe-legends', 'anime-legends', 'cartoon']);
 
 export function getDiceCount(outfit) {
