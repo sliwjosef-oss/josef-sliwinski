@@ -14,7 +14,10 @@ function standardSeedOrder(size) {
 // 1 = global reverse drops (crosses pools; hard to play pool-by-pool)
 // 2 = pool-local drops, no reverse (can rematch the skin that just eliminated you)
 // 3 = pool-local reverse every other drop, and pool winners-final losers float cross-pool
-export function createBracket(entrants, version = 3) {
+// 4 = like 3, but pool-boundary floats use half-swaps (no shared Round 1 feeders),
+//     and Top 64+ drops alternate reverse / half-swap so winners losers don't land
+//     on their own Round 2 pool's survivors
+export function createBracket(entrants, version = 4) {
   let size = 2;
   while (size < entrants.length) size *= 2;
   const slots = standardSeedOrder(size).map((seed) => entrants[seed - 1] ?? BYE);
@@ -175,24 +178,65 @@ function floatedPoolDropRounds(size) {
   return floated;
 }
 
-function poolLocalReverseIndex(index, count, size) {
-  const pools = size / POOL_SIZE;
-  if (pools <= 1 || count % pools !== 0) return count - 1 - index;
-  const perPool = count / pools;
-  const pool = Math.floor(index / perPool);
-  const local = index % perPool;
-  return pool * perPool + (perPool - 1 - local);
+function halfSwapIndex(index, count) {
+  return (index + Math.floor(count / 2)) % count;
+}
+
+function blockTransform(index, count, blocks, mode) {
+  if (blocks <= 1 || count % blocks !== 0) {
+    return mode === 'reverse' ? count - 1 - index : halfSwapIndex(index, count);
+  }
+  const per = count / blocks;
+  const block = Math.floor(index / per);
+  const local = index % per;
+  const mapped = mode === 'reverse' ? per - 1 - local : (local + Math.floor(per / 2)) % per;
+  return block * per + mapped;
+}
+
+// How many pool pages the winners round that feeds this losers drop still belongs to.
+function poolsForWinnersRound(winnersRound, size) {
+  const rounds = Math.log2(size);
+  let fromTop = size;
+  for (const top of PHASE_CUTS) {
+    if (top >= size) continue;
+    const winnersEnd = rounds - Math.log2(top / 2);
+    if (winnersRound <= winnersEnd) {
+      return isPoolCut(top) ? fromTop / POOL_SIZE : 1;
+    }
+    fromTop = top;
+  }
+  return 1;
 }
 
 function chooseDropIndex({ version, round, index, count, size, floatedDropRounds }) {
-  const alternateReverse = (round / 2) % 2 === 1;
-  // Pool winners-final losers always cross pools so they meet another pool's losers side.
-  if (floatedDropRounds.has(round)) return count - 1 - index;
+  const dropStep = round / 2;
+  const alternateReverse = dropStep % 2 === 1;
+  const mode = alternateReverse ? 'reverse' : 'halfSwap';
+  const winnersRound = dropStep + 1;
+
   if (version === 1) return alternateReverse ? count - 1 - index : index;
   if (version === 2) return index;
-  // version 3+: reverse every other drop, but keep the reverse inside each pool.
-  if (!alternateReverse) return index;
-  return poolLocalReverseIndex(index, count, size);
+
+  // Pool winners-final losers float into the next phase.
+  // First float (Round 1 → Round 2) stays a full reverse.
+  // Later floats (Round 2 → Top 64) half-swap so A1 meets E1/D1-class pools that
+  // do not share Round 1 feeders, instead of the mirror pool (A1↔H1).
+  if (floatedDropRounds.has(round)) {
+    if (version >= 4) {
+      const floatedOrder = [...floatedDropRounds].sort((a, b) => a - b);
+      return floatedOrder.indexOf(round) === 0 ? count - 1 - index : halfSwapIndex(index, count);
+    }
+    return count - 1 - index;
+  }
+
+  if (version === 3) {
+    if (!alternateReverse) return index;
+    return blockTransform(index, count, size / POOL_SIZE, 'reverse');
+  }
+
+  // version 4+: alternate reverse and half-swap every drop round.
+  const pools = poolsForWinnersRound(winnersRound, size);
+  return blockTransform(index, count, pools, mode);
 }
 
 // Splits the bracket at the points where Top 512, Top 64 and Top 8 remain

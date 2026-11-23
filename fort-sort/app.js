@@ -1,6 +1,6 @@
-import { estimateRemaining, looseName, normalizeName, parsePastedNames, replay, shuffle } from './sorter.js?v=8';
-import { BYE, createBracket, pageLabel, resolveBracket, roundLabel } from './bracket.js?v=8';
-import { MY_SKINS } from './preset.js?v=8';
+import { estimateRemaining, looseName, normalizeName, parsePastedNames, replay, shuffle } from './sorter.js?v=9';
+import { BYE, createBracket, pageLabel, resolveBracket, roundLabel } from './bracket.js?v=9';
+import { MY_SKINS } from './preset.js?v=9';
 
 const STORAGE_KEY = 'fort-sort-progress-v1';
 const BRACKET_KEY = 'fort-sort-bracket-v1';
@@ -115,7 +115,7 @@ function loadTournament() {
   return makeTournament(saved.entrants, saved.history, saved.version ?? 1);
 }
 
-function makeTournament(entrants, history, version = 3) {
+function makeTournament(entrants, history, version = 4) {
   return { entrants, history, version, bracket: createBracket(entrants, version) };
 }
 
@@ -125,7 +125,7 @@ function saveTournament() {
     JSON.stringify({
       entrants: tournament.entrants,
       history: tournament.history,
-      version: tournament.version ?? 3,
+      version: tournament.version ?? 4,
       savedAt: Date.now(),
     }),
   );
@@ -650,7 +650,7 @@ function downloadBracketProgress() {
   if (!tournament) return;
   const payload = {
     type: 'fort-sort-bracket',
-    version: tournament.version ?? 3,
+    version: tournament.version ?? 4,
     entrants: tournament.entrants,
     history: tournament.history,
     savedAt: Date.now(),
