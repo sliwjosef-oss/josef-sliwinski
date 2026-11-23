@@ -40,8 +40,12 @@ const BETTING_UNLOCK_ORDER = [
   'boostSlotsTier2',
   'top8Tier1',
   'top8Tier2',
+  'top8Tier3',
   'top64Tier1',
   'top64Tier2',
+  'top64Tier3',
+  'tournamentWinTier1',
+  'tournamentWinTier2',
   'starDicePlus',
   'boostDicePlus',
 ];

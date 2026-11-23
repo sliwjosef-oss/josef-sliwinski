@@ -40,7 +40,6 @@ import {
 import {
   BET_WIN_POINTS,
   SUPER_BET_ROUND_BONUS,
-  TOURNAMENT_WIN_POINTS,
   addPoints,
   canStartBettingRun,
   getBetWinPointsForPhase,
@@ -546,7 +545,7 @@ function SelectScreen({
           : mode === 'simulate'
             ? 'Pick discovered skins for a dice-simulated double-elim bracket. Each side rolls Nd100 and keeps the highest — series and star skins set N.'
             : mode === 'betting'
-              ? `All discovered skins enter. Pick up to ${maxStarBets} super bet skins (+${starBonus} dice, +${SUPER_BET_ROUND_BONUS} weebuck on every round payout, 2× XP) and up to ${maxBoostBets} bet skins (+${boostBonus} dice). Placement XP: 1st 200 · 2nd–4th 100 · 5th–7th 50 · else 25. Levels raise roll floors (Lv1: no 1–5, Lv3: no 1–10, Lv5: no 1–20). ${hasBetSeedingUnlock(economy) ? 'Your bets are seeded (super bets first, then bets). ' : ''}Base payout is ${BET_WIN_POINTS} weebucks per bet win. Winning the tournament pays ${TOURNAMENT_WIN_POINTS} weebucks. Bets lock until Monday CST (${nextMondayLabel()}).`
+              ? `All discovered skins enter. Pick up to ${maxStarBets} super bet skins (+${starBonus} dice, +${SUPER_BET_ROUND_BONUS} weebuck on every round payout, 2× XP) and up to ${maxBoostBets} bet skins (+${boostBonus} dice). Placement XP: 1st 200 · 2nd–4th 100 · 5th–7th 50 · else 25. Levels raise roll floors (Lv1: no 1–5, Lv3: no 1–10, Lv5: no 1–20). ${hasBetSeedingUnlock(economy) ? 'Your bets are seeded (super bets first, then bets). ' : ''}Base payout is ${BET_WIN_POINTS} weebucks per bet win. Winning the tournament pays ${getTournamentWinPoints(economy)} weebucks. Bets lock until Monday CST (${nextMondayLabel()}).`
               : 'Pick discovered skins, then run a double-elimination bracket.'}{' '}
         Only skins you have discovered in FortHang can enter.
       </p>
@@ -988,7 +987,7 @@ export default function FortSort({
         betIdSet.has(nextState.champion) &&
         !championBonusPaid
       ) {
-        pointsGain += getTournamentWinPoints({
+        pointsGain += getTournamentWinPoints(economy, {
           superBet: superBetIdSet.has(nextState.champion),
         });
         championBonusPaid = true;

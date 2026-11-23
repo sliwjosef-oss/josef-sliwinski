@@ -32,7 +32,9 @@ export const DAILY_BET_RUNS_TIER1 = 7;
 export const DAILY_BET_RUNS_TIER2 = 10;
 export const BASE_STAR_BETS = 1;
 export const STAR_BETS_TIER1 = 3;
-export const STAR_BETS_TIER2 = 5;
+export const STAR_BETS_TIER2 = 7;
+/** Previous max before the tier-2 cap was raised to 7. */
+const LEGACY_STAR_BETS_TIER2 = 5;
 export const BASE_BOOST_BETS = 5;
 export const BOOST_BETS_TIER1 = 10;
 export const BOOST_BETS_TIER2 = 20;
@@ -49,18 +51,35 @@ export const SHOP_UNLOCKS = {
   simulateAll: { id: 'simulateAll', cost: 5000, label: 'Unlock Simulate all', blurb: 'Unlock the Simulate all button in FortSort.' },
   top8Tier1: { id: 'top8Tier1', cost: 50, reward: 5, label: 'Top 8 wins → 5 weebucks', blurb: 'Bet-skin wins in Top 8 pay 5 weebucks.' },
   top8Tier2: { id: 'top8Tier2', cost: 500, reward: 10, label: 'Top 8 wins → 10 weebucks', blurb: 'Upgrade Top 8 bet wins to 10 weebucks.', requires: 'top8Tier1' },
+  top8Tier3: { id: 'top8Tier3', cost: 1000, reward: 20, label: 'Top 8 wins → 20 weebucks', blurb: 'Upgrade Top 8 bet wins to 20 weebucks.', requires: 'top8Tier2' },
   top64Tier1: { id: 'top64Tier1', cost: 100, reward: 3, label: 'Top 64 wins → 3 weebucks', blurb: 'Bet-skin wins in Top 64 pay 3 weebucks.' },
   top64Tier2: { id: 'top64Tier2', cost: 1000, reward: 5, label: 'Top 64 wins → 5 weebucks', blurb: 'Upgrade Top 64 bet wins to 5 weebucks.', requires: 'top64Tier1' },
+  top64Tier3: { id: 'top64Tier3', cost: 1500, reward: 10, label: 'Top 64 wins → 10 weebucks', blurb: 'Upgrade Top 64 bet wins to 10 weebucks.', requires: 'top64Tier2' },
+  tournamentWinTier1: {
+    id: 'tournamentWinTier1',
+    cost: 1000,
+    reward: 100,
+    label: 'Tournament win → 100 weebucks',
+    blurb: `Raise the tournament-win payout from ${TOURNAMENT_WIN_POINTS} to 100 weebucks.`,
+  },
+  tournamentWinTier2: {
+    id: 'tournamentWinTier2',
+    cost: 2500,
+    reward: 200,
+    label: 'Tournament win → 200 weebucks',
+    blurb: 'Raise the tournament-win payout to 200 weebucks.',
+    requires: 'tournamentWinTier1',
+  },
   starSlotsTier1: {
     id: 'starSlotsTier1',
-    cost: 100,
+    cost: 500,
     slots: STAR_BETS_TIER1,
     label: `Super bet slots → ${STAR_BETS_TIER1}`,
     blurb: `Increase super bet skins from ${BASE_STAR_BETS} to ${STAR_BETS_TIER1}.`,
   },
   starSlotsTier2: {
     id: 'starSlotsTier2',
-    cost: 1000,
+    cost: 1500,
     slots: STAR_BETS_TIER2,
     label: `Super bet slots → ${STAR_BETS_TIER2}`,
     blurb: `Increase super bet skins from ${STAR_BETS_TIER1} to ${STAR_BETS_TIER2}.`,
@@ -133,6 +152,7 @@ function defaultUnlocks() {
     simulateAll: false,
     top8Reward: 0,
     top64Reward: 0,
+    tournamentWinReward: 0,
     starSlots: BASE_STAR_BETS,
     boostSlots: BASE_BOOST_BETS,
     starDicePlus: false,
@@ -148,9 +168,14 @@ function defaultUnlocks() {
 function normalizeUnlocks(unlocks) {
   const base = defaultUnlocks();
   if (!unlocks || typeof unlocks !== 'object') return base;
+  // Legacy buyers of the old max (5) keep a mid tier until they buy → 7.
   const starSlots =
-    unlocks.starSlots === STAR_BETS_TIER2 || unlocks.starSlots === STAR_BETS_TIER1
-      ? unlocks.starSlots
+    unlocks.starSlots === STAR_BETS_TIER2 ||
+    unlocks.starSlots === STAR_BETS_TIER1 ||
+    unlocks.starSlots === LEGACY_STAR_BETS_TIER2
+      ? unlocks.starSlots === LEGACY_STAR_BETS_TIER2
+        ? LEGACY_STAR_BETS_TIER2
+        : unlocks.starSlots
       : BASE_STAR_BETS;
   const boostSlots =
     unlocks.boostSlots === BOOST_BETS_TIER2 || unlocks.boostSlots === BOOST_BETS_TIER1
@@ -162,8 +187,18 @@ function normalizeUnlocks(unlocks) {
       : BASE_DAILY_BET_RUNS;
   return {
     simulateAll: !!unlocks.simulateAll,
-    top8Reward: unlocks.top8Reward === 10 || unlocks.top8Reward === 5 ? unlocks.top8Reward : 0,
-    top64Reward: unlocks.top64Reward === 5 || unlocks.top64Reward === 3 ? unlocks.top64Reward : 0,
+    top8Reward:
+      unlocks.top8Reward === 20 || unlocks.top8Reward === 10 || unlocks.top8Reward === 5
+        ? unlocks.top8Reward
+        : 0,
+    top64Reward:
+      unlocks.top64Reward === 10 || unlocks.top64Reward === 5 || unlocks.top64Reward === 3
+        ? unlocks.top64Reward
+        : 0,
+    tournamentWinReward:
+      unlocks.tournamentWinReward === 200 || unlocks.tournamentWinReward === 100
+        ? unlocks.tournamentWinReward
+        : 0,
     starSlots,
     boostSlots,
     starDicePlus: !!unlocks.starDicePlus,
@@ -283,8 +318,10 @@ export function getBetWinPointsForPhase(phase, economy = loadEconomy(), { superB
   return points;
 }
 
-export function getTournamentWinPoints({ superBet = false } = {}) {
-  return TOURNAMENT_WIN_POINTS + (superBet ? SUPER_BET_ROUND_BONUS : 0);
+export function getTournamentWinPoints(economy = loadEconomy(), { superBet = false } = {}) {
+  const unlocks = normalizeUnlocks(economy.unlocks);
+  const base = unlocks.tournamentWinReward || TOURNAMENT_WIN_POINTS;
+  return base + (superBet ? SUPER_BET_ROUND_BONUS : 0);
 }
 
 export function hasSimulateAllUnlock(economy = loadEconomy()) {
@@ -319,8 +356,17 @@ export function buyShopUnlock(unlockId, economy = loadEconomy()) {
   if (item.requires === 'top8Tier1' && state.unlocks.top8Reward < 5) {
     return { ok: false, reason: 'Buy the Top 8 → 5 weebucks upgrade first.', economy: state };
   }
+  if (item.requires === 'top8Tier2' && state.unlocks.top8Reward < 10) {
+    return { ok: false, reason: 'Buy the Top 8 → 10 weebucks upgrade first.', economy: state };
+  }
   if (item.requires === 'top64Tier1' && state.unlocks.top64Reward < 3) {
     return { ok: false, reason: 'Buy the Top 64 → 3 weebucks upgrade first.', economy: state };
+  }
+  if (item.requires === 'top64Tier2' && state.unlocks.top64Reward < 5) {
+    return { ok: false, reason: 'Buy the Top 64 → 5 weebucks upgrade first.', economy: state };
+  }
+  if (item.requires === 'tournamentWinTier1' && state.unlocks.tournamentWinReward < 100) {
+    return { ok: false, reason: 'Buy Tournament win → 100 weebucks first.', economy: state };
   }
   if (item.requires === 'starSlotsTier1' && state.unlocks.starSlots < STAR_BETS_TIER1) {
     return { ok: false, reason: `Buy Super bet slots → ${STAR_BETS_TIER1} first.`, economy: state };
@@ -345,8 +391,12 @@ export function buyShopUnlock(unlockId, economy = loadEconomy()) {
     (unlockId === 'betSeeding' && state.unlocks.betSeeding) ||
     (unlockId === 'top8Tier1' && state.unlocks.top8Reward >= 5) ||
     (unlockId === 'top8Tier2' && state.unlocks.top8Reward >= 10) ||
+    (unlockId === 'top8Tier3' && state.unlocks.top8Reward >= 20) ||
     (unlockId === 'top64Tier1' && state.unlocks.top64Reward >= 3) ||
     (unlockId === 'top64Tier2' && state.unlocks.top64Reward >= 5) ||
+    (unlockId === 'top64Tier3' && state.unlocks.top64Reward >= 10) ||
+    (unlockId === 'tournamentWinTier1' && state.unlocks.tournamentWinReward >= 100) ||
+    (unlockId === 'tournamentWinTier2' && state.unlocks.tournamentWinReward >= 200) ||
     (unlockId === 'starSlotsTier1' && state.unlocks.starSlots >= STAR_BETS_TIER1) ||
     (unlockId === 'starSlotsTier2' && state.unlocks.starSlots >= STAR_BETS_TIER2) ||
     (unlockId === 'boostSlotsTier1' && state.unlocks.boostSlots >= BOOST_BETS_TIER1) ||
@@ -368,8 +418,12 @@ export function buyShopUnlock(unlockId, economy = loadEconomy()) {
   if (unlockId === 'betSeeding') state.unlocks.betSeeding = true;
   if (unlockId === 'top8Tier1') state.unlocks.top8Reward = 5;
   if (unlockId === 'top8Tier2') state.unlocks.top8Reward = 10;
+  if (unlockId === 'top8Tier3') state.unlocks.top8Reward = 20;
   if (unlockId === 'top64Tier1') state.unlocks.top64Reward = 3;
   if (unlockId === 'top64Tier2') state.unlocks.top64Reward = 5;
+  if (unlockId === 'top64Tier3') state.unlocks.top64Reward = 10;
+  if (unlockId === 'tournamentWinTier1') state.unlocks.tournamentWinReward = 100;
+  if (unlockId === 'tournamentWinTier2') state.unlocks.tournamentWinReward = 200;
   if (unlockId === 'starSlotsTier1') state.unlocks.starSlots = STAR_BETS_TIER1;
   if (unlockId === 'starSlotsTier2') state.unlocks.starSlots = STAR_BETS_TIER2;
   if (unlockId === 'boostSlotsTier1') state.unlocks.boostSlots = BOOST_BETS_TIER1;
@@ -611,8 +665,12 @@ export function isShopUnlockOwned(unlockId, economy = loadEconomy()) {
   if (unlockId === 'betSeeding') return unlocks.betSeeding;
   if (unlockId === 'top8Tier1') return unlocks.top8Reward >= 5;
   if (unlockId === 'top8Tier2') return unlocks.top8Reward >= 10;
+  if (unlockId === 'top8Tier3') return unlocks.top8Reward >= 20;
   if (unlockId === 'top64Tier1') return unlocks.top64Reward >= 3;
   if (unlockId === 'top64Tier2') return unlocks.top64Reward >= 5;
+  if (unlockId === 'top64Tier3') return unlocks.top64Reward >= 10;
+  if (unlockId === 'tournamentWinTier1') return unlocks.tournamentWinReward >= 100;
+  if (unlockId === 'tournamentWinTier2') return unlocks.tournamentWinReward >= 200;
   if (unlockId === 'starSlotsTier1') return unlocks.starSlots >= STAR_BETS_TIER1;
   if (unlockId === 'starSlotsTier2') return unlocks.starSlots >= STAR_BETS_TIER2;
   if (unlockId === 'boostSlotsTier1') return unlocks.boostSlots >= BOOST_BETS_TIER1;
@@ -626,7 +684,10 @@ export function isShopUnlockAvailable(unlockId, economy = loadEconomy()) {
   const unlocks = normalizeUnlocks(economy.unlocks);
   if (isShopUnlockOwned(unlockId, economy)) return false;
   if (unlockId === 'top8Tier2') return unlocks.top8Reward >= 5;
+  if (unlockId === 'top8Tier3') return unlocks.top8Reward >= 10;
   if (unlockId === 'top64Tier2') return unlocks.top64Reward >= 3;
+  if (unlockId === 'top64Tier3') return unlocks.top64Reward >= 5;
+  if (unlockId === 'tournamentWinTier2') return unlocks.tournamentWinReward >= 100;
   if (unlockId === 'starSlotsTier2') return unlocks.starSlots >= STAR_BETS_TIER1;
   if (unlockId === 'boostSlotsTier2') return unlocks.boostSlots >= BOOST_BETS_TIER1;
   if (unlockId === 'betRunsTier2') return unlocks.dailyBetRuns >= DAILY_BET_RUNS_TIER1;
