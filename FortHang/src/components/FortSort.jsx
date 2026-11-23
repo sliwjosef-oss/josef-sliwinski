@@ -39,14 +39,15 @@ import {
 } from '../fortSort/simulate';
 import {
   BET_WIN_POINTS,
-  MAX_BOOST_BETS,
-  MAX_STAR_BETS,
   TOURNAMENT_WIN_POINTS,
   addPoints,
   getBetWinPointsForPhase,
   getBoostBetBonusDice,
   getLockedBetIds,
+  getMaxBoostBets,
+  getMaxStarBets,
   getStarBetBonusDice,
+  hasRandomSelectUnlock,
   hasSimulateAllUnlock,
   lockBetSkins,
   nextMondayLabel,
@@ -313,6 +314,9 @@ function SelectScreen({
   const [hideUnowned, setHideUnowned] = useState(true);
   const starBonus = getStarBetBonusDice(economy);
   const boostBonus = getBoostBetBonusDice(economy);
+  const maxStarBets = getMaxStarBets(economy);
+  const maxBoostBets = getMaxBoostBets(economy);
+  const canRandomSelect = hasRandomSelectUnlock(economy);
 
   const catalogueSorted = useMemo(() => sortOutfitsByNumber(catalogue), [catalogue]);
   const visibleOutfits = useMemo(() => {
@@ -346,14 +350,29 @@ function SelectScreen({
       return;
     }
     if (betTier === 'star') {
-      if (starBetIds.length >= MAX_STAR_BETS) return;
+      if (starBetIds.length >= maxStarBets) return;
       setBoostBetIds((current) => current.filter((item) => item !== id));
       setStarBetIds((current) => [...current, id]);
       return;
     }
-    if (boostBetIds.length >= MAX_BOOST_BETS) return;
+    if (boostBetIds.length >= maxBoostBets) return;
     setStarBetIds((current) => current.filter((item) => item !== id));
     setBoostBetIds((current) => [...current, id]);
+  };
+
+  const selectRandomBets = () => {
+    if (!isBetting || !canRandomSelect) return;
+    const pool = discovered
+      .map((outfit) => outfit.id)
+      .filter((id) => !lockedBetIds.has(id));
+    for (let i = pool.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    const stars = pool.slice(0, Math.min(maxStarBets, pool.length));
+    const boosts = pool.slice(stars.length, stars.length + maxBoostBets);
+    setStarBetIds(stars);
+    setBoostBetIds(boosts);
   };
 
   const startLabel = (() => {
@@ -474,7 +493,7 @@ function SelectScreen({
           : mode === 'simulate'
             ? 'Pick discovered skins for a dice-simulated double-elim bracket. Each side rolls Nd100 and keeps the highest — series and star skins set N.'
             : mode === 'betting'
-              ? `All discovered skins enter. Pick up to ${MAX_STAR_BETS} skins for +${starBonus} dice and up to ${MAX_BOOST_BETS} more for +${boostBonus} dice. Base payout is ${BET_WIN_POINTS} weebucks per bet win (shop upgrades raise Top 64 / Top 8). Winning the tournament pays ${TOURNAMENT_WIN_POINTS} weebucks. Bet skins lock until Monday CST (${nextMondayLabel()}).`
+              ? `All discovered skins enter. Pick up to ${maxStarBets} skins for +${starBonus} dice and up to ${maxBoostBets} more for +${boostBonus} dice. Base payout is ${BET_WIN_POINTS} weebucks per bet win (shop upgrades raise slots, Top 64 / Top 8, and Select random). Winning the tournament pays ${TOURNAMENT_WIN_POINTS} weebucks. Bet skins lock until Monday CST (${nextMondayLabel()}).`
               : 'Pick discovered skins, then run a double-elimination bracket.'}{' '}
         Only skins you have discovered in FortHang can enter.
       </p>
@@ -488,8 +507,8 @@ function SelectScreen({
       {isBetting ? (
         <>
           <p className="hint">
-            Weebucks: {economy.points} · Star bets {starBetIds.length}/{MAX_STAR_BETS} · Boost bets{' '}
-            {boostBetIds.length}/{MAX_BOOST_BETS}. Locked skins were already bet this week.
+            Weebucks: {economy.points} · Star bets {starBetIds.length}/{maxStarBets} · Boost bets{' '}
+            {boostBetIds.length}/{maxBoostBets}. Locked skins were already bet this week.
           </p>
           <div className="import-actions" style={{ marginBottom: 12 }}>
             <button
@@ -506,6 +525,20 @@ function SelectScreen({
             >
               Pick +{boostBonus} dice
             </button>
+            {canRandomSelect ? (
+              <button type="button" className="primary-button" onClick={selectRandomBets}>
+                Select random
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="ghost-button"
+                disabled
+                title="Unlock in the Shop for 1000 weebucks"
+              >
+                Select random (locked · 1000)
+              </button>
+            )}
           </div>
         </>
       ) : null}
@@ -626,16 +659,23 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
   const [playerRunId, setPlayerRunId] = useState(null);
   const [status, setStatus] = useState('');
 
-  // Keep selection limited to currently discovered skins.
+  const maxStarBets = getMaxStarBets(economy);
+  const maxBoostBets = getMaxBoostBets(economy);
+
+  // Keep selection limited to currently discovered skins and owned slot caps.
   useEffect(() => {
     setSelectedIds((current) => {
       const next = current.filter((id) => discoveredIds.has(id));
       if (next.length !== current.length) saveSelectedIds(next);
       return next;
     });
-    setStarBetIds((current) => current.filter((id) => discoveredIds.has(id) && !lockedBetIds.has(id)));
-    setBoostBetIds((current) => current.filter((id) => discoveredIds.has(id) && !lockedBetIds.has(id)));
-  }, [discoveredIds, lockedBetIds]);
+    setStarBetIds((current) =>
+      current.filter((id) => discoveredIds.has(id) && !lockedBetIds.has(id)).slice(0, maxStarBets),
+    );
+    setBoostBetIds((current) =>
+      current.filter((id) => discoveredIds.has(id) && !lockedBetIds.has(id)).slice(0, maxBoostBets),
+    );
+  }, [discoveredIds, lockedBetIds, maxStarBets, maxBoostBets]);
 
   useEffect(() => {
     saveSortMode(mode);

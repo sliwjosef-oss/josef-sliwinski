@@ -29,6 +29,11 @@ function formatRollResults(results) {
 
 const BETTING_UNLOCK_ORDER = [
   'simulateAll',
+  'randomSelect',
+  'starSlotsTier1',
+  'starSlotsTier2',
+  'boostSlotsTier1',
+  'boostSlotsTier2',
   'top8Tier1',
   'top8Tier2',
   'top64Tier1',
