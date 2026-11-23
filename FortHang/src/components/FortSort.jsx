@@ -960,7 +960,7 @@ export default function FortSort({ outfits, guessedSkinIds, onBack }) {
                   Save tournament
                 </button>
               ) : null}
-              {!archiveReadOnly ? (
+              {!archiveReadOnly && !tournament.simulated ? (
                 <button
                   type="button"
                   className="ghost-button"
@@ -1016,15 +1016,16 @@ export default function FortSort({ outfits, guessedSkinIds, onBack }) {
                         Simulate all
                       </button>
                     </>
-                  ) : null}
-                  <button
-                    type="button"
-                    className="ghost-button"
-                    onClick={undoBracket}
-                    disabled={!tournament.history.length}
-                  >
-                    Undo
-                  </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="ghost-button"
+                      onClick={undoBracket}
+                      disabled={!tournament.history.length}
+                    >
+                      Undo
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="ghost-button"
