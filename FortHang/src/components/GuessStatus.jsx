@@ -28,15 +28,17 @@ export default function GuessStatus({ economy, onEconomyChange, className = '' }
   return (
     <div className={`guess-status ${className}`.trim()}>
       <p className="discovery-count guess-status-line">
-        Guesses left today: <strong>{remaining}</strong> / {limit}
+        Attempts left today: <strong>{remaining}</strong> / {limit}
         {economy.points ? ` · ${economy.points} weebucks` : ''}
       </p>
       {remaining <= 0 ? (
         <p className="guess-reset-countdown" role="status">
-          Out of guesses · resets in <strong>{formatCountdown(msLeft)}</strong> (6:00 AM CST)
+          Out of attempts · resets in <strong>{formatCountdown(msLeft)}</strong> (6:00 AM CST)
         </p>
       ) : (
-        <p className="guess-reset-hint">Daily guesses reset at 6:00 AM CST</p>
+        <p className="guess-reset-hint">
+          One attempt per skin (win or lose) · resets at 6:00 AM CST
+        </p>
       )}
     </div>
   );

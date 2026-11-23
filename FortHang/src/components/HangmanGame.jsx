@@ -151,21 +151,20 @@ export default function HangmanGame({
     const outfit = outfitQueueRef.current.next();
     if (!outfit) return;
 
+    const spent = spendGuess(economy);
+    onEconomyChange(spent.economy);
+    if (!spent.ok) return;
+
     setCurrentOutfit(outfit);
     setGuessedLetters(new Set());
     setWrongGuesses(0);
     setGameState(GAME_STATES.PLAYING);
-  }, [outfits, guessedSkinIds, economy]);
+  }, [outfits, guessedSkinIds, economy, onEconomyChange]);
 
   const handleGuess = useCallback(
     (letter) => {
       if (gameState !== GAME_STATES.PLAYING || !currentOutfit) return;
       if (guessedLetters.has(letter)) return;
-      if (!canSpendGuess(economy)) return;
-
-      const spent = spendGuess(economy);
-      onEconomyChange(spent.economy);
-      if (!spent.ok) return;
 
       const wordLetters = getLettersInWord(currentOutfit.name);
       const nextGuessed = new Set(guessedLetters);
@@ -189,7 +188,7 @@ export default function HangmanGame({
         setGameState(GAME_STATES.WON);
       }
     },
-    [gameState, currentOutfit, guessedLetters, wrongGuesses, onSkinWon, economy, onEconomyChange]
+    [gameState, currentOutfit, guessedLetters, wrongGuesses, onSkinWon]
   );
 
   useEffect(() => {
@@ -318,7 +317,10 @@ export default function HangmanGame({
               ) : (
                 <>
                   <GuessStatus economy={economy} onEconomyChange={onEconomyChange} />
-                  <p className="prompt">Buy more guesses in the Shop with weebucks, or wait for the daily reset.</p>
+                  <p className="prompt">
+                    Buy more attempts in the Shop with weebucks, or wait for the daily reset. Wins and
+                    losses both use an attempt.
+                  </p>
                   <button type="button" className="primary-button" onClick={onOpenShop}>
                     Open Shop
                   </button>
@@ -379,7 +381,7 @@ export default function HangmanGame({
                 type="button"
                 className={`key-button ${guessed ? (isWrong ? 'wrong' : 'correct') : ''}`}
                 onClick={() => handleGuess(letter)}
-                disabled={guessed || guessesRemaining <= 0}
+                disabled={guessed}
                 aria-label={`Letter ${letter}${guessed ? ', already guessed' : ''}`}
               >
                 {letter}
@@ -422,7 +424,10 @@ export default function HangmanGame({
             ) : (
               <>
                 <GuessStatus economy={economy} onEconomyChange={onEconomyChange} />
-                <p className="play-again-prompt">Out of daily guesses — visit the Shop or wait for 6:00 AM CST.</p>
+                <p className="play-again-prompt">
+                  Out of daily attempts (wins and losses both count) — visit the Shop or wait for 6:00 AM
+                  CST.
+                </p>
                 <button type="button" className="primary-button" onClick={onOpenShop}>
                   Open Shop
                 </button>

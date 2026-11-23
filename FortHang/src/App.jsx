@@ -4,11 +4,17 @@ import HangmanGame from './components/HangmanGame';
 import Shop from './components/Shop';
 import SidekickCatalogue from './components/SidekickCatalogue';
 import SkinCatalogue from './components/SkinCatalogue';
-import { loadEconomy, migrateOwnedSidekickIds } from './utils/economy';
+import {
+  CATALOG_COMPLETE_BONUS,
+  awardCatalogCompleteBonus,
+  loadEconomy,
+  migrateOwnedSidekickIds,
+} from './utils/economy';
 import { getGameOutfits } from './utils/outfits';
 import {
   addGuessedSkinId,
   clearGuessedSkinIds,
+  isCollectionComplete,
   loadGuessedSkinIds,
   normalizeGuessedSkinIds,
   saveGuessedSkinIds,
@@ -82,9 +88,30 @@ function App() {
       });
   }, []);
 
-  const handleSkinWon = useCallback((outfit) => {
-    setGuessedSkinIds((current) => addGuessedSkinId(current, outfit.id));
-  }, []);
+  const handleSkinWon = useCallback(
+    (outfit) => {
+      setGuessedSkinIds((current) => {
+        const next = addGuessedSkinId(current, outfit.id);
+        if (
+          outfits.length > 0 &&
+          !isCollectionComplete(outfits, current) &&
+          isCollectionComplete(outfits, next)
+        ) {
+          setEconomy((eco) => {
+            const result = awardCatalogCompleteBonus(eco);
+            if (result.ok) {
+              window.alert(
+                `Catalogue complete! You earned ${CATALOG_COMPLETE_BONUS.toLocaleString()} weebucks.`,
+              );
+            }
+            return result.economy;
+          });
+        }
+        return next;
+      });
+    },
+    [outfits],
+  );
 
   const handleDeleteAllData = useCallback(() => {
     setGuessedSkinIds(clearGuessedSkinIds());

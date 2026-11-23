@@ -111,13 +111,13 @@ export default function Shop({
         ultra-rare chance (SpongeBob, PAC-MAN, The Knight).
       </p>
 
-      <h2 className="shop-section-title">Guess packs</h2>
+        <h2 className="shop-section-title">Skin attempt packs</h2>
       <div className="shop-grid">
         {GUESS_PACKS.map((pack) => (
           <article key={pack.id} className="shop-card">
             <h2>+{pack.amount} guesses</h2>
-            <p>Add {pack.amount} letter guesses for today.</p>
-            <p className="shop-meta">Stacks until the 6:00 AM CST reset.</p>
+            <p>Add {pack.amount} skin attempts for today.</p>
+            <p className="shop-meta">One attempt per skin (win or lose) · stacks until the 6:00 AM CST reset.</p>
             <button
               type="button"
               className="primary-button"

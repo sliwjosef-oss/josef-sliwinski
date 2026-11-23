@@ -39,6 +39,7 @@ import {
 } from '../fortSort/simulate';
 import {
   BET_WIN_POINTS,
+  SUPER_BET_ROUND_BONUS,
   TOURNAMENT_WIN_POINTS,
   addPoints,
   getBetWinPointsForPhase,
@@ -47,6 +48,7 @@ import {
   getMaxBoostBets,
   getMaxStarBets,
   getStarBetBonusDice,
+  getTournamentWinPoints,
   hasRandomSelectUnlock,
   hasSimulateAllUnlock,
   lockBetSkins,
@@ -100,19 +102,26 @@ function BettingStatusPanel({ tournament, bracketState, standings, outfitsById }
       const isChampion = bracketState.champion === id;
       const isRunnerUp = bracketState.runnerUp === id;
       const eliminated = losses >= 2 || isRunnerUp || (bracketState.done && !isChampion);
-      let statusLabel = 'Still in';
-      if (isChampion) statusLabel = 'Champion · 1st';
-      else if (eliminated) {
+      let statusLabel = 'In winners';
+      let lane = 'winners';
+      if (isChampion) {
+        statusLabel = 'Champion · 1st';
+        lane = 'champion';
+      } else if (eliminated) {
         statusLabel =
           bracketState.done && place != null
             ? `Eliminated · ${formatPlace(place)}`
             : 'Eliminated';
+        lane = 'eliminated';
+      } else if (losses >= 1) {
+        statusLabel = 'In losers';
+        lane = 'losers';
       }
       return {
         id,
         outfit,
         statusLabel,
-        eliminated,
+        lane,
         isStar: starSet.has(id),
       };
     });
@@ -137,16 +146,14 @@ function BettingStatusPanel({ tournament, bracketState, standings, outfitsById }
           <button
             key={row.id}
             type="button"
-            className={`bet-status-card ${row.eliminated ? 'is-eliminated' : 'is-active'} ${
-              row.isStar ? 'is-star' : ''
-            }`}
+            className={`bet-status-card is-${row.lane} ${row.isStar ? 'is-star' : ''}`}
             onClick={() => setDetailId(row.id)}
           >
             <SkinIcon outfit={row.outfit} />
             <div className="bet-status-text">
               <strong>{row.outfit?.name ?? row.id}</strong>
               <span>{row.statusLabel}</span>
-              <span className="bet-status-tier">{row.isStar ? '★ bet' : '+boost'}</span>
+              <span className="bet-status-tier">{row.isStar ? 'Super bet' : 'Bet'}</span>
             </div>
           </button>
         ))}
@@ -379,7 +386,7 @@ function SelectScreen({
     if (mode === 'rank') return `Start ranking ${selectedIds.length} skins`;
     if (mode === 'simulate') return `Simulate bracket with ${selectedIds.length} skins`;
     if (mode === 'betting') {
-      return `Start betting sim (${discovered.length} skins · ${starBetIds.length}★ · ${boostBetIds.length}+${boostBonus})`;
+      return `Start betting sim (${discovered.length} skins · ${starBetIds.length} super · ${boostBetIds.length} bets)`;
     }
     return `Start bracket with ${selectedIds.length} skins`;
   })();
@@ -419,7 +426,7 @@ function SelectScreen({
           <DiceBadge outfit={outfit} bonus={bonus} />
         ) : null}
         <span className="fort-sort-check" aria-hidden="true">
-          {locked ? '🔒' : isStar ? '★★' : isBoost ? `+${boostBonus}` : selected && !isBetting ? '✓' : ''}
+          {locked ? '🔒' : isStar ? 'SUPER' : isBoost ? 'BET' : selected && !isBetting ? '✓' : ''}
         </span>
       </button>
     );
@@ -493,7 +500,7 @@ function SelectScreen({
           : mode === 'simulate'
             ? 'Pick discovered skins for a dice-simulated double-elim bracket. Each side rolls Nd100 and keeps the highest — series and star skins set N.'
             : mode === 'betting'
-              ? `All discovered skins enter. Pick up to ${maxStarBets} skins for +${starBonus} dice and up to ${maxBoostBets} more for +${boostBonus} dice. Base payout is ${BET_WIN_POINTS} weebucks per bet win (shop upgrades raise slots, Top 64 / Top 8, and Select random). Winning the tournament pays ${TOURNAMENT_WIN_POINTS} weebucks. Bet skins lock until Monday CST (${nextMondayLabel()}).`
+              ? `All discovered skins enter. Pick up to ${maxStarBets} super bet skins (+${starBonus} dice, +${SUPER_BET_ROUND_BONUS} weebuck on every round payout) and up to ${maxBoostBets} bet skins (+${boostBonus} dice). Base payout is ${BET_WIN_POINTS} weebucks per bet win (shop upgrades raise slots, Top 64 / Top 8, and Select random). Winning the tournament pays ${TOURNAMENT_WIN_POINTS} weebucks. Bets lock until Monday CST (${nextMondayLabel()}).`
               : 'Pick discovered skins, then run a double-elimination bracket.'}{' '}
         Only skins you have discovered in FortHang can enter.
       </p>
@@ -507,7 +514,7 @@ function SelectScreen({
       {isBetting ? (
         <>
           <p className="hint">
-            Weebucks: {economy.points} · Star bets {starBetIds.length}/{maxStarBets} · Boost bets{' '}
+            Weebucks: {economy.points} · Super bets {starBetIds.length}/{maxStarBets} · Bets{' '}
             {boostBetIds.length}/{maxBoostBets}. Locked skins were already bet this week.
           </p>
           <div className="import-actions" style={{ marginBottom: 12 }}>
@@ -516,14 +523,14 @@ function SelectScreen({
               className={`mode-tab ${betTier === 'star' ? 'is-active' : ''}`}
               onClick={() => setBetTier('star')}
             >
-              Pick ★ +{starBonus} dice
+              Pick super bet +{starBonus} dice
             </button>
             <button
               type="button"
               className={`mode-tab ${betTier === 'boost' ? 'is-active' : ''}`}
               onClick={() => setBetTier('boost')}
             >
-              Pick +{boostBonus} dice
+              Pick bet +{boostBonus} dice
             </button>
             {canRandomSelect ? (
               <button type="button" className="primary-button" onClick={selectRandomBets}>
@@ -751,6 +758,10 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
     if (!tournament?.betting) return new Set();
     return new Set([...(tournament.starBetIds ?? []), ...(tournament.boostBetIds ?? [])]);
   }, [tournament]);
+  const superBetIdSet = useMemo(() => {
+    if (!tournament?.betting) return new Set();
+    return new Set(tournament.starBetIds ?? []);
+  }, [tournament]);
   const canSimulateAll = hasSimulateAllUnlock(economy);
   const round1Pending =
     tournament?.simulated && tournament.bracket
@@ -870,7 +881,9 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
         const matchId = typeof win === 'string' ? null : win?.matchId;
         if (!winnerId || !betIdSet.has(winnerId)) continue;
         const phase = matchId ? matchPhase(tournament.bracket, matchId) : '';
-        pointsGain += getBetWinPointsForPhase(phase, economy);
+        pointsGain += getBetWinPointsForPhase(phase, economy, {
+          superBet: superBetIdSet.has(winnerId),
+        });
       }
       const wasDone = !!resolveBracket(tournament.bracket, Object.fromEntries(tournament.history)).done;
       const nextState = resolveBracket(tournament.bracket, Object.fromEntries(result.history));
@@ -881,7 +894,9 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
         betIdSet.has(nextState.champion) &&
         !championBonusPaid
       ) {
-        pointsGain += TOURNAMENT_WIN_POINTS;
+        pointsGain += getTournamentWinPoints({
+          superBet: superBetIdSet.has(nextState.champion),
+        });
         championBonusPaid = true;
       }
     }
@@ -1534,10 +1549,10 @@ export default function FortSort({ outfits, guessedSkinIds, economy, onEconomyCh
                         title={
                           canSimulateAll
                             ? 'Simulate the entire bracket'
-                            : 'Unlock in the Shop for 1000 weebucks'
+                            : 'Unlock in the Shop for 5000 weebucks'
                         }
                       >
-                        {canSimulateAll ? 'Simulate all' : 'Simulate all (locked · 1000)'}
+                        {canSimulateAll ? 'Simulate all' : 'Simulate all (locked · 5000)'}
                       </button>
                     </>
                   ) : (

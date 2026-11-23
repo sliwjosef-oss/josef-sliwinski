@@ -24,6 +24,9 @@ export const ULTRA_RARE_ROLL_CHANCE = 0.01;
 
 export const BET_WIN_POINTS = 2;
 export const TOURNAMENT_WIN_POINTS = 30;
+/** Extra weebucks on every match/tournament payout for super bet skins. */
+export const SUPER_BET_ROUND_BONUS = 1;
+export const CATALOG_COMPLETE_BONUS = 10000;
 export const BASE_STAR_BETS = 1;
 export const STAR_BETS_TIER1 = 3;
 export const STAR_BETS_TIER2 = 5;
@@ -40,7 +43,7 @@ export const STAR_BET_BONUS_DICE_UPGRADED = 5;
 export const BOOST_BET_BONUS_DICE_UPGRADED = 3;
 
 export const SHOP_UNLOCKS = {
-  simulateAll: { id: 'simulateAll', cost: 1000, label: 'Unlock Simulate all', blurb: 'Unlock the Simulate all button in FortSort.' },
+  simulateAll: { id: 'simulateAll', cost: 5000, label: 'Unlock Simulate all', blurb: 'Unlock the Simulate all button in FortSort.' },
   top8Tier1: { id: 'top8Tier1', cost: 50, reward: 5, label: 'Top 8 wins → 5 weebucks', blurb: 'Bet-skin wins in Top 8 pay 5 weebucks.' },
   top8Tier2: { id: 'top8Tier2', cost: 500, reward: 10, label: 'Top 8 wins → 10 weebucks', blurb: 'Upgrade Top 8 bet wins to 10 weebucks.', requires: 'top8Tier1' },
   top64Tier1: { id: 'top64Tier1', cost: 100, reward: 3, label: 'Top 64 wins → 3 weebucks', blurb: 'Bet-skin wins in Top 64 pay 3 weebucks.' },
@@ -49,39 +52,49 @@ export const SHOP_UNLOCKS = {
     id: 'starSlotsTier1',
     cost: 100,
     slots: STAR_BETS_TIER1,
-    label: `★ bet slots → ${STAR_BETS_TIER1}`,
-    blurb: `Increase star bets from ${BASE_STAR_BETS} to ${STAR_BETS_TIER1}.`,
+    label: `Super bet slots → ${STAR_BETS_TIER1}`,
+    blurb: `Increase super bet skins from ${BASE_STAR_BETS} to ${STAR_BETS_TIER1}.`,
   },
   starSlotsTier2: {
     id: 'starSlotsTier2',
     cost: 1000,
     slots: STAR_BETS_TIER2,
-    label: `★ bet slots → ${STAR_BETS_TIER2}`,
-    blurb: `Increase star bets from ${STAR_BETS_TIER1} to ${STAR_BETS_TIER2}.`,
+    label: `Super bet slots → ${STAR_BETS_TIER2}`,
+    blurb: `Increase super bet skins from ${STAR_BETS_TIER1} to ${STAR_BETS_TIER2}.`,
     requires: 'starSlotsTier1',
   },
   boostSlotsTier1: {
     id: 'boostSlotsTier1',
     cost: 100,
     slots: BOOST_BETS_TIER1,
-    label: `Boost bet slots → ${BOOST_BETS_TIER1}`,
-    blurb: `Increase boost bets from ${BASE_BOOST_BETS} to ${BOOST_BETS_TIER1}.`,
+    label: `Bet slots → ${BOOST_BETS_TIER1}`,
+    blurb: `Increase bet skins from ${BASE_BOOST_BETS} to ${BOOST_BETS_TIER1}.`,
   },
   boostSlotsTier2: {
     id: 'boostSlotsTier2',
     cost: 1000,
     slots: BOOST_BETS_TIER2,
-    label: `Boost bet slots → ${BOOST_BETS_TIER2}`,
-    blurb: `Increase boost bets from ${BOOST_BETS_TIER1} to ${BOOST_BETS_TIER2}.`,
+    label: `Bet slots → ${BOOST_BETS_TIER2}`,
+    blurb: `Increase bet skins from ${BOOST_BETS_TIER1} to ${BOOST_BETS_TIER2}.`,
     requires: 'boostSlotsTier1',
   },
-  starDicePlus: { id: 'starDicePlus', cost: 150, label: '★ bets +5 dice', blurb: 'Star bets grant +5 dice instead of +4.' },
-  boostDicePlus: { id: 'boostDicePlus', cost: 250, label: 'Boost bets +3 dice', blurb: 'Boost bets grant +3 dice instead of +2.' },
+  starDicePlus: {
+    id: 'starDicePlus',
+    cost: 150,
+    label: 'Super bets +5 dice',
+    blurb: 'Super bet skins grant +5 dice instead of +4.',
+  },
+  boostDicePlus: {
+    id: 'boostDicePlus',
+    cost: 250,
+    label: 'Bet skins +3 dice',
+    blurb: 'Bet skins grant +3 dice instead of +2.',
+  },
   randomSelect: {
     id: 'randomSelect',
     cost: 1000,
     label: 'Unlock Select random',
-    blurb: 'Auto-pick star and boost bets at random from available skins.',
+    blurb: 'Auto-pick super bet and bet skins at random from available skins.',
   },
 };
 
@@ -95,6 +108,7 @@ function defaultUnlocks() {
     starDicePlus: false,
     boostDicePlus: false,
     randomSelect: false,
+    catalogCompleteBonusPaid: false,
   };
 }
 
@@ -118,6 +132,7 @@ function normalizeUnlocks(unlocks) {
     starDicePlus: !!unlocks.starDicePlus,
     boostDicePlus: !!unlocks.boostDicePlus,
     randomSelect: !!unlocks.randomSelect,
+    catalogCompleteBonusPaid: !!unlocks.catalogCompleteBonusPaid,
   };
 }
 
@@ -215,12 +230,18 @@ export function getBoostBetBonusDice(economy = loadEconomy()) {
     : BOOST_BET_BONUS_DICE;
 }
 
-export function getBetWinPointsForPhase(phase, economy = loadEconomy()) {
+export function getBetWinPointsForPhase(phase, economy = loadEconomy(), { superBet = false } = {}) {
   const unlocks = normalizeUnlocks(economy.unlocks);
   const label = String(phase || '');
-  if (label.startsWith('Top 8') && unlocks.top8Reward) return unlocks.top8Reward;
-  if (label.startsWith('Top 64') && unlocks.top64Reward) return unlocks.top64Reward;
-  return BET_WIN_POINTS;
+  let points = BET_WIN_POINTS;
+  if (label.startsWith('Top 8') && unlocks.top8Reward) points = unlocks.top8Reward;
+  else if (label.startsWith('Top 64') && unlocks.top64Reward) points = unlocks.top64Reward;
+  if (superBet) points += SUPER_BET_ROUND_BONUS;
+  return points;
+}
+
+export function getTournamentWinPoints({ superBet = false } = {}) {
+  return TOURNAMENT_WIN_POINTS + (superBet ? SUPER_BET_ROUND_BONUS : 0);
 }
 
 export function hasSimulateAllUnlock(economy = loadEconomy()) {
@@ -251,10 +272,10 @@ export function buyShopUnlock(unlockId, economy = loadEconomy()) {
     return { ok: false, reason: 'Buy the Top 64 → 3 weebucks upgrade first.', economy: state };
   }
   if (item.requires === 'starSlotsTier1' && state.unlocks.starSlots < STAR_BETS_TIER1) {
-    return { ok: false, reason: `Buy ★ bet slots → ${STAR_BETS_TIER1} first.`, economy: state };
+    return { ok: false, reason: `Buy Super bet slots → ${STAR_BETS_TIER1} first.`, economy: state };
   }
   if (item.requires === 'boostSlotsTier1' && state.unlocks.boostSlots < BOOST_BETS_TIER1) {
-    return { ok: false, reason: `Buy boost bet slots → ${BOOST_BETS_TIER1} first.`, economy: state };
+    return { ok: false, reason: `Buy Bet slots → ${BOOST_BETS_TIER1} first.`, economy: state };
   }
 
   const already =
@@ -462,6 +483,17 @@ export function addPoints(amount, economy = loadEconomy()) {
     unlocks: normalizeUnlocks(economy.unlocks),
   };
   return write(state);
+}
+
+/** One-time 10000 weebucks when the player finishes the outfit catalogue. */
+export function awardCatalogCompleteBonus(economy = loadEconomy()) {
+  const state = withFreshMeta(economy);
+  if (state.unlocks.catalogCompleteBonusPaid) {
+    return { ok: false, awarded: 0, economy: state };
+  }
+  state.unlocks = { ...state.unlocks, catalogCompleteBonusPaid: true };
+  state.points = Math.max(0, (Number(state.points) || 0) + CATALOG_COMPLETE_BONUS);
+  return { ok: true, awarded: CATALOG_COMPLETE_BONUS, economy: write(state) };
 }
 
 export function isShopUnlockOwned(unlockId, economy = loadEconomy()) {
