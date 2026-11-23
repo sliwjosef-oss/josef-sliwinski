@@ -120,6 +120,12 @@ export const SHOP_UNLOCKS = {
     label: 'Super bet extra life',
     blurb: 'Once per run, each super bet’s first loss becomes a win instead.',
   },
+  betSeeding: {
+    id: 'betSeeding',
+    cost: 500,
+    label: 'Seed bet skins',
+    blurb: 'Super bets take the top seeds; bet skins are seeded right below them.',
+  },
 };
 
 function defaultUnlocks() {
@@ -135,6 +141,7 @@ function defaultUnlocks() {
     catalogCompleteBonusPaid: false,
     dailyBetRuns: BASE_DAILY_BET_RUNS,
     superBetExtraLife: false,
+    betSeeding: false,
   };
 }
 
@@ -165,6 +172,7 @@ function normalizeUnlocks(unlocks) {
     catalogCompleteBonusPaid: !!unlocks.catalogCompleteBonusPaid,
     dailyBetRuns,
     superBetExtraLife: !!unlocks.superBetExtraLife,
+    betSeeding: !!unlocks.betSeeding,
   };
 }
 
@@ -299,6 +307,10 @@ export function hasSuperBetExtraLifeUnlock(economy = loadEconomy()) {
   return normalizeUnlocks(economy.unlocks).superBetExtraLife;
 }
 
+export function hasBetSeedingUnlock(economy = loadEconomy()) {
+  return normalizeUnlocks(economy.unlocks).betSeeding;
+}
+
 export function buyShopUnlock(unlockId, economy = loadEconomy()) {
   const state = withFreshMeta(economy);
   const item = Object.values(SHOP_UNLOCKS).find((entry) => entry.id === unlockId);
@@ -330,6 +342,7 @@ export function buyShopUnlock(unlockId, economy = loadEconomy()) {
     (unlockId === 'boostDicePlus' && state.unlocks.boostDicePlus) ||
     (unlockId === 'randomSelect' && state.unlocks.randomSelect) ||
     (unlockId === 'superBetExtraLife' && state.unlocks.superBetExtraLife) ||
+    (unlockId === 'betSeeding' && state.unlocks.betSeeding) ||
     (unlockId === 'top8Tier1' && state.unlocks.top8Reward >= 5) ||
     (unlockId === 'top8Tier2' && state.unlocks.top8Reward >= 10) ||
     (unlockId === 'top64Tier1' && state.unlocks.top64Reward >= 3) ||
@@ -352,6 +365,7 @@ export function buyShopUnlock(unlockId, economy = loadEconomy()) {
   if (unlockId === 'boostDicePlus') state.unlocks.boostDicePlus = true;
   if (unlockId === 'randomSelect') state.unlocks.randomSelect = true;
   if (unlockId === 'superBetExtraLife') state.unlocks.superBetExtraLife = true;
+  if (unlockId === 'betSeeding') state.unlocks.betSeeding = true;
   if (unlockId === 'top8Tier1') state.unlocks.top8Reward = 5;
   if (unlockId === 'top8Tier2') state.unlocks.top8Reward = 10;
   if (unlockId === 'top64Tier1') state.unlocks.top64Reward = 3;
@@ -594,6 +608,7 @@ export function isShopUnlockOwned(unlockId, economy = loadEconomy()) {
   if (unlockId === 'boostDicePlus') return unlocks.boostDicePlus;
   if (unlockId === 'randomSelect') return unlocks.randomSelect;
   if (unlockId === 'superBetExtraLife') return unlocks.superBetExtraLife;
+  if (unlockId === 'betSeeding') return unlocks.betSeeding;
   if (unlockId === 'top8Tier1') return unlocks.top8Reward >= 5;
   if (unlockId === 'top8Tier2') return unlocks.top8Reward >= 10;
   if (unlockId === 'top64Tier1') return unlocks.top64Reward >= 3;

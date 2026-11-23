@@ -31,6 +31,7 @@ const BETTING_UNLOCK_ORDER = [
   'simulateAll',
   'randomSelect',
   'superBetExtraLife',
+  'betSeeding',
   'betRunsTier1',
   'betRunsTier2',
   'starSlotsTier1',
