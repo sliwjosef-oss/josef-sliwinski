@@ -1,4 +1,4 @@
-import { estimateRemaining, looseName, normalizeName, parsePastedNames, replay, shuffle } from './sorter.js?v=10';
+import { estimateRemaining, looseName, normalizeName, parsePastedNames, replay, shuffle } from './sorter.js?v=11';
 import {
   BYE,
   buildPlayerRun,
@@ -8,8 +8,8 @@ import {
   pageLabel,
   resolveBracket,
   roundLabel,
-} from './bracket.js?v=10';
-import { MY_SKINS } from './preset.js?v=10';
+} from './bracket.js?v=11';
+import { MY_SKINS } from './preset.js?v=11';
 
 const STORAGE_KEY = 'fort-sort-progress-v1';
 const BRACKET_KEY = 'fort-sort-bracket-v1';
@@ -46,6 +46,7 @@ let pageIndex = 0;
 let followCurrentPage = true;
 let pendingJumpMatchId = null;
 let html2canvasPromise = null;
+let jsPdfPromise = null;
 let archiveReadOnly = false;
 let showingArchiveList = false;
 let selectedPlayerId = null;
@@ -786,43 +787,70 @@ function downloadBlob(blob, filename) {
   URL.revokeObjectURL(link.href);
 }
 
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error(`Could not load ${src}`));
+    document.head.append(script);
+  });
+}
+
 function loadHtml2Canvas() {
   if (window.html2canvas) return Promise.resolve(window.html2canvas);
   if (html2canvasPromise) return html2canvasPromise;
-  html2canvasPromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
-    script.onload = () => resolve(window.html2canvas);
-    script.onerror = () => reject(new Error('Could not load the image exporter'));
-    document.head.append(script);
-  });
+  html2canvasPromise = loadScript('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js').then(
+    () => window.html2canvas,
+  );
   return html2canvasPromise;
 }
 
-async function downloadBracketPage() {
-  if (!tournament) return;
-  const status = $('download-status');
-  const button = $('download-page-button');
-  button.disabled = true;
-  status.textContent = 'Preparing PNG…';
-  try {
-    const boardEl = $('bracket-board');
-    const previous = {
-      maxHeight: boardEl.style.maxHeight,
-      overflow: boardEl.style.overflow,
-      height: boardEl.style.height,
-      width: boardEl.style.width,
-    };
-    // Expand the scroll box so the full page is captured, not just the viewport.
-    boardEl.style.maxHeight = 'none';
-    boardEl.style.overflow = 'visible';
-    boardEl.style.height = `${boardEl.scrollHeight}px`;
-    boardEl.style.width = `${Math.max(boardEl.scrollWidth, boardEl.clientWidth)}px`;
+function loadJsPdf() {
+  if (window.jspdf?.jsPDF) return Promise.resolve(window.jspdf.jsPDF);
+  if (jsPdfPromise) return jsPdfPromise;
+  jsPdfPromise = loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js').then(() => {
+    if (!window.jspdf?.jsPDF) throw new Error('Could not load the PDF exporter');
+    return window.jspdf.jsPDF;
+  });
+  return jsPdfPromise;
+}
 
-    const html2canvas = await loadHtml2Canvas();
-    const canvas = await html2canvas(boardEl, {
+function waitForImages(root) {
+  const images = [...root.querySelectorAll('img')];
+  return Promise.all(
+    images.map((img) => {
+      if (img.complete) return Promise.resolve();
+      return new Promise((resolve) => {
+        img.addEventListener('load', resolve, { once: true });
+        img.addEventListener('error', resolve, { once: true });
+      });
+    }),
+  );
+}
+
+async function captureBracketBoardCanvas({ scale = 2 } = {}) {
+  const boardEl = $('bracket-board');
+  const previous = {
+    maxHeight: boardEl.style.maxHeight,
+    overflow: boardEl.style.overflow,
+    height: boardEl.style.height,
+    width: boardEl.style.width,
+  };
+  // Expand the scroll box so the full page is captured, not just the viewport.
+  boardEl.style.maxHeight = 'none';
+  boardEl.style.overflow = 'visible';
+  boardEl.style.height = `${boardEl.scrollHeight}px`;
+  boardEl.style.width = `${Math.max(boardEl.scrollWidth, boardEl.clientWidth)}px`;
+
+  await waitForImages(boardEl);
+  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+  const html2canvas = await loadHtml2Canvas();
+  try {
+    return await html2canvas(boardEl, {
       backgroundColor: '#0b1222',
-      scale: 2,
+      scale,
       useCORS: true,
       logging: false,
       width: boardEl.scrollWidth,
@@ -830,18 +858,97 @@ async function downloadBracketPage() {
       windowWidth: boardEl.scrollWidth,
       windowHeight: boardEl.scrollHeight,
     });
-
+  } finally {
     Object.assign(boardEl.style, previous);
+  }
+}
 
+function showBracketPageForCapture(index) {
+  followCurrentPage = false;
+  pageIndex = index;
+  board = buildBoard(tournament.bracket, index);
+  updateBoard(tournamentState());
+  renderPageNav(tournament.bracket, tournamentState().current?.id);
+}
+
+async function downloadBracketPage() {
+  if (!tournament) return;
+  const status = $('download-status');
+  const button = $('download-page-button');
+  button.disabled = true;
+  $('download-pdf-button').disabled = true;
+  status.textContent = 'Preparing PNG…';
+  try {
+    const canvas = await captureBracketBoardCanvas({ scale: 2 });
     const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
     if (!blob) throw new Error('PNG export failed');
     const title = pageLabel(tournament.bracket.pages[pageIndex]);
     downloadBlob(blob, `fortsort-${safeFileName(title)}.png`);
     status.textContent = 'Downloaded PNG.';
   } catch (error) {
-    $('download-status').textContent = error.message;
+    status.textContent = error.message;
   } finally {
     button.disabled = false;
+    $('download-pdf-button').disabled = false;
+  }
+}
+
+async function downloadBracketPdf() {
+  if (!tournament) return;
+  const status = $('download-status');
+  const button = $('download-pdf-button');
+  const pngButton = $('download-page-button');
+  button.disabled = true;
+  pngButton.disabled = true;
+
+  const savedPage = pageIndex;
+  const savedFollow = followCurrentPage;
+  const pages = tournament.bracket.pages;
+
+  try {
+    status.textContent = `Preparing PDF (0/${pages.length})…`;
+    const JsPDF = await loadJsPdf();
+    const pdf = new JsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' });
+    const margin = 28;
+    const titleH = 18;
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const maxW = pageW - margin * 2;
+    const maxH = pageH - margin * 2 - titleH;
+
+    for (let index = 0; index < pages.length; index += 1) {
+      status.textContent = `Preparing PDF (${index + 1}/${pages.length})…`;
+      showBracketPageForCapture(index);
+      const canvas = await captureBracketBoardCanvas({ scale: 1.5 });
+      const title = pageLabel(pages[index]);
+      if (index > 0) pdf.addPage();
+
+      pdf.setFillColor(11, 18, 34);
+      pdf.rect(0, 0, pageW, pageH, 'F');
+      pdf.setTextColor(203, 213, 225);
+      pdf.setFontSize(12);
+      pdf.text(title, margin, margin + 10);
+
+      const ratio = Math.min(maxW / canvas.width, maxH / canvas.height);
+      const drawW = canvas.width * ratio;
+      const drawH = canvas.height * ratio;
+      const x = margin + (maxW - drawW) / 2;
+      const y = margin + titleH + (maxH - drawH) / 2;
+      const image = canvas.toDataURL('image/jpeg', 0.92);
+      pdf.addImage(image, 'JPEG', x, y, drawW, drawH, undefined, 'FAST');
+    }
+
+    pdf.save(`fortsort-bracket-${pages.length}p.pdf`);
+    status.textContent = `Downloaded PDF (${pages.length} pages).`;
+  } catch (error) {
+    status.textContent = error.message;
+  } finally {
+    pageIndex = savedPage;
+    followCurrentPage = savedFollow;
+    board = null;
+    button.disabled = false;
+    pngButton.disabled = false;
+    render();
   }
 }
 
@@ -992,6 +1099,7 @@ function wireEvents() {
     board?.boxes.get(state.current?.id)?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
   });
   $('download-page-button').addEventListener('click', downloadBracketPage);
+  $('download-pdf-button').addEventListener('click', downloadBracketPdf);
   $('download-progress-button').addEventListener('click', downloadBracketProgress);
   $('full-results-button').addEventListener('click', () => {
     $('placements-panel').hidden = true;
