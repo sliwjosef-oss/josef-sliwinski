@@ -204,7 +204,6 @@ function App() {
           skinLevels={skinLevels}
           onSkinLevelsChange={handleSkinLevelsChange}
           onBack={() => setView(VIEWS.HANGMAN)}
-          onOpenShop={() => setView(VIEWS.SHOP)}
         />
       ) : (
         <FortSort

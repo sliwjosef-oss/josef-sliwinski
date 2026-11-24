@@ -3,16 +3,23 @@ import { getCatalogueSeriesKey } from '../utils/seriesSort';
 /** Squad flavor pools shown in encounter text + event images. */
 export const SQUAD_VISUAL_POOLS = [
   {
-    key: 'anime',
-    groupLabel: 'anime skins',
-    soloLabel: 'anime skin',
-    series: ['anime-legends', 'anime-originals'],
+    key: 'anime-legends',
+    groupLabel: 'Anime Legends skins',
+    soloLabel: 'Anime Legends skin',
+    series: ['anime-legends'],
+    odds: [-15, 0, 20],
+  },
+  {
+    key: 'anime-originals',
+    groupLabel: 'Anime Originals skins',
+    soloLabel: 'Anime Originals skin',
+    series: ['anime-originals'],
     odds: [-15, 0, 20],
   },
   {
     key: 'cartoon',
-    groupLabel: 'cartoon skins',
-    soloLabel: 'cartoon skin',
+    groupLabel: 'Cartoon Legends skins',
+    soloLabel: 'Cartoon Legends skin',
     series: ['cartoon'],
     odds: [-10, 5, 10],
   },

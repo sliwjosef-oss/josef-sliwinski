@@ -5,9 +5,11 @@ import {
   TRAIL_SURVIVOR_XP,
   canStartTrailRun,
   getDailyTrailRunsRemaining,
+  getLockedTrailSkinIds,
   getTrailFightResist,
   getTrailStormResist,
   getTrailUnlockedBossItems,
+  lockTrailSkins,
   settleTrailPayout,
   spendTrailRun,
 } from '../utils/economy';
@@ -228,7 +230,6 @@ export default function BattleBusTrail({
   skinLevels,
   onSkinLevelsChange,
   onBack,
-  onOpenShop,
 }) {
   const discovered = useMemo(
     () => outfits.filter((outfit) => guessedSkinIds.includes(outfit.id)),
@@ -393,6 +394,8 @@ export default function BattleBusTrail({
 
   const headerMembers = screen === 'select' ? selectMembers : playMembers;
   const runsLeft = getDailyTrailRunsRemaining(economy);
+  const lockedIds = useMemo(() => getLockedTrailSkinIds(economy), [economy]);
+  const partyHasLocked = partyIds.some((id) => lockedIds.has(id));
 
   const toggleParty = (id) => {
     if (busy) return;
@@ -403,11 +406,17 @@ export default function BattleBusTrail({
     });
   };
 
-  const startRun = async () => {
+  const startRun = async ({ forFun = false } = {}) => {
     if (busy || partyIds.length !== 4) return;
-    if (!canStartTrailRun(economy)) {
-      window.alert('No Battle Bus Trail runs left today.');
-      return;
+    if (!forFun) {
+      if (!canStartTrailRun(economy)) {
+        window.alert('No Battle Bus Trail runs left today.');
+        return;
+      }
+      if (partyIds.some((id) => lockedIds.has(id))) {
+        window.alert('One of those skins is locked until Monday. Use For Fun, or pick other skins.');
+        return;
+      }
     }
 
     const party = partyIds.map((id) => outfits.find((outfit) => outfit.id === id)).filter(Boolean);
@@ -417,13 +426,17 @@ export default function BattleBusTrail({
       return;
     }
 
-    const spent = spendTrailRun(economy);
-    onEconomyChange(spent.economy);
-    if (!spent.ok) {
-      window.alert(spent.reason);
-      return;
+    let runEconomy = economy;
+    if (!forFun) {
+      const spent = spendTrailRun(economy);
+      onEconomyChange(spent.economy);
+      if (!spent.ok) {
+        window.alert(spent.reason);
+        return;
+      }
+      runEconomy = lockTrailSkins(partyIds, spent.economy);
+      onEconomyChange(runEconomy);
     }
-    const runEconomy = spent.economy;
 
     const nameMap = new Map();
     for (const outfit of party) nameMap.set(outfit.name, outfit);
@@ -465,6 +478,10 @@ export default function BattleBusTrail({
       })),
     );
 
+    if (forFun) {
+      enqueueLog('FOR FUN — no weebucks or skin XP this run.');
+    }
+
     const log = (line) => {
       enqueueLog(line);
     };
@@ -505,9 +522,25 @@ export default function BattleBusTrail({
 
       await waitForLogDrain();
 
-      const survivorNames = new Set(match.survivors);
       const fallenCount = match.fallen.length;
       const survivorCount = match.survivors.length;
+
+      if (forFun) {
+        setResult({
+          ...match,
+          forFun: true,
+          weebucks: 0,
+          survivorCount,
+          fallenCount,
+          survivorPay: 0,
+          fallenPay: 0,
+          xpAwards: [],
+        });
+        setScreen('result');
+        return;
+      }
+
+      const survivorNames = new Set(match.survivors);
       const payout = settleTrailPayout(
         { survivors: survivorCount, fallen: fallenCount },
         runEconomy,
@@ -527,6 +560,7 @@ export default function BattleBusTrail({
 
       setResult({
         ...match,
+        forFun: false,
         weebucks: payout.amount,
         survivorCount,
         fallenCount,
@@ -640,13 +674,19 @@ export default function BattleBusTrail({
         {screen === 'result' && result ? (
           <div className="trail-result">
             <h2>{result.won ? 'Victory Royale!' : `Placed #${result.placement}`}</h2>
-            <p>
-              +{result.weebucks} weebucks ({result.survivorCount} alive × {result.survivorPay},{' '}
-              {result.fallenCount} fallen × {result.fallenPay})
-            </p>
-            <p>
-              Skin XP: survivors +{TRAIL_SURVIVOR_XP}, fallen +{TRAIL_FALLEN_XP}
-            </p>
+            {result.forFun ? (
+              <p>For Fun — no weebucks or skin XP earned.</p>
+            ) : (
+              <>
+                <p>
+                  +{result.weebucks} weebucks ({result.survivorCount} alive × {result.survivorPay},{' '}
+                  {result.fallenCount} fallen × {result.fallenPay})
+                </p>
+                <p>
+                  Skin XP: survivors +{TRAIL_SURVIVOR_XP}, fallen +{TRAIL_FALLEN_XP}
+                </p>
+              </>
+            )}
             <div className="import-actions">
               <button type="button" className="primary-button" onClick={backToSelect}>
                 Back to squad select
@@ -673,8 +713,8 @@ export default function BattleBusTrail({
         <button
           type="button"
           className="betting-start"
-          disabled={partyIds.length !== 4 || busy || runsLeft <= 0}
-          onClick={startRun}
+          disabled={partyIds.length !== 4 || busy || runsLeft <= 0 || partyHasLocked}
+          onClick={() => startRun()}
         >
           Drop in ({partyIds.length}/4 skins
           {sidekickId ? ' · sidekick' : ''} · {runsLeft} run{runsLeft === 1 ? '' : 's'} left)
@@ -729,11 +769,14 @@ export default function BattleBusTrail({
         <div className="catalogue-grid fort-sort-select-grid">
           {visibleSkins.map((outfit) => {
             const selected = partyIds.includes(outfit.id);
+            const locked = lockedIds.has(outfit.id);
             return (
               <button
                 key={outfit.id}
                 type="button"
-                className={`catalogue-card fort-sort-pick revealed ${selected ? 'is-selected' : ''}`}
+                className={`catalogue-card fort-sort-pick revealed ${selected ? 'is-selected' : ''} ${
+                  locked ? 'is-locked' : ''
+                }`}
                 onClick={() => toggleParty(outfit.id)}
                 disabled={partyIds.length >= 4 && !selected}
               >
@@ -743,7 +786,7 @@ export default function BattleBusTrail({
                 </div>
                 <p className="catalogue-name">{outfit.name}</p>
                 <span className="fort-sort-check" aria-hidden="true">
-                  {selected ? '✓' : ''}
+                  {locked ? '🔒' : selected ? '✓' : ''}
                 </span>
               </button>
             );
@@ -752,8 +795,13 @@ export default function BattleBusTrail({
       </div>
 
       <nav className="catalogue-sort-bar catalogue-sort-bar--two" aria-label="Trail">
-        <button type="button" className="catalogue-sort-button" onClick={onOpenShop}>
-          Shop
+        <button
+          type="button"
+          className="catalogue-sort-button"
+          disabled={partyIds.length !== 4 || busy}
+          onClick={() => startRun({ forFun: true })}
+        >
+          For Fun
         </button>
         <button type="button" className="catalogue-sort-button" onClick={onBack}>
           Main Menu

@@ -208,13 +208,15 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           </li>
           <li>
             <strong>Daily runs</strong> — {BASE_DAILY_TRAIL_RUNS} per day by default (shop can raise
-            to {DAILY_TRAIL_RUNS_TIER1}).
+            to {DAILY_TRAIL_RUNS_TIER1}). Ranked Drop in locks those skins until Monday.{" "}
+            <strong>For Fun</strong> is unlimited, does not lock skins, and awards no weebucks or
+            skin XP.
           </li>
           <li>
-            <strong>Event images</strong> — encounters show skin icons from Anime, Cartoon, Star
-            Wars, Marvel, Icon, Gaming Legends, Sports, and Space Explorer pools. Solos show 1
-            skin, squads show up to 4. Bosses use a random collab skin. Loot drops show an item
-            card (icons from fortnite.gg when available).
+            <strong>Event images</strong> — encounters show skin icons from Anime Legends, Anime
+            Originals, Cartoon Legends, Star Wars, Marvel, Icon, Gaming Legends, Sports, and Space
+            Explorer pools. Solos show 1 skin, squads show up to 4. Bosses use a random collab skin.
+            Loot drops show an item card (icons from fortnite.gg when available).
           </li>
           <li>
             <strong>Payout</strong> — {TRAIL_SURVIVOR_PAYOUT} weebucks per surviving squad member,{' '}
