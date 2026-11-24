@@ -267,17 +267,24 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             slot).
           </li>
           <li>
-            <strong>Choice events</strong> — between turns you may get a decision: check a noisy
-            bush (loot or solo bot), answer a solo teaming wave (free elim, or 70% item / 30%
-            betrayal), crack a locked vault (2 turns for a guaranteed rare while the Storm moves),
-            jump a sky rift (closer to zone or dropped in danger), or hop in a car (70% massive
-            ambush on the next squad and farther from the Storm, 30% explosion for 100 damage each).
+            <strong>Lobby</strong> — before you drop, 95 other players spawn with unique skins in
+            squads of 4 (plus one squad of 3). Each squad is Sweats, Players, or Bots. You can still
+            run into solos, duos, and trios that split off those squads. Random deaths hit the lobby
+            every turn, and squads that already lost someone die faster.
           </li>
           <li>
-            <strong>Final 10</strong> — once 10 players are left, the others stop dying on their own.
-            They only go down if you attack them, or if they ambush you and you win the fight.
-            Ambushes jump sharply: looting, resting, and rotating all get jumped much more often,
-            and anyone you run into usually shoots first.
+            <strong>Choice events</strong> — between turns you may get a decision: check a noisy
+            bush (loot or a camping solo), answer a solo teaming wave (free elim, or 70% item / 30%
+            betrayal — teaming stops in the final 10), crack a locked vault (2 turns for a guaranteed
+            rare while the Storm moves), jump a sky rift (closer to zone or dropped in danger), or
+            hop in a car (70% massive ambush on the next squad and farther from the Storm, 30%
+            explosion for 100 damage each).
+          </li>
+          <li>
+            <strong>Final 10</strong> — once 10 players are left, the others stop dying on their own
+            and teaming offers stop. They only go down if you attack them, or if they ambush you and
+            you win the fight. Ambushes jump sharply: looting, resting, and rotating all get jumped
+            much more often, and anyone you run into usually shoots first.
           </li>
         </ul>
       </section>
