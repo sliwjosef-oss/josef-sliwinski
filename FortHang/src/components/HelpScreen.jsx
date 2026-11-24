@@ -88,7 +88,14 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           matches. Extra sources include tournament-win bonuses and the catalogue-complete reward.
         </p>
         <p>
-          Spend weebucks in the Shop on more hangman attempts, sidekick rolls, and betting upgrades.
+          <strong>Battle Bus Trail</strong> also pays weebucks at the end of a ranked run:{' '}
+          {TRAIL_SURVIVOR_PAYOUT} per surviving squad member and {TRAIL_FALLEN_PAYOUT} per fallen
+          member (sidekick counts). Shop upgrades can raise those to {TRAIL_SURVIVOR_PAYOUT_TIER1} /{' '}
+          {TRAIL_FALLEN_PAYOUT_TIER1}. For Fun runs award no weebucks.
+        </p>
+        <p>
+          Spend weebucks in the Shop on more hangman attempts, sidekick rolls, betting upgrades, and
+          Battle Bus Trail unlocks.
         </p>
       </section>
 
@@ -275,13 +282,21 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
         <h2>Skin levels</h2>
         <p>
           Bet skins earn XP from tournament place at the end of a betting run. Super bets earn double
-          XP. Battle Bus Trail also awards skin XP for surviving or falling.
+          XP.
         </p>
         <ul>
           <li>1st place: 200 XP</li>
           <li>2nd–4th: 100 XP</li>
           <li>5th–7th: 50 XP</li>
           <li>Everyone else who entered as a bet: 25 XP</li>
+        </ul>
+        <p>
+          <strong>Battle Bus Trail</strong> awards skin XP to squad members after a ranked run
+          (For Fun awards none):
+        </p>
+        <ul>
+          <li>Survive the run: {TRAIL_SURVIVOR_XP} XP</li>
+          <li>Fall during the run: {TRAIL_FALLEN_XP} XP</li>
         </ul>
         <p>
           Levels go from 0 to {MAX_SKIN_LEVEL}. Level 1 costs 100 XP. Each next level costs 100 XP
