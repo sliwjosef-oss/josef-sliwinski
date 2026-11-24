@@ -911,6 +911,9 @@ export default function BattleBusTrail({
       </div>
 
       <nav className="catalogue-sort-bar catalogue-sort-bar--two" aria-label="Trail">
+        <button type="button" className="catalogue-sort-button" onClick={onBack}>
+          Main Menu
+        </button>
         {isForFunSelect ? (
           <button type="button" className="catalogue-sort-button" onClick={openRankedSelect}>
             Ranked
@@ -920,9 +923,6 @@ export default function BattleBusTrail({
             For Fun
           </button>
         )}
-        <button type="button" className="catalogue-sort-button" onClick={onBack}>
-          Main Menu
-        </button>
       </nav>
     </div>
   );
