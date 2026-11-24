@@ -11,7 +11,7 @@ import {
   SUPER_BET_ROUND_BONUS,
   TOURNAMENT_WIN_POINTS,
 } from '../utils/economy';
-import { FIVE_STAR_NAMES } from '../fortSort/simulate';
+import { FIVE_STAR_NAMES, THREE_STAR_NAMES } from '../fortSort/simulate';
 import { LEVEL_XP_THRESHOLDS, MAX_SKIN_LEVEL } from '../utils/skinLevels';
 
 const SECTIONS = [
@@ -130,13 +130,14 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
         <p>Dice counts, before any bet bonus:</p>
         <ul>
           <li>
-            <strong>1</strong> — Other
+            <strong>1</strong> — Other, General Collaborations, Sports
           </li>
           <li>
             <strong>2</strong> — default
           </li>
           <li>
-            <strong>3</strong> — DC, Icon, Other Collab, Marvel, Gaming Legends
+            <strong>3</strong> — DC, Icon, Other Collab, Marvel, Gaming Legends, Star Wars; also{' '}
+            {[...THREE_STAR_NAMES].join(', ')}
           </li>
           <li>
             <strong>4</strong> — TV, WWE, Anime, and Cartoon Legends

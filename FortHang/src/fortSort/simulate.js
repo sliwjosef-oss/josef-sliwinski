@@ -14,16 +14,37 @@ export const FIVE_STAR_NAMES = new Set([
   'John Cena',
   'Batman (Pen & Ink)',
   'Sonic the Hedgehog',
+  'Freddy Fazbear',
+  'Slim Shady',
+  'Master Chief',
+  'Luke Skywalker',
+  'Darth Vader',
+  'Optimus Prime',
+  'Midas',
+  'Renegade Raider',
+  'Genos',
 ]);
 
-const THREE_DICE_SERIES = new Set(['dc', 'icon', 'other-collab-skins', 'marvel', 'gaming-legends']);
+/** Exact catalogue names that always roll 3d100. */
+export const THREE_STAR_NAMES = new Set(['Helsie', 'Hope', 'Jonesy The First']);
+
+const ONE_DICE_SERIES = new Set(['other', 'general-collaborations', 'sports']);
+const THREE_DICE_SERIES = new Set([
+  'dc',
+  'icon',
+  'other-collab-skins',
+  'marvel',
+  'gaming-legends',
+  'star-wars',
+]);
 const FOUR_DICE_SERIES = new Set(['tv-legends', 'wwe-legends', 'anime-legends', 'cartoon']);
 
 export function getBaseDiceCount(outfit) {
   if (!outfit) return 1;
   if (FIVE_STAR_NAMES.has(outfit.name)) return 5;
+  if (THREE_STAR_NAMES.has(outfit.name)) return 3;
   const series = getCatalogueSeriesKey(outfit);
-  if (series === 'other') return 1;
+  if (ONE_DICE_SERIES.has(series)) return 1;
   if (THREE_DICE_SERIES.has(series)) return 3;
   if (FOUR_DICE_SERIES.has(series)) return 4;
   return 2;
