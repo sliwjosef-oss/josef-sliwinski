@@ -881,7 +881,7 @@ function SelectScreen({
                 disabled
                 title="Unlock in the Shop for 1000 weebucks"
               >
-                Select random (locked · 1000)
+                Select random (locked)
               </button>
             )}
           </div>
@@ -2204,7 +2204,7 @@ export default function FortSort({
                             : 'Unlock in the Shop for 5000 weebucks'
                         }
                       >
-                        {canSimulateAll ? 'Simulate all' : 'Simulate all (locked · 5000)'}
+                        {canSimulateAll ? 'Simulate all' : 'Simulate all (locked)'}
                       </button>
                     </>
                   ) : (
