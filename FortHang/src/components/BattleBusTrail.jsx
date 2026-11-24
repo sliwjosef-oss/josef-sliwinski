@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { START_PLAYERS } from '../battleBus/constants';
 import { playTrailMatch } from '../battleBus/engine';
 import {
   TRAIL_FALLEN_XP,
@@ -76,8 +77,17 @@ function EventIconImg({ outfit, iconUrls = [], alt = '', fallback = null }) {
 
 const LOG_LINE_MS = 2000;
 
-function EventVisualPanel({ visual }) {
+function EventVisualPanel({ visual, discoveredIds }) {
   if (!visual) return null;
+
+  const ownedIds = discoveredIds instanceof Set ? discoveredIds : new Set(discoveredIds || []);
+  const outfitLabel = (outfit) => {
+    if (!outfit) return '???';
+    // Squad/member events always show real names; encounter NPCs hide undiscovered names.
+    if (visual.kind === 'member' || visual.kind === 'death') return outfit.name || '???';
+    if (outfit.id && ownedIds.has(outfit.id)) return outfit.name;
+    return '???';
+  };
 
   const outfits = visual.outfits || [];
   const isItem = visual.kind === 'item';
@@ -117,18 +127,21 @@ function EventVisualPanel({ visual }) {
           Math.max(1, outfits.length || (isItem ? 1 : 0)),
         )}`}
       >
-        {outfits.map((outfit) => (
+        {outfits.map((outfit) => {
+          const label = outfitLabel(outfit);
+          return (
           <div
             key={outfit.id || outfit.name}
             className={`trail-event-card ${isDeath ? 'is-crossed' : ''}`}
           >
             <div className="trail-event-art">
-              <EventIconImg key={outfit.id || outfit.name} outfit={outfit} alt={outfit.name} />
+              <EventIconImg key={outfit.id || outfit.name} outfit={outfit} alt={label} />
               {isDeath ? <span className="trail-squad-x" aria-hidden="true" /> : null}
             </div>
-            <p className="trail-event-name">{outfit.name}</p>
+            <p className="trail-event-name">{label}</p>
           </div>
-        ))}
+          );
+        })}
         {isItem ? (
           <div className="trail-event-card is-item">
             <div className="trail-event-art">
@@ -272,6 +285,7 @@ export default function BattleBusTrail({
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const [liveSquad, setLiveSquad] = useState(null);
+  const [playersLeft, setPlayersLeft] = useState(null);
   const [eventVisual, setEventVisual] = useState(null);
   const chooseRef = useRef(null);
   const logEndRef = useRef(null);
@@ -497,6 +511,7 @@ export default function BattleBusTrail({
         getTrailStormDamageResist(getSkinLevel(skinLevels, outfit.id)),
       ]),
     );
+    setPlayersLeft(START_PLAYERS);
     setLiveSquad(
       [
         ...party.map((outfit) => ({
@@ -540,6 +555,7 @@ export default function BattleBusTrail({
         sidekickName: sidekick?.name || null,
         // Full catalogue for encounter art — not limited to discovered/owned skins.
         outfits,
+        discoveredSkinIds: guessedSkinIds,
         partyOutfits: party,
         startingHpByName,
         fightResistByName,
@@ -551,7 +567,11 @@ export default function BattleBusTrail({
         forFun,
         log,
         choose,
-        onSquadUpdate: setLiveSquad,
+        onSquadUpdate: (update) => {
+          if (forfeitedRef.current) return;
+          setLiveSquad(update.members);
+          setPlayersLeft(update.playersLeft);
+        },
         onEventVisual: (visual) => {
           if (forfeitedRef.current) return;
           setEventVisual(visual);
@@ -623,6 +643,7 @@ export default function BattleBusTrail({
       }
       setScreen(forFun || forFunMode ? 'forFunSelect' : 'select');
       setLiveSquad(null);
+      setPlayersLeft(null);
       setEventVisual(null);
       clearPlayLog();
     } finally {
@@ -666,6 +687,7 @@ export default function BattleBusTrail({
     } else {
       setScreen(forFunMode ? 'forFunSelect' : 'select');
       setLiveSquad(null);
+      setPlayersLeft(null);
       setBusy(false);
       runActiveRef.current = false;
     }
@@ -676,6 +698,7 @@ export default function BattleBusTrail({
     setPartyIds([]);
     setSidekickId(null);
     setLiveSquad(null);
+    setPlayersLeft(null);
     setEventVisual(null);
     setResult(null);
     clearPlayLog();
@@ -747,7 +770,14 @@ export default function BattleBusTrail({
       <div className="fort-sort fort-sort-screen trail-screen">
         <header className="catalogue-header trail-header">
           <div className="trail-header-top">
-            <h1>{forFunMode ? 'Battle Bus Trail · For Fun' : 'Battle Bus Trail'}</h1>
+            <div className="trail-header-titles">
+              <h1 className={forFunMode ? 'is-for-fun' : undefined}>
+                {forFunMode ? 'Battle Bus Trail · For Fun' : 'Battle Bus Trail'}
+              </h1>
+              {playersLeft != null ? (
+                <p className="trail-players-left">Players Remaining: {playersLeft}</p>
+              ) : null}
+            </div>
             {screen === 'play' ? (
               <button type="button" className="trail-forfeit-button" onClick={forfeitRun}>
                 Forfeit run
@@ -756,7 +786,7 @@ export default function BattleBusTrail({
           </div>
           <SquadStatusBar members={headerMembers} />
         </header>
-        <EventVisualPanel visual={eventVisual} />
+        <EventVisualPanel visual={eventVisual} discoveredIds={guessedSkinIds} />
         <div className="catalogue-scroll trail-log" tabIndex={0} aria-label="Trail log">
           {logLines.map((line, index) => (
             <p key={`${index}-${line.slice(0, 24)}`} className="trail-log-line">
@@ -817,7 +847,9 @@ export default function BattleBusTrail({
   return (
     <div className="fort-sort fort-sort-screen trail-screen">
       <header className="catalogue-header trail-header">
-        <h1>{isForFunSelect ? 'Battle Bus Trail · For Fun' : 'Battle Bus Trail'}</h1>
+        <h1 className={isForFunSelect ? 'is-for-fun' : undefined}>
+          {isForFunSelect ? 'Battle Bus Trail · For Fun' : 'Battle Bus Trail'}
+        </h1>
         <SquadStatusBar members={headerMembers} />
       </header>
 

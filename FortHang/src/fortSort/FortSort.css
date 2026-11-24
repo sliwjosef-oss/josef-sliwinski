@@ -2304,15 +2304,34 @@
   margin-bottom: 0;
 }
 
+.trail-screen .trail-header h1.is-for-fun {
+  font-size: 1.35rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
 .trail-header-top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
 }
 
+.trail-header-titles {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
 .trail-header-top h1 {
   margin: 0;
+}
+
+.trail-players-left {
+  margin: 0.2rem 0 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  line-height: 1.2;
 }
 
 .trail-forfeit-button {

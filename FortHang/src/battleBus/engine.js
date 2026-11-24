@@ -92,19 +92,23 @@ function weighted(entries) {
  *   fightResist?: number,
  *   unlockedBossItems?: string[] | Set<string>,
  *   unlockedEvents?: string[] | Set<string>,
+ *   discoveredSkinIds?: string[] | Set<string>,
  *   forFun?: boolean,
  *   log: (line: string) => void,
  *   clearLog?: () => void,
  *   choose: (options: string[]) => Promise<string>,
- *   onSquadUpdate?: (members: Array<{
- *     name: string,
- *     sidekick: boolean,
- *     hp: number,
- *     maxHp: number,
- *     shield: number,
- *     alive: boolean,
- *     afkTurns: number,
- *   }>) => void,
+ *   onSquadUpdate?: (update: {
+ *     members: Array<{
+ *       name: string,
+ *       sidekick: boolean,
+ *       hp: number,
+ *       maxHp: number,
+ *       shield: number,
+ *       alive: boolean,
+ *       afkTurns: number,
+ *     }>,
+ *     playersLeft: number,
+ *   }) => void,
  *   onEventVisual?: (visual: object | null) => void,
  * }} opts
  */
@@ -120,6 +124,7 @@ export async function playTrailMatch({
   fightResist = 0,
   unlockedBossItems = [],
   unlockedEvents = [],
+  discoveredSkinIds = [],
   forFun = false,
   log,
   clearLog,
@@ -129,7 +134,13 @@ export async function playTrailMatch({
 }) {
   const unlocked = new Set(unlockedBossItems);
   const eventUnlocks = new Set(unlockedEvents);
+  const discoveredIds = new Set(discoveredSkinIds);
   const isRanked = !forFun;
+  const encounterLabel = (outfit, fallback = '???') => {
+    if (!outfit) return fallback;
+    if (outfit.id && discoveredIds.has(outfit.id)) return outfit.name;
+    return '???';
+  };
   const sidekick = sidekickName || null;
   const names = sidekick
     ? [...partyNames.slice(0, 4), sidekick]
@@ -204,8 +215,8 @@ export async function playTrailMatch({
 
   const emitSquad = () => {
     if (!onSquadUpdate) return;
-    onSquadUpdate(
-      names.map((name) => {
+    onSquadUpdate({
+      members: names.map((name) => {
         const member = S.squad[name];
         return {
           name,
@@ -217,7 +228,8 @@ export async function playTrailMatch({
           afkTurns: S.afk[name] || 0,
         };
       }),
-    );
+      playersLeft: S.playersLeft,
+    });
   };
 
   const phaseIndex = () => {
@@ -455,6 +467,7 @@ export async function playTrailMatch({
     const floor = fromFight ? alive : Math.max(ENDGAME_LOCK, alive);
     S.playersLeft = Math.max(floor, S.playersLeft - n);
     noteEndgame();
+    emitSquad();
   };
 
   const enemyMaxHp = (enemy) => Math.floor(ENEMY_TEAMS[enemy].hp * ENEMY_HP_MULT);
@@ -1029,7 +1042,7 @@ export async function playTrailMatch({
   const bossEncounter = async () => {
     const bossSkins = pickOutfitsFromSeries(bySeries, BOSS_SERIES_KEYS, 1);
     const bossOutfit = bossSkins[0] || null;
-    const bossLabel = bossOutfit?.name || 'a collab skin';
+    const bossLabel = encounterLabel(bossOutfit, 'a collab skin');
     lastEncounterOutfits = bossOutfit ? [bossOutfit] : [];
     log(`A BOSS (${bossLabel}) is guarding a vault full of loot!`);
     emitVisual({
@@ -1096,7 +1109,7 @@ export async function playTrailMatch({
     const pool = pickRandomPool(SQUAD_VISUAL_POOLS);
     const skins = pickOutfitsFromSeries(bySeries, pool.series, 1);
     lastEncounterOutfits = skins;
-    const label = skins[0]?.name || pool.soloLabel;
+    const label = encounterLabel(skins[0], pool.soloLabel);
     log(`A solo player (${label}) waves at you — looks like a teaming offer.`);
     emitVisual({
       kind: 'skins',

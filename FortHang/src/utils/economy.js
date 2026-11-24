@@ -200,21 +200,21 @@ export const SHOP_UNLOCKS = {
 export const TRAIL_SHOP_UNLOCKS = {
   trailBending: {
     id: 'trailBending',
-    cost: 1000,
+    cost: 800,
     items: ['Firebending', 'Waterbending', 'Earthbending', 'Airbending'],
     label: 'Unlock Bending',
     blurb: 'Bosses can drop Fire, Water, Earth, and Airbending.',
   },
   trailLightsaber: {
     id: 'trailLightsaber',
-    cost: 1000,
+    cost: 800,
     items: ['Sith Apprentice Lightsaber', 'Jedi Apprentice Lightsaber'],
     label: 'Unlock Lightsabers',
     blurb: 'Bosses can drop Sith and Jedi Apprentice Lightsabers.',
   },
   trailInfinity: {
     id: 'trailInfinity',
-    cost: 1000,
+    cost: 1200,
     items: ['Infinity Blade'],
     label: 'Unlock Infinity Blade',
     blurb: 'Adds the Infinity Blade to the boss loot pool.',

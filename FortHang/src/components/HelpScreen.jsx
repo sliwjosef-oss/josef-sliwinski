@@ -226,8 +226,9 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             Originals, Cartoon Legends, TV Legends, WWE Legends, Star Wars, Marvel, DC, Icon, Gaming
             Legends, Sports, Space Explorers, Peely, Food, Toys, Robots, Animals, Aliens, Midas
             Family, Winterfest, and Fortnightmares pools. Those picks use the full catalogue —
-            owning the skin does not matter. Solos show 1 skin, squads show up to 4. Bosses use a
-            random collab skin. Loot drops show an item card (icons from fortnite.gg when available).
+            icons always show, but undiscovered skins are labeled ???. Solos show 1 skin, squads show
+            up to 4. Bosses use a random collab skin. Loot drops show an item card (icons from
+            fortnite.gg when available).
           </li>
           <li>
             <strong>Payout</strong> — {TRAIL_SURVIVOR_PAYOUT} weebucks per surviving squad member,{' '}
