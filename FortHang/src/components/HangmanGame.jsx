@@ -269,11 +269,13 @@ export default function HangmanGame({
           <h1>Fortnite Hangman</h1>
         )}
         <p className="subtitle">Guess the outfit name before Peely gets bananated!</p>
-        <GuessStatus
-          economy={economy}
-          onEconomyChange={onEconomyChange}
-          showResetHint={gameState === GAME_STATES.IDLE}
-        />
+        {!collectionComplete ? (
+          <GuessStatus
+            economy={economy}
+            onEconomyChange={onEconomyChange}
+            showResetHint={gameState === GAME_STATES.IDLE}
+          />
+        ) : null}
         {gameState !== GAME_STATES.IDLE ? (
           <p className="discovery-count">
             Catalogue: {discoveredCount} / {outfits.length} skins discovered

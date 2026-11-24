@@ -209,8 +209,8 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           <li>
             <strong>Daily runs</strong> — {BASE_DAILY_TRAIL_RUNS} per day by default (shop can raise
             to {DAILY_TRAIL_RUNS_TIER1}). Ranked Drop in locks those skins until Monday.{" "}
-            <strong>For Fun</strong> is unlimited, does not lock skins, and awards no weebucks or
-            skin XP.
+            <strong>For Fun</strong> opens a separate squad select with no locks or daily-run
+            limit, and awards no weebucks or skin XP.
           </li>
           <li>
             <strong>Event images</strong> — encounters show skin icons from Anime Legends, Anime

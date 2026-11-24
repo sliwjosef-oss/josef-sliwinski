@@ -37,9 +37,9 @@ export default function CollectionCompleteScreen({
             Sidekick Catalogue
           </button>
         ) : null}
-        {onOpenShop ? (
-          <button type="button" className="secondary-button" onClick={onOpenShop}>
-            Shop
+        {onOpenTrail ? (
+          <button type="button" className="secondary-button" onClick={onOpenTrail}>
+            Battle Bus Trail
           </button>
         ) : null}
         {onOpenFortSort ? (
@@ -47,9 +47,9 @@ export default function CollectionCompleteScreen({
             Betting
           </button>
         ) : null}
-        {onOpenTrail ? (
-          <button type="button" className="secondary-button" onClick={onOpenTrail}>
-            Battle Bus Trail
+        {onOpenShop ? (
+          <button type="button" className="secondary-button" onClick={onOpenShop}>
+            Shop
           </button>
         ) : null}
         {onOpenHelp ? (

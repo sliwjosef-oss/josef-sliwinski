@@ -243,7 +243,8 @@ export default function BattleBusTrail({
     return sidekicks.filter((sidekick) => counts.has(sidekick.id));
   }, [sidekicks, economy.ownedSidekickIds]);
 
-  const [screen, setScreen] = useState('select'); // select | play | result
+  const [screen, setScreen] = useState('select'); // select | forFunSelect | play | result
+  const [forFunMode, setForFunMode] = useState(false);
   const [partyIds, setPartyIds] = useState([]);
   const [sidekickId, setSidekickId] = useState(null);
   const [search, setSearch] = useState('');
@@ -392,10 +393,12 @@ export default function BattleBusTrail({
     return members;
   }, [liveSquad, selectMembers, outfits, ownedSidekicks]);
 
-  const headerMembers = screen === 'select' ? selectMembers : playMembers;
+  const isSelectScreen = screen === 'select' || screen === 'forFunSelect';
+  const isForFunSelect = screen === 'forFunSelect';
+  const headerMembers = isSelectScreen ? selectMembers : playMembers;
   const runsLeft = getDailyTrailRunsRemaining(economy);
   const lockedIds = useMemo(() => getLockedTrailSkinIds(economy), [economy]);
-  const partyHasLocked = partyIds.some((id) => lockedIds.has(id));
+  const partyHasLocked = !isForFunSelect && partyIds.some((id) => lockedIds.has(id));
 
   const toggleParty = (id) => {
     if (busy) return;
@@ -418,6 +421,7 @@ export default function BattleBusTrail({
         return;
       }
     }
+    setForFunMode(forFun);
 
     const party = partyIds.map((id) => outfits.find((outfit) => outfit.id === id)).filter(Boolean);
     const sidekick = sidekickId ? sidekicks.find((entry) => entry.id === sidekickId) : null;
@@ -576,7 +580,7 @@ export default function BattleBusTrail({
         enqueueLog(`Something went wrong: ${error.message || error}`);
         await waitForLogDrain();
       }
-      setScreen('select');
+      setScreen(forFun || forFunMode ? 'forFunSelect' : 'select');
       setLiveSquad(null);
       setEventVisual(null);
       clearPlayLog();
@@ -619,7 +623,7 @@ export default function BattleBusTrail({
       err.code = 'forfeited';
       pending.reject(err);
     } else {
-      setScreen('select');
+      setScreen(forFunMode ? 'forFunSelect' : 'select');
       setLiveSquad(null);
       setBusy(false);
       runActiveRef.current = false;
@@ -627,11 +631,21 @@ export default function BattleBusTrail({
   };
 
   const backToSelect = () => {
-    setScreen('select');
+    setScreen(forFunMode || result?.forFun ? 'forFunSelect' : 'select');
     setLiveSquad(null);
     setEventVisual(null);
     setResult(null);
     clearPlayLog();
+  };
+
+  const openForFunSelect = () => {
+    setForFunMode(true);
+    setScreen('forFunSelect');
+  };
+
+  const openRankedSelect = () => {
+    setForFunMode(false);
+    setScreen('select');
   };
 
   if (screen === 'play' || screen === 'result') {
@@ -639,7 +653,7 @@ export default function BattleBusTrail({
       <div className="fort-sort fort-sort-screen trail-screen">
         <header className="catalogue-header trail-header">
           <div className="trail-header-top">
-            <h1>Battle Bus Trail</h1>
+            <h1>{forFunMode ? 'Battle Bus Trail · For Fun' : 'Battle Bus Trail'}</h1>
             {screen === 'play' ? (
               <button type="button" className="trail-forfeit-button" onClick={forfeitRun}>
                 Forfeit run
@@ -705,7 +719,7 @@ export default function BattleBusTrail({
   return (
     <div className="fort-sort fort-sort-screen trail-screen">
       <header className="catalogue-header trail-header">
-        <h1>Battle Bus Trail</h1>
+        <h1>{isForFunSelect ? 'Battle Bus Trail · For Fun' : 'Battle Bus Trail'}</h1>
         <SquadStatusBar members={headerMembers} />
       </header>
 
@@ -713,15 +727,26 @@ export default function BattleBusTrail({
         <button
           type="button"
           className="betting-start"
-          disabled={partyIds.length !== 4 || busy || runsLeft <= 0 || partyHasLocked}
-          onClick={() => startRun()}
+          disabled={
+            partyIds.length !== 4 ||
+            busy ||
+            (!isForFunSelect && (runsLeft <= 0 || partyHasLocked))
+          }
+          onClick={() => startRun({ forFun: isForFunSelect })}
         >
-          Drop in ({partyIds.length}/4 skins
-          {sidekickId ? ' · sidekick' : ''} · {runsLeft} run{runsLeft === 1 ? '' : 's'} left)
+          {isForFunSelect
+            ? `Drop in (${partyIds.length}/4 skins${sidekickId ? ' · sidekick' : ''})`
+            : `Drop in (${partyIds.length}/4 skins${sidekickId ? ' · sidekick' : ''} · ${runsLeft} run${
+                runsLeft === 1 ? '' : 's'
+              } left)`}
         </button>
       </div>
 
-      <div className="catalogue-scroll" tabIndex={0} aria-label="Trail squad select">
+      <div
+        className="catalogue-scroll"
+        tabIndex={0}
+        aria-label={isForFunSelect ? 'For Fun squad select' : 'Trail squad select'}
+      >
         <h2 className="shop-section-title">Sidekick (optional)</h2>
         {ownedSidekicks.length === 0 ? (
           <p className="hint">Optional — buy sidekick rolls in the Shop if you want one.</p>
@@ -769,7 +794,7 @@ export default function BattleBusTrail({
         <div className="catalogue-grid fort-sort-select-grid">
           {visibleSkins.map((outfit) => {
             const selected = partyIds.includes(outfit.id);
-            const locked = lockedIds.has(outfit.id);
+            const locked = !isForFunSelect && lockedIds.has(outfit.id);
             return (
               <button
                 key={outfit.id}
@@ -795,14 +820,15 @@ export default function BattleBusTrail({
       </div>
 
       <nav className="catalogue-sort-bar catalogue-sort-bar--two" aria-label="Trail">
-        <button
-          type="button"
-          className="catalogue-sort-button"
-          disabled={partyIds.length !== 4 || busy}
-          onClick={() => startRun({ forFun: true })}
-        >
-          For Fun
-        </button>
+        {isForFunSelect ? (
+          <button type="button" className="catalogue-sort-button" onClick={openRankedSelect}>
+            Ranked
+          </button>
+        ) : (
+          <button type="button" className="catalogue-sort-button" onClick={openForFunSelect}>
+            For Fun
+          </button>
+        )}
         <button type="button" className="catalogue-sort-button" onClick={onBack}>
           Main Menu
         </button>
