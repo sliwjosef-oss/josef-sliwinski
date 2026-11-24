@@ -263,15 +263,15 @@ export default function HangmanGame({
     return (
       <div className="hangman-game hangman-game--playing">
         <header className="game-header play-header">
-          <h1 className="attempts-left-heading">
-            Attempts left today: {guessesRemaining} / {guessesLimit}
-          </h1>
+          <p className="attempts-left-heading">
+            Attempts left today: <strong>{guessesRemaining}</strong> / {guessesLimit}
+          </p>
           <button
             type="button"
             className="secondary-button play-catalogue-button"
-            onClick={onOpenCatalogue}
+            onClick={returnToMenu}
           >
-            Skin Catalogue
+            Main Menu
           </button>
         </header>
 
@@ -336,18 +336,18 @@ export default function HangmanGame({
     return (
       <div className="hangman-game hangman-game--result">
         <header className="game-header play-header">
-          <h1 className="attempts-left-heading">
-            Attempts left today: {guessesRemaining} / {guessesLimit}
-          </h1>
+          <p className="attempts-left-heading">
+            Attempts left today: <strong>{guessesRemaining}</strong> / {guessesLimit}
+          </p>
           <p className="discovery-count">
             Catalogue: {discoveredCount} / {outfits.length} skins discovered
           </p>
           <button
             type="button"
             className="secondary-button play-catalogue-button"
-            onClick={onOpenCatalogue}
+            onClick={returnToMenu}
           >
-            Skin Catalogue
+            Main Menu
           </button>
         </header>
 
@@ -409,9 +409,6 @@ export default function HangmanGame({
                 Open Shop
               </button>
             ) : null}
-            <button type="button" className="secondary-button" onClick={returnToMenu}>
-              Main Menu
-            </button>
           </div>
         </div>
       </div>

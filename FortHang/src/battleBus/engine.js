@@ -13,8 +13,10 @@ import {
   ENEMY_SKILL,
   ENEMY_TEAMS,
   ENV_HEAL,
+  DEATH_BLURBS,
   FALL_DAMAGE,
   FALL_REASONS,
+  OREGON_DEATH_CHANCE,
   FIGHT_SNIPER,
   FIND_TEXT,
   GROUP_WORDS,
@@ -83,9 +85,11 @@ function weighted(entries) {
  *   partyOutfits?: object[],
  *   startingHpByName?: Record<string, number>,
  *   fightResistByName?: Record<string, number>,
+ *   stormResistByName?: Record<string, number>,
  *   stormResist?: number,
  *   fightResist?: number,
  *   unlockedBossItems?: string[] | Set<string>,
+ *   unlockedEvents?: string[] | Set<string>,
  *   log: (line: string) => void,
  *   clearLog?: () => void,
  *   choose: (options: string[]) => Promise<string>,
@@ -108,9 +112,11 @@ export async function playTrailMatch({
   partyOutfits = [],
   startingHpByName = {},
   fightResistByName = {},
+  stormResistByName = {},
   stormResist = 0,
   fightResist = 0,
   unlockedBossItems = [],
+  unlockedEvents = [],
   log,
   clearLog,
   choose,
@@ -118,6 +124,7 @@ export async function playTrailMatch({
   onEventVisual,
 }) {
   const unlocked = new Set(unlockedBossItems);
+  const eventUnlocks = new Set(unlockedEvents);
   const sidekick = sidekickName || null;
   const names = sidekick
     ? [...partyNames.slice(0, 4), sidekick]
@@ -181,6 +188,7 @@ export async function playTrailMatch({
       .map(Number)
       .sort((a, b) => b - a),
     campfireTurns: 0,
+    vaultTurns: 0,
     turn: 1,
     afk: {},
     lastHit: {},
@@ -318,10 +326,45 @@ export async function playTrailMatch({
     give(pick(RARE_ITEMS.filter((item) => item !== 'Chug Jug' || unlocked.has('Chug Jug'))));
   };
 
+  const isMythicBossItem = (item) =>
+    item === 'Infinity Blade' || BOSS_ITEMS[item]?.rarity === 'Mythic';
+
+  const mythicBossEntries = () =>
+    Object.entries(bossLootPool()).filter(([item]) => isMythicBossItem(item));
+
+  const giveMythicBoss = () => {
+    const entries = mythicBossEntries();
+    if (!entries.length) {
+      log('No Mythic boss loot is unlocked yet.');
+      return false;
+    }
+    give(weighted(entries));
+    return true;
+  };
+
   const causeOf = (enemy) => {
     if (enemy === 'Boss') return 'the boss';
+    if (enemy === 'Sweats' || enemy === 'Solo sweat') return 'sweats';
     if (String(enemy).startsWith('Solo')) return 'a solo player';
     return 'an enemy squad';
+  };
+
+  const deathBlurbKey = (cause) => {
+    if (cause === 'the Storm') return 'storm';
+    if (cause === 'a sniper') return 'sniper';
+    if (cause === 'the boss') return 'boss';
+    if (cause === 'sweats') return 'sweats';
+    if (cause === 'a solo player') return 'solo';
+    if (cause === 'fall damage') return 'fall';
+    return 'squad';
+  };
+
+  const deathBlurb = (name, cause) => {
+    const pool =
+      rand() < OREGON_DEATH_CHANCE
+        ? DEATH_BLURBS.oregon
+        : DEATH_BLURBS[deathBlurbKey(cause)] || DEATH_BLURBS.squad;
+    return pick(pool).replaceAll('{name}', name);
   };
 
   const applyResist = (amount, resist) => {
@@ -346,7 +389,8 @@ export async function playTrailMatch({
 
   const stormHit = (name, amount) => {
     S.lastHit[name] = 'the Storm';
-    const reduced = applyResist(amount, stormResist);
+    const personal = Number(stormResistByName[name]) || 0;
+    const reduced = applyResist(amount, stormResist + personal);
     S.squad[name].hp -= reduced;
     S.damage += Math.floor(reduced / 4);
     emitSquad();
@@ -370,14 +414,16 @@ export async function playTrailMatch({
     if (!dead.length) return false;
     for (const name of dead) {
       const cause = S.lastHit[name] || 'the island';
-      log(`*** ${name} has been eliminated by ${cause}. They can't be revived. ***`);
-      showMemberEvent(name, `${name} was eliminated by ${cause}.`, {
+      const blurb = deathBlurb(name, cause);
+      log(`*** ${blurb} ***`);
+      log(`(${name} was eliminated by ${cause}. They can't be revived.)`);
+      showMemberEvent(name, blurb, {
         kind: 'death',
         crossedOut: true,
       });
       emitSquad();
       await choose(['Continue']);
-      S.fallen.push({ name, cause, playersLeft: S.playersLeft });
+      S.fallen.push({ name, cause, blurb, playersLeft: S.playersLeft });
       delete S.squad[name];
       delete S.afk[name];
       S.playersLeft -= 1;
@@ -1001,8 +1047,8 @@ export async function playTrailMatch({
       showMemberEvent(m, line);
     } else {
       const m = pick(Object.keys(S.squad));
-      const dmg = Math.min(randInt(...FALL_DAMAGE), S.squad[m].hp - 1);
-      if (dmg <= 0) return;
+      const dmg = randInt(...FALL_DAMAGE);
+      S.lastHit[m] = 'fall damage';
       S.squad[m].hp -= dmg;
       S.damage += Math.floor(dmg / 4);
       const line = `[SQUAD] ${m} ${pick(FALL_REASONS)} and took ${dmg} fall damage.`;
@@ -1024,7 +1070,239 @@ export async function playTrailMatch({
     }
   };
 
+  const eventBushNoise = async () => {
+    log('You hear a strange noise in a bush nearby.');
+    if ((await choose(['Check it', 'Ignore it'])) === 'Ignore it') {
+      log('You leave the bush alone and keep moving.');
+      return;
+    }
+    if (rand() < 0.5) {
+      log('Something useful was stashed in the bush.');
+      rollLoot();
+    } else {
+      log('A solo bot was camping the bush!');
+      await engage('a solo bot crouched in the bush', 'Solo bot', 1);
+    }
+  };
+
+  const eventTeamingOffer = async () => {
+    const pool = pickRandomPool(SQUAD_VISUAL_POOLS);
+    const skins = pickOutfitsFromSeries(bySeries, pool.series, 1);
+    lastEncounterOutfits = skins;
+    const label = skins[0]?.name || pool.soloLabel;
+    log(`A solo player (${label}) waves at you — looks like a teaming offer.`);
+    emitVisual({
+      kind: 'skins',
+      caption: `Solo wave: ${label}`,
+      outfits: skins,
+      poolKey: pool.key,
+    });
+    const pickOpt = await choose(['Let them pass', 'Eliminate them (free win)']);
+    if (pickOpt.startsWith('Eliminate')) {
+      log(`You open up on ${label}. Free elim.`);
+      reward('Solo player');
+      return;
+    }
+    if (rand() < 0.3) {
+      log('They betray you! Guns out!');
+      await engage(`the solo player (${label}) who just waved`, 'Solo player', 1);
+    } else {
+      log('They toss you something and peels off. True teammates... for now.');
+      rollLoot();
+    }
+  };
+
+  const eventLockedVault = async () => {
+    log('You find a locked vault. Cracking it will take 2 full turns while the Storm keeps moving.');
+    if ((await choose(['Spend 2 turns opening it', 'Leave it'])) === 'Leave it') {
+      log('You leave the vault locked.');
+      return;
+    }
+    S.vaultTurns = 2;
+    log('You start working the lock. You will not be able to act for the next 2 turns.');
+  };
+
+  const eventRiftSky = async () => {
+    log('A rift crackles open in the sky above you.');
+    if ((await choose(['Jump in', 'Skip it'])) === 'Skip it') {
+      log('You leave the rift alone.');
+      return;
+    }
+    if (rand() < 0.5) {
+      S.stormDistance = Math.max(0, S.stormDistance - randInt(1, 2));
+      log(`The rift drops you closer to the zone! Now: ${STATUS[S.stormDistance]}`);
+    } else {
+      S.stormDistance = Math.min(3, S.stormDistance + randInt(1, 2));
+      log(`Bad rift! You land somewhere dangerous. Now: ${STATUS[S.stormDistance]}`);
+    }
+  };
+
+  const eventCar = async () => {
+    log('You spot a car sitting idle on the road.');
+    if ((await choose(['Hop in and drive', 'Pass it'])) === 'Pass it') {
+      log('You walk past the car.');
+      return;
+    }
+    S.stormDistance = Math.max(0, S.stormDistance - 1);
+    log(`You peel out. The drive puts you farther from the Storm. Now: ${STATUS[S.stormDistance]}`);
+    if (rand() < 0.3) {
+      log('The car explodes! Everyone takes 100 damage!');
+      for (const m of Object.keys(S.squad)) fightDamage(m, 100, 'a car explosion');
+      await removeEliminated();
+      return;
+    }
+    log('Perfect timing — you ram the next squad you see!');
+    const [text, enemy] = describeSquad();
+    const maxHp = enemyMaxHp(enemy);
+    const carDmg = randInt(180, 280);
+    log(`You plow into ${text} for ${carDmg} damage!`);
+    const hpLeft = maxHp - carDmg;
+    if (hpLeft <= 0) {
+      emitEnemyStatus(enemy, 0, maxHp);
+      reward(enemy);
+      return;
+    }
+    log("They're still up — finish the fight!");
+    await combat(enemy, hpLeft, true);
+  };
+
+  const choiceEvents = [
+    eventBushNoise,
+    eventTeamingOffer,
+    eventLockedVault,
+    eventRiftSky,
+    eventCar,
+  ];
+
+  const eventLegendarySupplyDrop = async () => {
+    log('A Legendary Supply Drop streaks across the sky and lands nearby!');
+    if ((await choose(['Loot it', 'Leave it'])) === 'Leave it') {
+      log('You leave the Legendary drop for someone else.');
+      return;
+    }
+    log('You crack open the Legendary drop...');
+    if (rand() < 0.4) {
+      log('Ambush! Someone else wanted that drop!');
+      await playerEncounter(1);
+      if (!Object.keys(S.squad).length) return;
+      log('You get back to the drop.');
+    }
+    log('Two Mythic items spill out!');
+    giveMythicBoss();
+    giveMythicBoss();
+  };
+
+  const eventFloatingIsland = async () => {
+    log('A floating island drifts into view overhead.');
+    if ((await choose(['Go up there', 'Stay on the ground'])) === 'Stay on the ground') {
+      log('You watch the island float away.');
+      return;
+    }
+    log('You ride a rift up to the island...');
+    if (rand() < 0.5) {
+      log('Sweats were camping the loot!');
+      await engage('a squad of sweats waiting on the floating island', 'Sweats', 1);
+      if (!Object.keys(S.squad).length) return;
+      log('The island loot is yours.');
+    } else {
+      log('The island is quiet. Easy pickings.');
+    }
+    log('You grab two Mythic boss-pool items!');
+    giveMythicBoss();
+    giveMythicBoss();
+  };
+
+  const fishingCommonPool = () =>
+    LOOT_TABLE.filter(([, rarity]) => rarity === 'Common' || rarity === 'Uncommon').map(
+      ([item]) => item,
+    );
+  const fishingEpicPool = () =>
+    LOOT_TABLE.filter(([, rarity]) => rarity === 'Epic')
+      .map(([item]) => item)
+      .filter((item) => item !== 'Chug Jug' || unlocked.has('Chug Jug'));
+
+  const eventFishingSpot = async () => {
+    log('You find a quiet fishing spot. Stay as long as you want — the Storm will keep moving.');
+    while (Object.keys(S.squad).length) {
+      log(`Storm: ${STATUS[S.stormDistance]} · turn ${S.turn}`);
+      showSquad();
+      showInventory();
+      if ((await choose(['Cast a line', 'Leave the spot'])) === 'Leave the spot') {
+        log('You pack up and leave the fishing spot.');
+        return;
+      }
+      const roll = rand();
+      if (roll < 0.5) {
+        log('Nothing on the line...');
+      } else if (roll < 0.75) {
+        const pool = fishingCommonPool();
+        give(pick(pool));
+      } else if (roll < 0.9) {
+        const pool = fishingEpicPool();
+        if (pool.length) give(pick(pool));
+        else log('The line snaps. Nothing epic this cast.');
+      } else if (!giveMythicBoss()) {
+        log('A big one got away.');
+      }
+      const phase = PHASES[phaseIndex()];
+      eliminateOthers(randInt(...phase.elims));
+      stormShrinkCheck();
+      stormTick();
+      await removeEliminated();
+      afkTick();
+      S.turn += 1;
+      if (!Object.keys(S.squad).length) return;
+      if (S.playersLeft - Object.keys(S.squad).length <= 0) {
+        log('While you were fishing, everyone else got wiped. Victory Royale!');
+        return;
+      }
+    }
+  };
+
+  const eventVendingMachine = async () => {
+    const mythics = mythicBossEntries().map(([item]) => item);
+    if (!mythics.length) {
+      log('A vending machine hums nearby, but it has no Mythics stocked for you yet.');
+      return false;
+    }
+    const owned = Object.keys(S.inventory);
+    if (!owned.length) {
+      log('A vending machine hums nearby, but you have nothing to trade.');
+      return false;
+    }
+    log('A vending machine appears! Trade one item for a random unlocked Mythic.');
+    const labels = owned.map((item) =>
+      S.inventory[item] > 1 ? `Trade ${item} x${S.inventory[item]}` : `Trade ${item}`,
+    );
+    const pickLabel = await choose([...labels, 'Walk away']);
+    if (pickLabel === 'Walk away') {
+      log('You leave the vending machine.');
+      return false;
+    }
+    const item = owned[labels.indexOf(pickLabel)];
+    useItem(item);
+    log(`You feed the machine your ${item}...`);
+    give(pick(mythics));
+    return true;
+  };
+
   const randomEvent = async () => {
+    if (eventUnlocks.has('legendarySupplyDrop') && rand() < 0.08) {
+      await eventLegendarySupplyDrop();
+      return;
+    }
+    if (eventUnlocks.has('floatingIsland') && rand() < 0.14) {
+      await eventFloatingIsland();
+      return;
+    }
+    if (eventUnlocks.has('fishingSpot') && rand() < 0.14) {
+      await eventFishingSpot();
+      return;
+    }
+    if (rand() < 0.55) {
+      await pick(choiceEvents)();
+      return;
+    }
     const roll = rand();
     if (roll < (inFinalCircle() ? 0.9 : 0.7)) await playerEncounter();
     else if (roll < 0.85) {
@@ -1108,6 +1386,14 @@ export async function playTrailMatch({
     if (S.campfireTurns > 0) {
       find = 'Campfire';
       log('You keep resting by the campfire.');
+    } else if (eventUnlocks.has('slurpBarrel') && rand() < 0.01) {
+      log('You find a Slurp Barrel! Everyone slurps up to full health.');
+      for (const m of Object.keys(S.squad)) {
+        S.squad[m].hp = S.squad[m].maxHp;
+        log(`${m} is back to full HP.`);
+      }
+      emitSquad();
+      return;
     } else {
       const table = { ...ENV_HEAL };
       const weights = Object.fromEntries(Object.entries(table).map(([k, v]) => [k, v[0]]));
@@ -1136,6 +1422,13 @@ export async function playTrailMatch({
   };
 
   const actionRest = async () => {
+    if (eventUnlocks.has('vendingMachine') && rand() < 0.28) {
+      const traded = await eventVendingMachine();
+      if (traded) {
+        restStormRisk();
+        return;
+      }
+    }
     log('You stop to rest. Use something you are carrying, or search for heals.');
     while (true) {
       const pickOpt = await choose(['Use a healing item', 'Search for heals']);
@@ -1174,7 +1467,8 @@ export async function playTrailMatch({
       log(`You move carefully along the trees. Now: ${STATUS[S.stormDistance]}`);
       const safeAmbush = inFinalCircle() ? Math.max(chance(SAFE_ROUTE_AMBUSH), 0.65) : chance(SAFE_ROUTE_AMBUSH);
       if (rand() < safeAmbush) {
-        if (inFinalCircle()) await playerEncounter(0.9);
+        if (rand() < (inFinalCircle() ? 0.05 : 0.25)) await bossEncounter();
+        else if (inFinalCircle()) await playerEncounter(0.9);
         else await engage('a pack of bots wandering through the trees', 'Bots', 0.2);
       }
     }
@@ -1249,24 +1543,37 @@ export async function playTrailMatch({
     showSquad();
     showInventory();
 
-    const pickOpt = await choose(['Fight', 'Loot', 'Rest', 'Rotate']);
     let elims = randInt(...phase.elims);
-    if (pickOpt === 'Fight') await actionFight();
-    else if (pickOpt === 'Loot') await actionLoot();
-    else if (pickOpt === 'Rest') {
-      await actionRest();
-      elims = Math.max(1, elims - 1);
+    if (S.vaultTurns > 0) {
+      S.vaultTurns -= 1;
+      if (S.vaultTurns > 0) {
+        log(`Still cracking the vault... (${S.vaultTurns} turn(s) left). The Storm keeps moving.`);
+      } else if (Object.keys(S.squad).length) {
+        log('The vault finally opens! Guaranteed rare loot.');
+        giveRare(false);
+      }
     } else {
-      await actionRotate();
-      elims = Math.max(1, elims - 2);
-    }
+      const pickOpt = await choose(['Fight', 'Loot', 'Rest', 'Rotate']);
+      if (pickOpt === 'Fight') await actionFight();
+      else if (pickOpt === 'Loot') await actionLoot();
+      else if (pickOpt === 'Rest') {
+        await actionRest();
+        elims = Math.max(1, elims - 1);
+      } else {
+        await actionRotate();
+        elims = Math.max(1, elims - 2);
+      }
 
-    const eventChance = phase.eventChance + S.damage / 1500;
-    const endgameEvent = inFinalCircle() ? Math.max(eventChance, 0.85) : eventChance;
-    if (Object.keys(S.squad).length && rand() < endgameEvent) {
-      await randomEvent();
+      const eventChance = phase.eventChance + S.damage / 1500;
+      const endgameEvent = inFinalCircle() ? Math.max(eventChance, 0.85) : eventChance;
+      if (Object.keys(S.squad).length && rand() < endgameEvent) {
+        await randomEvent();
+      }
     }
-    if (Object.keys(S.squad).length && rand() < SQUAD_EVENT_CHANCE) squadEvent();
+    if (Object.keys(S.squad).length && rand() < SQUAD_EVENT_CHANCE) {
+      squadEvent();
+      await removeEliminated();
+    }
     if (Object.keys(S.squad).length) {
       eliminateOthers(elims);
       stormShrinkCheck();
@@ -1281,7 +1588,9 @@ export async function playTrailMatch({
     log('');
     log('Fallen squad members:');
     for (const entry of S.fallen) {
-      log(`- ${entry.name}: eliminated by ${entry.cause} (${entry.playersLeft} players left)`);
+      log(
+        `- ${entry.blurb || `${entry.name}: eliminated by ${entry.cause}`} (${entry.playersLeft} players left)`,
+      );
     }
   }
 

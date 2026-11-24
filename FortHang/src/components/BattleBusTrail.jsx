@@ -9,6 +9,7 @@ import {
   getTrailFightResist,
   getTrailStormResist,
   getTrailUnlockedBossItems,
+  getTrailUnlockedEvents,
   lockTrailSkins,
   settleTrailPayout,
   spendTrailRun,
@@ -17,10 +18,13 @@ import { getOutfitIconFallbackSrc, getOutfitIconSrc } from '../utils/outfits';
 import { groupOutfitsBySeason, sortOutfitsByNumber } from '../utils/seasonSort';
 import { groupOutfitsBySeries } from '../utils/seriesSort';
 import {
+  MAX_SKIN_LEVEL,
   awardXpAmounts,
   getSkinLevel,
   getTrailFightDamageResist,
   getTrailStartHp,
+  getTrailStartHpBonus,
+  getTrailStormDamageResist,
 } from '../utils/skinLevels';
 import '../fortSort/FortSort.css';
 
@@ -481,6 +485,12 @@ export default function BattleBusTrail({
         getTrailFightDamageResist(getSkinLevel(skinLevels, outfit.id)),
       ]),
     );
+    const stormResistByName = Object.fromEntries(
+      party.map((outfit) => [
+        outfit.name,
+        getTrailStormDamageResist(getSkinLevel(skinLevels, outfit.id)),
+      ]),
+    );
     setLiveSquad(
       [
         ...party.map((outfit) => ({
@@ -526,9 +536,11 @@ export default function BattleBusTrail({
         partyOutfits: party,
         startingHpByName,
         fightResistByName,
+        stormResistByName,
         stormResist: getTrailStormResist(runEconomy),
         fightResist: getTrailFightResist(runEconomy),
         unlockedBossItems: getTrailUnlockedBossItems(runEconomy),
+        unlockedEvents: getTrailUnlockedEvents(runEconomy),
         log,
         choose,
         onSquadUpdate: setLiveSquad,
@@ -669,13 +681,21 @@ export default function BattleBusTrail({
   const renderSkinPick = (outfit) => {
     const selected = partyIds.includes(outfit.id);
     const locked = !isForFunSelect && lockedIds.has(outfit.id);
+    const level = getSkinLevel(skinLevels, outfit.id);
+    const hpBonus = getTrailStartHpBonus(level);
+    const fightResist = getTrailFightDamageResist(level);
+    const stormResist = getTrailStormDamageResist(level);
+    const levelBits = [`Lv ${level}`];
+    if (hpBonus > 0) levelBits.push(`+${hpBonus} HP`);
+    if (stormResist > 0) levelBits.push(`${Math.round(stormResist * 100)}% storm`);
+    if (fightResist > 0) levelBits.push(`${Math.round(fightResist * 100)}% fight`);
     return (
       <button
         key={outfit.id}
         type="button"
-        className={`catalogue-card fort-sort-pick revealed ${selected ? 'is-selected' : ''} ${
-          locked ? 'is-locked' : ''
-        }`}
+        className={`catalogue-card fort-sort-pick revealed ${
+          level >= MAX_SKIN_LEVEL ? 'level-max' : ''
+        } ${selected ? 'is-selected' : ''} ${locked ? 'is-locked' : ''}`}
         onClick={() => toggleParty(outfit.id)}
         disabled={partyIds.length >= 4 && !selected}
       >
@@ -684,6 +704,7 @@ export default function BattleBusTrail({
           <SkinThumb outfit={outfit} />
         </div>
         <p className="catalogue-name">{outfit.name}</p>
+        <p className="skin-level-badge">{levelBits.join(' · ')}</p>
         <span className="fort-sort-check" aria-hidden="true">
           {locked ? '🔒' : selected ? '✓' : ''}
         </span>

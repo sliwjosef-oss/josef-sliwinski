@@ -2,7 +2,7 @@ export const ENEMY_DAMAGE_MULT = 2.0;
 export const STORM_DAMAGE_MULT = 2.2;
 export const ENEMY_HP_MULT = 2.0;
 export const START_PLAYERS = 100;
-export const MAX_ITEMS = 5;
+export const MAX_ITEMS = 10;
 
 export const PHASES = [
   { start: 70, name: 'Hot drop', elims: [5, 12], eventChance: 0.15 },
@@ -303,3 +303,49 @@ export const FALL_REASONS = [
   'fell off a bridge',
   'tried to slide down a cliff',
 ];
+
+/** Death flavor lines. `{name}` is replaced with the fallen skin name. */
+export const DEATH_BLURBS = {
+  squad: [
+    '{name} got third-partied while reloading.',
+    '{name} tried to build, panicked, and built a single floor tile.',
+    '{name} peeked at the wrong time and got beamed.',
+    '{name} held his ground bravely. The other squad held theirs better.',
+    '{name} was surrounded on three sides and ran out of walls.',
+  ],
+  sweats: [
+    '{name} got boxed in and edited out of existence.',
+    '{name} never saw it coming. Neither did the tower he was standing on.',
+    '{name} lost a build fight so fast it looked like a cutscene.',
+  ],
+  solo: [
+    "{name} got clutched on by a solo who's probably telling his friends about it right now.",
+    'A lone player crouch-walked up behind {name} and ended him.',
+    '{name} lost a 1v1 to someone who was definitely playing on a controller.',
+  ],
+  boss: [
+    '{name} tried to take the vault and the boss said no.',
+    "{name} walked into the boss's room with full confidence and left with none.",
+  ],
+  sniper: [
+    '{name} stood still for one second too long.',
+    '{name} was hit from so far away the shooter was basically in another zone.',
+    '{name} never even heard the shot.',
+  ],
+  storm: [
+    '{name} thought he could make it. He could not make it.',
+    '{name} stayed for one more chest.',
+    '{name} ran out of time, out of heals, and out of zone.',
+    '{name} was last seen running toward the circle. The circle won.',
+  ],
+  fall: [
+    "{name} forgot he wasn't on a launch pad.",
+    "{name} jumped off the tower to look cool. It didn't go well.",
+  ],
+  oregon: [
+    '{name} has died of dysentery. Nobody knows how.',
+    '{name} has died of exhaustion. He should have rested at that campfire.',
+  ],
+};
+
+export const OREGON_DEATH_CHANCE = 0.05;

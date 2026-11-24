@@ -709,8 +709,8 @@ function SelectScreen({
     const owned = discoveredIds.has(outfit.id);
     const selected = selectedSet.has(outfit.id);
     const locked = lockedBetIds.has(outfit.id);
-    const isStar = starSet.has(outfit.id);
-    const isBoost = boostSet.has(outfit.id);
+    const isStar = isBetting && starSet.has(outfit.id);
+    const isBoost = isBetting && boostSet.has(outfit.id);
     const bonus = isStar ? starBonus : isBoost ? boostBonus : 0;
     const level = owned ? getSkinLevel(skinLevels, outfit.id) : 0;
     const minRoll = getMinRollForLevel(level);
@@ -740,7 +740,17 @@ function SelectScreen({
           <DiceBadge outfit={outfit} bonus={bonus} />
         ) : null}
         <span className="fort-sort-check" aria-hidden="true">
-          {locked ? '🔒' : isStar ? 'SUPER' : isBoost ? 'BET' : selected && !isBetting ? '✓' : ''}
+          {isBetting
+            ? locked
+              ? '🔒'
+              : isStar
+                ? 'SUPER'
+                : isBoost
+                  ? 'BET'
+                  : ''
+            : selected
+              ? '✓'
+              : ''}
         </span>
       </button>
     );

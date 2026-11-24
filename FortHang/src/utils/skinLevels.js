@@ -43,6 +43,12 @@ export function getTrailFightDamageResist(level) {
   return 0;
 }
 
+/** Fraction of Storm damage ignored at this skin level. */
+export function getTrailStormDamageResist(level) {
+  if (level >= 1) return 0.05;
+  return 0;
+}
+
 export function placementXp(place, superBet = false) {
   const rank = Number(place) || 999;
   let xp = 25;

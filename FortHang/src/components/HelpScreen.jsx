@@ -227,20 +227,40 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           </li>
           <li>
             <strong>XP</strong> — skins earn {TRAIL_SURVIVOR_XP} XP if they survive, {TRAIL_FALLEN_XP}{' '}
-            XP if they fall. Level 2+ skins start with +10 HP; level 4 skins take 5% less fight
-            damage; level 5 skins start with +20 HP.
+            XP if they fall. Level 1+ skins take 5% less Storm damage; level 2+ skins start with +10
+            HP; level 4 skins take 5% less fight damage; level 5 skins start with +20 HP.
           </li>
           <li>
             <strong>Shop</strong> — Trail upgrades (storm/fight resist, daily runs, payouts) plus
-            boss loot packs (Bending, Lightsabers, Infinity Blade, Kamehameha, Mythic Goldfish) and
-            Chug Jugs (1000 weebucks).
+            boss loot packs (Bending, Lightsabers, Infinity Blade, Kamehameha, Mythic Goldfish),
+            Chug Jugs, and unlockable events (Legendary Supply Drop, Vending Machine, Floating
+            Island, Fishing Spot, Slurp Barrel) for 1000 weebucks each.
           </li>
           <li>
             <strong>Rest</strong> — use a healing item, or search for heals. Both can still draw the
             Storm. Medkits restore one squad member you pick to full HP (not shield). Shield Potions
             add +50 shield to one member.
             Slurp Juice, found in chests (about 5%), fills one member's health and shield. Chug
-            Jugs restore the whole squad and only drop after you unlock them.
+            Jugs restore the whole squad and only drop after you unlock them. With Vending Machine
+            unlocked, Rest can instead offer a one-item trade for a random unlocked Mythic. Slurp
+            Barrel (shop unlock) can rarely appear when searching for heals and restores the whole
+            squad to full HP.
+          </li>
+          <li>
+            <strong>Rotate</strong> — Book it covers more ground but risks open-field ambushes;
+            Safer route moves slower. On the safer path you can still run into bots — or rarely a
+            boss guarding a vault (same odds as a loot ambush turning into a boss).
+          </li>
+          <li>
+            <strong>Inventory</strong> — up to 10 item slots (stacks of the same item each use a
+            slot).
+          </li>
+          <li>
+            <strong>Choice events</strong> — between turns you may get a decision: check a noisy
+            bush (loot or solo bot), answer a solo teaming wave (free elim, or 70% item / 30%
+            betrayal), crack a locked vault (2 turns for a guaranteed rare while the Storm moves),
+            jump a sky rift (closer to zone or dropped in danger), or hop in a car (70% massive
+            ambush on the next squad and farther from the Storm, 30% explosion for 100 damage each).
           </li>
           <li>
             <strong>Final 10</strong> — once 10 players are left, the others stop dying on their own.
@@ -282,6 +302,9 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
         </ul>
         <p>Battle Bus Trail bonuses also scale with skin level:</p>
         <ul>
+          <li>
+            <strong>Level 1+</strong> — take 5% less Storm damage
+          </li>
           <li>
             <strong>Level 2–4</strong> — +10 HP at the start of a run (110 max)
           </li>

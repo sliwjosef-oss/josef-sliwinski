@@ -237,7 +237,7 @@ export const TRAIL_SHOP_UNLOCKS = {
     cost: 1000,
     items: ['Chug Jug'],
     label: 'Unlock Chug Jug',
-    blurb: 'Chests can drop a Chug Jug (1%). Boss loot keeps its usual Chug Jug rate.',
+    blurb: 'Chests can drop a Chug Jug. Boss loot can still drop them too.',
   },
   trailStormResist10: {
     id: 'trailStormResist10',
@@ -297,6 +297,47 @@ export const TRAIL_SHOP_UNLOCKS = {
     label: `Fallen payout → ${TRAIL_FALLEN_PAYOUT_TIER1}`,
     blurb: `Fallen squad members pay ${TRAIL_FALLEN_PAYOUT_TIER1} weebucks instead of ${TRAIL_FALLEN_PAYOUT}.`,
   },
+  trailLegendarySupplyDrop: {
+    id: 'trailLegendarySupplyDrop',
+    cost: 1000,
+    kind: 'trailEvent',
+    eventId: 'legendarySupplyDrop',
+    label: 'Legendary Supply Drop',
+    blurb: 'Rare Trail event: loot two Mythic boss-pool items. You can get ambushed while looting.',
+  },
+  trailVendingMachine: {
+    id: 'trailVendingMachine',
+    cost: 1000,
+    kind: 'trailEvent',
+    eventId: 'vendingMachine',
+    label: 'Vending Machine',
+    blurb: 'Can appear when you Rest. Trade one inventory item for a random unlocked Mythic.',
+  },
+  trailFloatingIsland: {
+    id: 'trailFloatingIsland',
+    cost: 1000,
+    kind: 'trailEvent',
+    eventId: 'floatingIsland',
+    label: 'Floating Island',
+    blurb: 'Random Trail event: climb for two Mythic boss-pool items — Sweats might be waiting up there.',
+  },
+  trailFishingSpot: {
+    id: 'trailFishingSpot',
+    cost: 1000,
+    kind: 'trailEvent',
+    eventId: 'fishingSpot',
+    label: 'Fishing Spot',
+    blurb:
+      'Random Trail event: keep fishing as long as you want while the Storm closes. Catch commons through Mythics — or nothing.',
+  },
+  trailSlurpBarrel: {
+    id: 'trailSlurpBarrel',
+    cost: 1000,
+    kind: 'trailEvent',
+    eventId: 'slurpBarrel',
+    label: 'Slurp Barrel',
+    blurb: 'Rare find when you Rest and search for heals. Heals the whole squad to full health.',
+  },
 };
 
 export const TRAIL_SHOP_ORDER = [
@@ -313,6 +354,11 @@ export const TRAIL_SHOP_ORDER = [
   'trailKamehameha',
   'trailGoldfish',
   'trailChugJug',
+  'trailLegendarySupplyDrop',
+  'trailVendingMachine',
+  'trailFloatingIsland',
+  'trailFishingSpot',
+  'trailSlurpBarrel',
 ];
 
 function defaultUnlocks() {
@@ -331,6 +377,7 @@ function defaultUnlocks() {
     superBetExtraLife: false,
     betSeeding: false,
     trailBossItems: [],
+    trailEvents: [],
     trailStormResist: 0,
     trailFightResist: 0,
     dailyTrailRuns: BASE_DAILY_TRAIL_RUNS,
@@ -384,6 +431,9 @@ function normalizeUnlocks(unlocks) {
     betSeeding: !!unlocks.betSeeding,
     trailBossItems: Array.isArray(unlocks.trailBossItems)
       ? unlocks.trailBossItems.filter((name) => typeof name === 'string')
+      : [],
+    trailEvents: Array.isArray(unlocks.trailEvents)
+      ? unlocks.trailEvents.filter((name) => typeof name === 'string')
       : [],
     trailStormResist:
       unlocks.trailStormResist === 0.2 || unlocks.trailStormResist === 0.1
@@ -1159,6 +1209,10 @@ export function getTrailUnlockedBossItems(economy = loadEconomy()) {
   return [...normalizeUnlocks(economy.unlocks).trailBossItems];
 }
 
+export function getTrailUnlockedEvents(economy = loadEconomy()) {
+  return [...normalizeUnlocks(economy.unlocks).trailEvents];
+}
+
 function trailUnlockItems(entry) {
   if (!entry) return [];
   if (Array.isArray(entry.items) && entry.items.length) return entry.items;
@@ -1173,6 +1227,7 @@ function isTrailMetaUnlockOwned(entry, unlocks) {
   if (entry.kind === 'dailyTrailRuns') return unlocks.dailyTrailRuns >= entry.value;
   if (entry.kind === 'survivorPayout') return unlocks.trailSurvivorPayout >= entry.value;
   if (entry.kind === 'fallenPayout') return unlocks.trailFallenPayout >= entry.value;
+  if (entry.kind === 'trailEvent') return unlocks.trailEvents.includes(entry.eventId);
   return false;
 }
 
@@ -1220,6 +1275,10 @@ export function buyTrailShopUnlock(unlockId, economy = loadEconomy()) {
     state.unlocks.trailSurvivorPayout = entry.value;
   } else if (entry.kind === 'fallenPayout') {
     state.unlocks.trailFallenPayout = entry.value;
+  } else if (entry.kind === 'trailEvent') {
+    const owned = new Set(state.unlocks.trailEvents);
+    owned.add(entry.eventId);
+    state.unlocks.trailEvents = [...owned];
   } else {
     const items = trailUnlockItems(entry);
     if (!items.length) return { ok: false, reason: 'Unknown Trail shop item.', economy: state };

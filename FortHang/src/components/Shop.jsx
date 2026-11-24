@@ -167,13 +167,17 @@ export default function Shop({ economy, sidekicks, onEconomyChange, onBack }) {
           const available = isTrailShopUnlockAvailable(item.id, economy);
           const meta = owned
             ? 'Owned'
-            : item.kind
+            : item.kind === 'trailEvent'
               ? available
-                ? 'Trail upgrade'
+                ? 'Unlockable Trail event'
                 : 'Locked'
-              : item.id === 'trailChugJug'
-                ? 'Chest and boss loot'
-                : 'Adds to boss loot pool';
+              : item.kind
+                ? available
+                  ? 'Trail upgrade'
+                  : 'Locked'
+                : item.id === 'trailChugJug'
+                  ? 'Chest and boss loot'
+                  : 'Adds to boss loot pool';
           return (
             <article key={item.id} className={`shop-card ${owned ? 'is-owned' : ''}`}>
               <h2>{item.label}</h2>
