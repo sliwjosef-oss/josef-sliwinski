@@ -2051,6 +2051,355 @@
   cursor: not-allowed;
 }
 
+.trail-screen .trail-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  flex: none;
+}
+
+.trail-event-panel {
+  flex: none;
+  min-height: 132px;
+  padding: 0.55rem 0.45rem;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.72));
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.trail-event-panel.is-empty {
+  display: grid;
+  place-items: center;
+  opacity: 0.7;
+}
+
+.trail-event-caption {
+  margin: 0 0 0.45rem;
+  font-size: 0.78rem;
+  line-height: 1.25;
+  color: #cbd5e1;
+  text-align: center;
+}
+
+.trail-event-grid {
+  display: grid;
+  gap: 0.4rem;
+  justify-content: center;
+}
+
+.trail-event-grid.count-1 {
+  grid-template-columns: minmax(72px, 110px);
+}
+
+.trail-event-grid.count-2 {
+  grid-template-columns: repeat(2, minmax(72px, 110px));
+}
+
+.trail-event-grid.count-3 {
+  grid-template-columns: repeat(3, minmax(64px, 100px));
+}
+
+.trail-event-grid.count-4 {
+  grid-template-columns: repeat(4, minmax(58px, 92px));
+}
+
+.trail-event-card {
+  min-width: 0;
+  text-align: center;
+}
+
+.trail-event-art {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(125, 211, 252, 0.25);
+}
+
+.trail-event-art img,
+.trail-event-art .icon-placeholder,
+.trail-event-art .trail-item-fallback {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.trail-event-art .icon-placeholder {
+  display: grid;
+  place-items: center;
+  color: #94a3b8;
+}
+
+.trail-item-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.4rem;
+  background: radial-gradient(circle at 30% 20%, rgba(56, 189, 248, 0.28), rgba(15, 23, 42, 0.95));
+  color: #e2e8f0;
+  text-align: center;
+}
+
+.trail-item-fallback span {
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #7dd3fc;
+}
+
+.trail-item-fallback strong {
+  font-size: 0.72rem;
+  line-height: 1.15;
+}
+
+.trail-event-name {
+  margin: 0.25rem 0 0;
+  font-size: 0.66rem;
+  line-height: 1.15;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trail-event-panel.kind-boss .trail-event-art {
+  border-color: rgba(250, 204, 21, 0.55);
+  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.2);
+}
+
+.trail-event-panel.kind-member .trail-event-art,
+.trail-event-panel.kind-death .trail-event-art {
+  border-color: rgba(248, 113, 113, 0.5);
+}
+
+.trail-event-panel.is-death .trail-event-caption {
+  color: #fca5a5;
+  font-weight: 600;
+}
+
+.trail-event-card.is-crossed {
+  filter: grayscale(0.9);
+  opacity: 0.85;
+}
+
+.trail-event-card.is-crossed .trail-event-name {
+  text-decoration: line-through;
+  color: #94a3b8;
+}
+
+.trail-event-art .trail-squad-x {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.trail-enemy-hud {
+  margin: 0 0 0.5rem;
+  padding: 0.35rem 0.45rem 0.45rem;
+  border-radius: 8px;
+  background: rgba(127, 29, 29, 0.35);
+  border: 1px solid rgba(248, 113, 113, 0.35);
+}
+
+.trail-enemy-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+  font-size: 0.78rem;
+  color: #fecaca;
+}
+
+.trail-enemy-bar {
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(51, 65, 85, 0.95);
+}
+
+.trail-enemy-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #dc2626, #f87171);
+  transition: width 160ms ease;
+}
+
+.trail-event-panel.kind-enemy .trail-event-art {
+  border-color: rgba(248, 113, 113, 0.45);
+}
+
+.trail-screen .trail-header h1 {
+  margin-bottom: 0;
+}
+
+.trail-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.trail-header-top h1 {
+  margin: 0;
+}
+
+.trail-forfeit-button {
+  flex: none;
+  border: 1px solid rgba(248, 113, 113, 0.65);
+  background: #b91c1c;
+  color: #fff7f7;
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.trail-forfeit-button:hover {
+  background: #dc2626;
+}
+
+.trail-squad-bar {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.trail-squad-member {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 0.3rem 0.2rem;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.trail-squad-member.is-empty {
+  opacity: 0.45;
+}
+
+.trail-squad-member.is-fallen {
+  opacity: 0.7;
+  filter: grayscale(0.9);
+}
+
+.trail-squad-member.is-fallen .trail-squad-name {
+  text-decoration: line-through;
+  color: #94a3b8;
+}
+
+.trail-squad-member.is-sidekick {
+  outline: 1px solid rgba(125, 211, 252, 0.45);
+}
+
+.trail-squad-icon {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  max-width: 56px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(30, 41, 59, 0.9);
+}
+
+.trail-squad-x {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.trail-squad-x::before,
+.trail-squad-x::after {
+  content: '';
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 50%;
+  height: 3px;
+  border-radius: 999px;
+  background: #ef4444;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.55);
+}
+
+.trail-squad-x::before {
+  transform: rotate(45deg);
+}
+
+.trail-squad-x::after {
+  transform: rotate(-45deg);
+}
+
+.trail-squad-icon img,
+.trail-squad-icon .icon-placeholder {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.trail-squad-icon .icon-placeholder {
+  display: grid;
+  place-items: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.trail-squad-name {
+  margin: 0;
+  width: 100%;
+  font-size: 0.68rem;
+  line-height: 1.15;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #e2e8f0;
+}
+
+.trail-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+}
+
+.trail-bar {
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(51, 65, 85, 0.95);
+  overflow: hidden;
+}
+
+.trail-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transition: width 160ms ease;
+}
+
+.trail-bar-shield > span {
+  background: linear-gradient(90deg, #38bdf8, #7dd3fc);
+}
+
+.trail-bar-hp > span {
+  background: linear-gradient(90deg, #22c55e, #86efac);
+}
+
+.trail-squad-nums {
+  margin: 0;
+  font-size: 0.62rem;
+  color: #94a3b8;
+  line-height: 1;
+}
+
 .trail-screen .trail-start-bar {
   display: flex;
   flex-direction: column;
@@ -2091,4 +2440,14 @@
 
 .trail-result h2 {
   margin: 0 0 0.4rem;
+}
+
+@media (max-width: 520px) {
+  .trail-squad-icon {
+    max-width: 44px;
+  }
+
+  .trail-squad-name {
+    font-size: 0.58rem;
+  }
 }

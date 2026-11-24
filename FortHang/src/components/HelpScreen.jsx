@@ -2,7 +2,6 @@ import { useState } from 'react';
 import {
   BASE_BOOST_BETS,
   BASE_DAILY_BET_RUNS,
-  BASE_DAILY_TRAIL_RUNS,
   BASE_STAR_BETS,
   BET_WIN_POINTS,
   BOOST_BET_BONUS_DICE,
@@ -199,10 +198,14 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
         </p>
         <ul>
           <li>
-            <strong>Daily runs</strong> — {BASE_DAILY_TRAIL_RUNS} per day (6:00 AM America/Chicago).
+            <strong>Squad HUD</strong> — the top row shows all 4 skins and your sidekick with live
+            HP (green) and shield (blue) bars. Fallen members are crossed out.
           </li>
           <li>
-            <strong>Weekly locks</strong> — skins used on a drop stay locked until Monday.
+            <strong>Event images</strong> — encounters show skin icons from Anime, Cartoon, Star
+            Wars, Marvel, Icon, Gaming Legends, Sports, and Space Explorer pools. Solos show 1
+            skin, squads show up to 4. Bosses use a random collab skin. Loot drops show an item
+            card (icons from fortnite.gg when available).
           </li>
           <li>
             <strong>Payout</strong> — {TRAIL_SURVIVOR_PAYOUT} weebucks per surviving squad member,{' '}
@@ -213,8 +216,8 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             XP if they fall.
           </li>
           <li>
-            <strong>Shop</strong> — unlock mythic boss drops (lightsabers, bending, Kamehameha,
-            Mythic Goldfish) so bosses can drop them on later runs.
+            <strong>Shop</strong> — unlock boss loot packs (Bending, Lightsabers, Infinity Blade,
+            Kamehameha, Mythic Goldfish) so bosses can drop them on later runs.
           </li>
         </ul>
       </section>

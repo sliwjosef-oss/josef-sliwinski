@@ -194,71 +194,47 @@ export const SHOP_UNLOCKS = {
 
 /** Battle Bus Trail boss-drop unlocks (buying adds them to the boss loot pool). */
 export const TRAIL_SHOP_UNLOCKS = {
-  trailSith: {
-    id: 'trailSith',
-    cost: 600,
-    item: 'Sith Apprentice Lightsaber',
-    label: 'Unlock Sith Apprentice Lightsaber',
-    blurb: 'Bosses can drop the Sith Apprentice Lightsaber.',
+  trailBending: {
+    id: 'trailBending',
+    cost: 1000,
+    items: ['Firebending', 'Waterbending', 'Earthbending', 'Airbending'],
+    label: 'Unlock Bending',
+    blurb: 'Bosses can drop Fire, Water, Earth, and Airbending.',
   },
-  trailJedi: {
-    id: 'trailJedi',
-    cost: 600,
-    item: 'Jedi Apprentice Lightsaber',
-    label: 'Unlock Jedi Apprentice Lightsaber',
-    blurb: 'Bosses can drop the Jedi Apprentice Lightsaber.',
+  trailLightsaber: {
+    id: 'trailLightsaber',
+    cost: 1000,
+    items: ['Sith Apprentice Lightsaber', 'Jedi Apprentice Lightsaber'],
+    label: 'Unlock Lightsabers',
+    blurb: 'Bosses can drop Sith and Jedi Apprentice Lightsabers.',
   },
-  trailFire: {
-    id: 'trailFire',
-    cost: 500,
-    item: 'Firebending',
-    label: 'Unlock Firebending',
-    blurb: 'Bosses can drop Firebending.',
-  },
-  trailWater: {
-    id: 'trailWater',
-    cost: 500,
-    item: 'Waterbending',
-    label: 'Unlock Waterbending',
-    blurb: 'Bosses can drop Waterbending.',
-  },
-  trailEarth: {
-    id: 'trailEarth',
-    cost: 500,
-    item: 'Earthbending',
-    label: 'Unlock Earthbending',
-    blurb: 'Bosses can drop Earthbending.',
-  },
-  trailAir: {
-    id: 'trailAir',
-    cost: 500,
-    item: 'Airbending',
-    label: 'Unlock Airbending',
-    blurb: 'Bosses can drop Airbending.',
+  trailInfinity: {
+    id: 'trailInfinity',
+    cost: 1000,
+    items: ['Infinity Blade'],
+    label: 'Unlock Infinity Blade',
+    blurb: 'Adds the Infinity Blade to the boss loot pool.',
   },
   trailKamehameha: {
     id: 'trailKamehameha',
     cost: 800,
-    item: 'Kamehameha',
+    items: ['Kamehameha'],
     label: 'Unlock Kamehameha',
     blurb: 'Bosses can drop Kamehameha.',
   },
   trailGoldfish: {
     id: 'trailGoldfish',
     cost: 1000,
-    item: 'Mythic Goldfish',
+    items: ['Mythic Goldfish'],
     label: 'Unlock Mythic Goldfish',
     blurb: 'Bosses can drop the Mythic Goldfish.',
   },
 };
 
 export const TRAIL_SHOP_ORDER = [
-  'trailFire',
-  'trailWater',
-  'trailEarth',
-  'trailAir',
-  'trailSith',
-  'trailJedi',
+  'trailBending',
+  'trailLightsaber',
+  'trailInfinity',
   'trailKamehameha',
   'trailGoldfish',
 ];
@@ -1063,26 +1039,34 @@ export function getTrailUnlockedBossItems(economy = loadEconomy()) {
   return [...normalizeUnlocks(economy.unlocks).trailBossItems];
 }
 
+function trailUnlockItems(entry) {
+  if (!entry) return [];
+  if (Array.isArray(entry.items) && entry.items.length) return entry.items;
+  if (entry.item) return [entry.item];
+  return [];
+}
+
 export function isTrailShopUnlockOwned(unlockId, economy = loadEconomy()) {
   const owned = new Set(getTrailUnlockedBossItems(economy));
-  const item = TRAIL_SHOP_UNLOCKS[unlockId];
-  if (!item?.item) return false;
-  return owned.has(item.item);
+  const items = trailUnlockItems(TRAIL_SHOP_UNLOCKS[unlockId]);
+  if (!items.length) return false;
+  return items.every((item) => owned.has(item));
 }
 
 export function buyTrailShopUnlock(unlockId, economy = loadEconomy()) {
   const state = withFreshMeta(economy);
-  const item = TRAIL_SHOP_UNLOCKS[unlockId];
-  if (!item?.item) return { ok: false, reason: 'Unknown Trail shop item.', economy: state };
+  const entry = TRAIL_SHOP_UNLOCKS[unlockId];
+  const items = trailUnlockItems(entry);
+  if (!items.length) return { ok: false, reason: 'Unknown Trail shop item.', economy: state };
   if (isTrailShopUnlockOwned(unlockId, state)) {
     return { ok: false, reason: 'Already unlocked.', economy: state };
   }
-  if (state.points < item.cost) {
+  if (state.points < entry.cost) {
     return { ok: false, reason: 'Not enough weebucks.', economy: state };
   }
-  state.points -= item.cost;
+  state.points -= entry.cost;
   const owned = new Set(state.unlocks.trailBossItems);
-  owned.add(item.item);
+  for (const item of items) owned.add(item);
   state.unlocks.trailBossItems = [...owned];
   return { ok: true, economy: write(state) };
 }

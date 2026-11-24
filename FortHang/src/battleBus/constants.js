@@ -230,17 +230,16 @@ export const INFINITY_BLADE_CHANCE = 0.01;
 
 /** Boss items locked until purchased in the FortHang shop. */
 export const TRAIL_SHOP_UNLOCK_ITEMS = {
-  'Sith Apprentice Lightsaber': 600,
-  'Jedi Apprentice Lightsaber': 600,
-  Firebending: 500,
-  Waterbending: 500,
-  Earthbending: 500,
-  Airbending: 500,
+  'Sith Apprentice Lightsaber': 1000,
+  'Jedi Apprentice Lightsaber': 1000,
+  Firebending: 1000,
+  Waterbending: 1000,
+  Earthbending: 1000,
+  Airbending: 1000,
+  'Infinity Blade': 1000,
   Kamehameha: 800,
   'Mythic Goldfish': 1000,
 };
-
-export const TRAIL_SHOP_EVERYTHING_COST = 5000;
 
 export const MULTI_USE = {
   'Infinity Blade': 3,
