@@ -20,7 +20,6 @@ import {
   loadRankProgress,
   loadSelectedIds,
   loadSimBracketProgress,
-  loadSortMode,
   newArchiveId,
   saveArchive,
   saveBracketProgress,
@@ -68,6 +67,7 @@ import {
   awardPlacementXp,
   getMinRollForLevel,
   getSkinLevel,
+  placementXp,
 } from '../utils/skinLevels';
 import '../fortSort/FortSort.css';
 
@@ -269,18 +269,20 @@ function DiceBadge({ outfit, bonus = 0 }) {
   );
 }
 
-function SkinCard({ outfit, onPick, placeLabel, showDice = false, bonusDice = 0 }) {
+function SkinCard({ outfit, onPick, placeLabel, showDice = false, bonusDice = 0, compact = false }) {
   if (!outfit) return null;
-  const className = `skin-card ${placeLabel ? 'podium-card' : ''} ${onPick ? '' : 'is-static'}`;
+  const className = `skin-card ${placeLabel ? 'podium-card' : ''} ${compact ? 'is-compact' : ''} ${onPick ? '' : 'is-static'}`;
   const body = (
     <>
       {placeLabel ? <p className="podium-place">{placeLabel}</p> : null}
       <SkinIcon outfit={outfit} />
       <p className="skin-name">{outfit.name}</p>
-      {showDice ? <DiceBadge outfit={outfit} bonus={bonusDice} /> : null}
-      <p className="skin-meta">
-        {outfit.chapter && outfit.season ? `Chapter ${outfit.chapter} · Season ${outfit.season}` : ''}
-      </p>
+      {showDice && !compact ? <DiceBadge outfit={outfit} bonus={bonusDice} /> : null}
+      {compact ? null : (
+        <p className="skin-meta">
+          {outfit.chapter && outfit.season ? `Chapter ${outfit.chapter} · Season ${outfit.season}` : ''}
+        </p>
+      )}
     </>
   );
   if (!onPick) return <div className={className}>{body}</div>;
@@ -326,6 +328,29 @@ function RollBreakdown({ roll, outfitsById }) {
       </div>
       <p className="sim-roll-winner">{winner?.name ?? '—'} advances</p>
     </div>
+  );
+}
+
+function xpEarnedById(tournament, standings) {
+  const earned = new Map();
+  if (!tournament?.betting || !standings?.placeById) return earned;
+  const stars = new Set(tournament.starBetIds ?? []);
+  for (const id of [...(tournament.starBetIds ?? []), ...(tournament.boostBetIds ?? [])]) {
+    const place = standings.placeById.get(id);
+    if (place == null) continue;
+    earned.set(id, placementXp(place, stars.has(id)));
+  }
+  return earned;
+}
+
+function PlacementName({ id, outfitsById, xpById }) {
+  const xp = xpById?.get(id) ?? 0;
+  return (
+    <span className="placement-skin">
+      <SkinIcon outfit={outfitsById.get(id)} />
+      <span>{outfitsById.get(id)?.name ?? id}</span>
+      {xp > 0 ? <span className="placement-xp">+{xp} XP</span> : null}
+    </span>
   );
 }
 
@@ -711,7 +736,7 @@ export default function FortSort({
   const discoveredIds = useMemo(() => new Set(discovered.map((outfit) => outfit.id)), [discovered]);
   const lockedBetIds = useMemo(() => getLockedBetIds(economy), [economy]);
 
-  const [mode, setMode] = useState(loadSortMode);
+  const [mode, setMode] = useState('betting');
   const [selectedIds, setSelectedIds] = useState(() =>
     loadSelectedIds().filter((id) => discoveredIds.has(id) || discovered.some((outfit) => outfit.id === id)),
   );
@@ -773,16 +798,15 @@ export default function FortSort({
       setScreen('play');
     }
     const savedSim = loadSimBracketProgress();
-    if (
+    const resumeSim =
       savedSim?.entrants.every((id) => discoveredIds.has(id)) &&
-      (mode === 'simulate' || mode === 'betting')
-    ) {
+      ((mode === 'betting' && savedSim.betting) || (mode === 'simulate' && !savedSim.betting));
+    if (resumeSim) {
       setTournament({
         ...savedSim,
         simulated: true,
         bracket: createBracket(savedSim.entrants, savedSim.version ?? 4),
       });
-      if (savedSim.betting) setMode('betting');
       setScreen('play');
     }
     // Only on mount / discovery set identity.
@@ -1493,6 +1517,10 @@ export default function FortSort({
     }
     const currentPhase = page.phase;
     const activeGroup = phases.find((group) => group.phase === currentPhase);
+    const xpById = bracketState.done ? xpEarnedById(tournament, standings) : null;
+    const currentOutcome = bracketState.current
+      ? bracketState.outcomes.get(bracketState.current.id)
+      : null;
 
     return (
       <div className="fort-sort">
@@ -1529,26 +1557,11 @@ export default function FortSort({
             {archiveReadOnly ? (
               <p className="resume-note">Viewing a saved tournament. Your active bracket is unchanged.</p>
             ) : null}
-            <div className="podium">
-              <SkinCard
-                outfit={outfitsById.get(bracketState.champion)}
-                placeLabel="1st"
-                showDice={tournament.simulated}
-              />
-              <SkinCard
-                outfit={outfitsById.get(bracketState.runnerUp)}
-                placeLabel="2nd"
-                showDice={tournament.simulated}
-              />
-            </div>
             {tournament.betting ? (
               <p className="hint">
                 Betting haul: +{tournament.pointsEarned ?? 0} weebucks this run · Bank {economy.points}{' '}
                 weebucks
               </p>
-            ) : null}
-            {tournament.simulated && lastRoll ? (
-              <RollBreakdown roll={lastRoll} outfitsById={outfitsById} />
             ) : null}
             {standings ? (
               <div className="placements-panel">
@@ -1563,10 +1576,12 @@ export default function FortSort({
                             <span className="placement-rank">{formatPlace(place)}</span>
                             <div className="placement-names">
                               {ids.map((id) => (
-                                <span key={id} className="placement-skin">
-                                  <SkinIcon outfit={outfitsById.get(id)} />
-                                  <span>{outfitsById.get(id)?.name ?? id}</span>
-                                </span>
+                                <PlacementName
+                                  key={id}
+                                  id={id}
+                                  outfitsById={outfitsById}
+                                  xpById={xpById}
+                                />
                               ))}
                             </div>
                           </li>
@@ -1595,10 +1610,7 @@ export default function FortSort({
                             onClick={() => setPlayerRunId(id)}
                           >
                             <span className="placement-rank">{formatPlace(place)}</span>
-                            <span className="placement-skin">
-                              <SkinIcon outfit={outfitsById.get(id)} />
-                              <span>{outfitsById.get(id)?.name ?? id}</span>
-                            </span>
+                            <PlacementName id={id} outfitsById={outfitsById} xpById={xpById} />
                           </button>
                         )),
                       )}
@@ -1668,28 +1680,55 @@ export default function FortSort({
                   {tournament.betting ? ' · Betting' : tournament.simulated ? ' · Simulated' : ''}
                 </p>
                 <h2>{tournament.simulated ? 'Dice matchup' : 'Which skin advances?'}</h2>
-                <div className="matchup">
-                  <SkinCard
-                    outfit={outfitsById.get(bracketState.outcomes.get(bracketState.current.id).participants[0])}
-                    onPick={tournament.simulated ? undefined : () => chooseBracket(true)}
-                    showDice={tournament.simulated}
-                    bonusDice={
-                      bonusById?.[bracketState.outcomes.get(bracketState.current.id).participants[0]] ?? 0
-                    }
-                  />
-                  <span className="versus">vs</span>
-                  <SkinCard
-                    outfit={outfitsById.get(bracketState.outcomes.get(bracketState.current.id).participants[1])}
-                    onPick={tournament.simulated ? undefined : () => chooseBracket(false)}
-                    showDice={tournament.simulated}
-                    bonusDice={
-                      bonusById?.[bracketState.outcomes.get(bracketState.current.id).participants[1]] ?? 0
-                    }
-                  />
-                </div>
-                {tournament.simulated && lastRoll ? (
-                  <RollBreakdown roll={lastRoll} outfitsById={outfitsById} />
-                ) : null}
+                {tournament.simulated ? (
+                  <>
+                    <div className="sim-play-row">
+                      <div className="sim-play-roll">
+                        {lastRoll ? (
+                          <RollBreakdown roll={lastRoll} outfitsById={outfitsById} />
+                        ) : (
+                          <p className="hint">Roll the match to see the dice.</p>
+                        )}
+                      </div>
+                      <div className="matchup matchup-side">
+                        <SkinCard
+                          compact
+                          outfit={outfitsById.get(
+                            (lastRoll ? lastRoll.participants : currentOutcome?.participants)?.[0],
+                          )}
+                        />
+                        <span className="versus">vs</span>
+                        <SkinCard
+                          compact
+                          outfit={outfitsById.get(
+                            (lastRoll ? lastRoll.participants : currentOutcome?.participants)?.[1],
+                          )}
+                        />
+                      </div>
+                    </div>
+                    {lastRoll &&
+                    currentOutcome &&
+                    (currentOutcome.participants[0] !== lastRoll.participants[0] ||
+                      currentOutcome.participants[1] !== lastRoll.participants[1]) ? (
+                      <p className="hint sim-next-match">
+                        Next: {outfitsById.get(currentOutcome.participants[0])?.name ?? 'TBD'} vs{' '}
+                        {outfitsById.get(currentOutcome.participants[1])?.name ?? 'TBD'}
+                      </p>
+                    ) : null}
+                  </>
+                ) : (
+                  <div className="matchup">
+                    <SkinCard
+                      outfit={outfitsById.get(currentOutcome?.participants[0])}
+                      onPick={() => chooseBracket(true)}
+                    />
+                    <span className="versus">vs</span>
+                    <SkinCard
+                      outfit={outfitsById.get(currentOutcome?.participants[1])}
+                      onPick={() => chooseBracket(false)}
+                    />
+                  </div>
+                )}
                 <div className="compare-actions">
                   {tournament.simulated ? (
                     <>

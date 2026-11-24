@@ -1,8 +1,13 @@
 const STORAGE_KEY = 'fort-hang-skin-levels-v1';
 
 export const MAX_SKIN_LEVEL = 5;
-/** Cumulative XP required to reach each level index. */
-export const LEVEL_XP_THRESHOLDS = [0, 100, 200, 300, 400, 500];
+/**
+ * Cumulative XP required to reach each level.
+ * Level n costs n × 100 XP: 100, then 200 more (300 total), then 300 more (600 total), and so on.
+ */
+export const LEVEL_XP_THRESHOLDS = Array.from({ length: MAX_SKIN_LEVEL + 1 }, (_, level) =>
+  level === 0 ? 0 : (100 * level * (level + 1)) / 2,
+);
 
 export function levelFromXp(xp) {
   const total = Math.max(0, Number(xp) || 0);

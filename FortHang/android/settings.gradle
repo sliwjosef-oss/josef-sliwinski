@@ -1,0 +1,13 @@
+// Keep Gradle outputs out of OneDrive. Cloud placeholders are not regular files,
+// and the Android build fails with "Cannot snapshot ... not a regular file".
+def fortHangBuildRoot = new File(System.getProperty("user.home"), "AppData/Local/FortHangBuild")
+gradle.beforeProject { project ->
+    def name = project.path == ":" ? "root" : project.path.substring(1).replace(":", "/")
+    project.layout.buildDirectory.set(new File(fortHangBuildRoot, name))
+}
+
+include ':app'
+include ':capacitor-cordova-android-plugins'
+project(':capacitor-cordova-android-plugins').projectDir = new File('./capacitor-cordova-android-plugins/')
+
+apply from: 'capacitor.settings.gradle'

@@ -21,7 +21,10 @@ import {
   spendGuess,
 } from '../utils/economy';
 import { countDiscoveredSkins, isCollectionComplete } from '../utils/progress';
-import CollectionCompleteScreen from './CollectionCompleteScreen';
+import CollectionCompleteScreen, {
+  COMPLETE_ALT,
+  COMPLETE_IMAGE,
+} from './CollectionCompleteScreen';
 import GuessStatus from './GuessStatus';
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -214,8 +217,8 @@ export default function HangmanGame({
       <header className="game-header">
         {gameState === GAME_STATES.IDLE ? (
           <img
-            src={TITLE_IMAGE}
-            alt="Fortnite Hangman"
+            src={collectionComplete ? COMPLETE_IMAGE : TITLE_IMAGE}
+            alt={collectionComplete ? COMPLETE_ALT : 'Fortnite Hangman'}
             className="game-title-image"
           />
         ) : (
@@ -306,6 +309,7 @@ export default function HangmanGame({
       {gameState === GAME_STATES.IDLE && (
         collectionComplete ? (
           <CollectionCompleteScreen
+            showImage={false}
             onOpenCatalogue={onOpenCatalogue}
             onOpenSidekicks={onOpenSidekicks}
             onOpenShop={onOpenShop}

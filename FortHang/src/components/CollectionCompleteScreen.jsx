@@ -1,4 +1,5 @@
-const COMPLETE_IMAGE = `${import.meta.env.BASE_URL}collection-complete.png`;
+export const COMPLETE_IMAGE = `${import.meta.env.BASE_URL}collection-complete.png`;
+export const COMPLETE_ALT = 'Wow! You collected them all! Congratulations, Peely is proud!';
 
 export default function CollectionCompleteScreen({
   onOpenCatalogue,
@@ -6,17 +7,26 @@ export default function CollectionCompleteScreen({
   onOpenShop,
   onOpenFortSort,
   onOpenHelp,
+  showImage = true,
 }) {
   return (
-    <section className="collection-complete-screen" aria-labelledby="collection-complete-heading">
-      <img
-        src={COMPLETE_IMAGE}
-        alt=""
-        className="collection-complete-image"
-      />
-      <h2 id="collection-complete-heading" className="collection-complete-sr-only">
-        Wow! You collected them all! Congratulations, Peely is proud!
-      </h2>
+    <section
+      className="collection-complete-screen"
+      aria-labelledby={showImage ? 'collection-complete-heading' : undefined}
+      aria-label={showImage ? undefined : 'Collection complete'}
+    >
+      {showImage ? (
+        <>
+          <img
+            src={COMPLETE_IMAGE}
+            alt=""
+            className="collection-complete-image"
+          />
+          <h2 id="collection-complete-heading" className="collection-complete-sr-only">
+            {COMPLETE_ALT}
+          </h2>
+        </>
+      ) : null}
       <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
         Skin Catalogue
       </button>

@@ -173,7 +173,9 @@ export default function HelpScreen({ onBack }) {
           <li>Everyone else who entered as a bet: 25 XP</li>
         </ul>
         <p>
-          Levels go from 0 to {MAX_SKIN_LEVEL}. Cumulative XP needed: {LEVEL_XP_THRESHOLDS.slice(1).join(' / ')}.
+          Levels go from 0 to {MAX_SKIN_LEVEL}. Level 1 costs 100 XP. Each next level costs 100 XP
+          more than the one before it, so level 2 costs 200 (300 total) and level 3 costs 300 (600
+          total). Totals to reach each level: {LEVEL_XP_THRESHOLDS.slice(1).join(', ')}.
         </p>
         <p>Higher levels raise a skin’s minimum d100 roll in Simulate / Betting:</p>
         <ul>
