@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   BASE_BOOST_BETS,
   BASE_DAILY_BET_RUNS,
+  BASE_DAILY_TRAIL_RUNS,
   BASE_STAR_BETS,
   BET_WIN_POINTS,
   BOOST_BET_BONUS_DICE,
@@ -10,6 +11,10 @@ import {
   STAR_BET_BONUS_DICE,
   SUPER_BET_ROUND_BONUS,
   TOURNAMENT_WIN_POINTS,
+  TRAIL_FALLEN_PAYOUT,
+  TRAIL_FALLEN_XP,
+  TRAIL_SURVIVOR_PAYOUT,
+  TRAIL_SURVIVOR_XP,
 } from '../utils/economy';
 import { FIVE_STAR_NAMES, THREE_STAR_NAMES } from '../fortSort/simulate';
 import { LEVEL_XP_THRESHOLDS, MAX_SKIN_LEVEL } from '../utils/skinLevels';
@@ -20,6 +25,7 @@ const SECTIONS = [
   { id: 'weebucks', title: 'Weebucks' },
   { id: 'shop', title: 'Shop' },
   { id: 'betting', title: 'Betting' },
+  { id: 'trail', title: 'Battle Bus Trail' },
   { id: 'levels', title: 'Skin levels' },
 ];
 
@@ -185,11 +191,39 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
         </p>
       </section>
 
+      <section id="help-trail" className="help-section">
+        <h2>Battle Bus Trail</h2>
+        <p>
+          An Oregon Trail–style Battle Royale run. Pick 4 discovered skins and 1 owned sidekick, then
+          Fight, Loot, Rest, or Rotate each turn while the Storm closes and enemies show up.
+        </p>
+        <ul>
+          <li>
+            <strong>Daily runs</strong> — {BASE_DAILY_TRAIL_RUNS} per day (6:00 AM America/Chicago).
+          </li>
+          <li>
+            <strong>Weekly locks</strong> — skins used on a drop stay locked until Monday.
+          </li>
+          <li>
+            <strong>Payout</strong> — {TRAIL_SURVIVOR_PAYOUT} weebucks per surviving squad member,{' '}
+            {TRAIL_FALLEN_PAYOUT} per fallen member (sidekick counts).
+          </li>
+          <li>
+            <strong>XP</strong> — skins earn {TRAIL_SURVIVOR_XP} XP if they survive, {TRAIL_FALLEN_XP}{' '}
+            XP if they fall.
+          </li>
+          <li>
+            <strong>Shop</strong> — unlock mythic boss drops (lightsabers, bending, Kamehameha,
+            Mythic Goldfish) so bosses can drop them on later runs.
+          </li>
+        </ul>
+      </section>
+
       <section id="help-levels" className="help-section">
         <h2>Skin levels</h2>
         <p>
           Bet skins earn XP from tournament place at the end of a betting run. Super bets earn double
-          XP.
+          XP. Battle Bus Trail also awards skin XP for surviving or falling.
         </p>
         <ul>
           <li>1st place: 200 XP</li>

@@ -2,11 +2,15 @@ import {
   GUESS_PACKS,
   SHOP_UNLOCKS,
   SIDEKICK_ROLLS,
+  TRAIL_SHOP_ORDER,
+  TRAIL_SHOP_UNLOCKS,
   buyGuessPack,
   buyShopUnlock,
+  buyTrailShopUnlock,
   countOwnedSidekickKinds,
   isShopUnlockAvailable,
   isShopUnlockOwned,
+  isTrailShopUnlockOwned,
   rollRandomSidekick,
 } from '../utils/economy';
 import GuessStatus from './GuessStatus';
@@ -76,11 +80,19 @@ export default function Shop({ economy, sidekicks, onEconomyChange, onBack }) {
     if (!result.ok) window.alert(result.reason);
   };
 
+  const buyTrailUnlock = (unlockId) => {
+    const result = buyTrailShopUnlock(unlockId, economy);
+    onEconomyChange(result.economy);
+    if (!result.ok) window.alert(result.reason);
+  };
+
   const unlockCards = BETTING_UNLOCK_ORDER.map((id) => SHOP_UNLOCKS[id]).filter((item) => {
     if (!item) return false;
     if (isShopUnlockOwned(item.id, economy)) return true;
     return isShopUnlockAvailable(item.id, economy);
   });
+
+  const trailCards = TRAIL_SHOP_ORDER.map((id) => TRAIL_SHOP_UNLOCKS[id]).filter(Boolean);
 
   return (
     <div className="skin-catalogue shop-screen">
@@ -134,6 +146,34 @@ export default function Shop({ economy, sidekicks, onEconomyChange, onBack }) {
                   className="primary-button"
                   onClick={() => buyUnlock(item.id)}
                   disabled={!available || economy.points < item.cost}
+                >
+                  Buy for {item.cost} weebucks
+                </button>
+              )}
+            </article>
+          );
+        })}
+      </div>
+
+      <h2 className="shop-section-title">Battle Bus Trail unlocks</h2>
+      <div className="shop-grid">
+        {trailCards.map((item) => {
+          const owned = isTrailShopUnlockOwned(item.id, economy);
+          return (
+            <article key={item.id} className={`shop-card ${owned ? 'is-owned' : ''}`}>
+              <h2>{item.label}</h2>
+              <p>{item.blurb}</p>
+              <p className="shop-meta">{owned ? 'Owned' : 'Adds to boss loot pool'}</p>
+              {owned ? (
+                <button type="button" className="ghost-button" disabled>
+                  Owned
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={() => buyTrailUnlock(item.id)}
+                  disabled={economy.points < item.cost}
                 >
                   Buy for {item.cost} weebucks
                 </button>

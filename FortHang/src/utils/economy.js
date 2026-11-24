@@ -28,6 +28,11 @@ export const TOURNAMENT_WIN_POINTS = 30;
 export const SUPER_BET_ROUND_BONUS = 1;
 export const CATALOG_COMPLETE_BONUS = 10000;
 export const BASE_DAILY_BET_RUNS = 5;
+export const BASE_DAILY_TRAIL_RUNS = 3;
+export const TRAIL_SURVIVOR_PAYOUT = 100;
+export const TRAIL_FALLEN_PAYOUT = 50;
+export const TRAIL_SURVIVOR_XP = 200;
+export const TRAIL_FALLEN_XP = 100;
 export const DAILY_BET_RUNS_TIER1 = 7;
 export const DAILY_BET_RUNS_TIER2 = 10;
 export const BASE_STAR_BETS = 1;
@@ -187,6 +192,77 @@ export const SHOP_UNLOCKS = {
   },
 };
 
+/** Battle Bus Trail boss-drop unlocks (buying adds them to the boss loot pool). */
+export const TRAIL_SHOP_UNLOCKS = {
+  trailSith: {
+    id: 'trailSith',
+    cost: 600,
+    item: 'Sith Apprentice Lightsaber',
+    label: 'Unlock Sith Apprentice Lightsaber',
+    blurb: 'Bosses can drop the Sith Apprentice Lightsaber.',
+  },
+  trailJedi: {
+    id: 'trailJedi',
+    cost: 600,
+    item: 'Jedi Apprentice Lightsaber',
+    label: 'Unlock Jedi Apprentice Lightsaber',
+    blurb: 'Bosses can drop the Jedi Apprentice Lightsaber.',
+  },
+  trailFire: {
+    id: 'trailFire',
+    cost: 500,
+    item: 'Firebending',
+    label: 'Unlock Firebending',
+    blurb: 'Bosses can drop Firebending.',
+  },
+  trailWater: {
+    id: 'trailWater',
+    cost: 500,
+    item: 'Waterbending',
+    label: 'Unlock Waterbending',
+    blurb: 'Bosses can drop Waterbending.',
+  },
+  trailEarth: {
+    id: 'trailEarth',
+    cost: 500,
+    item: 'Earthbending',
+    label: 'Unlock Earthbending',
+    blurb: 'Bosses can drop Earthbending.',
+  },
+  trailAir: {
+    id: 'trailAir',
+    cost: 500,
+    item: 'Airbending',
+    label: 'Unlock Airbending',
+    blurb: 'Bosses can drop Airbending.',
+  },
+  trailKamehameha: {
+    id: 'trailKamehameha',
+    cost: 800,
+    item: 'Kamehameha',
+    label: 'Unlock Kamehameha',
+    blurb: 'Bosses can drop Kamehameha.',
+  },
+  trailGoldfish: {
+    id: 'trailGoldfish',
+    cost: 1000,
+    item: 'Mythic Goldfish',
+    label: 'Unlock Mythic Goldfish',
+    blurb: 'Bosses can drop the Mythic Goldfish.',
+  },
+};
+
+export const TRAIL_SHOP_ORDER = [
+  'trailFire',
+  'trailWater',
+  'trailEarth',
+  'trailAir',
+  'trailSith',
+  'trailJedi',
+  'trailKamehameha',
+  'trailGoldfish',
+];
+
 function defaultUnlocks() {
   return {
     simulateAll: false,
@@ -202,6 +278,7 @@ function defaultUnlocks() {
     dailyBetRuns: BASE_DAILY_BET_RUNS,
     superBetExtraLife: false,
     betSeeding: false,
+    trailBossItems: [],
   };
 }
 
@@ -248,6 +325,9 @@ function normalizeUnlocks(unlocks) {
     dailyBetRuns,
     superBetExtraLife: !!unlocks.superBetExtraLife,
     betSeeding: !!unlocks.betSeeding,
+    trailBossItems: Array.isArray(unlocks.trailBossItems)
+      ? unlocks.trailBossItems.filter((name) => typeof name === 'string')
+      : [],
   };
 }
 
@@ -304,7 +384,9 @@ function read() {
         : [],
       daily: normalizeDaily(parsed.daily),
       dailyBetRuns: normalizeDailyBetRuns(parsed.dailyBetRuns),
+      dailyTrailRuns: normalizeDailyTrailRuns(parsed.dailyTrailRuns),
       weeklyBets: normalizeWeekly(parsed.weeklyBets),
+      weeklyTrail: normalizeWeeklyTrail(parsed.weeklyTrail),
       unlocks: normalizeUnlocks(parsed.unlocks),
     };
   } catch {
@@ -323,7 +405,9 @@ function defaultEconomy() {
     ownedSidekickIds: [],
     daily: { dayKey: guessDayKey(), used: 0, bonus: 0 },
     dailyBetRuns: { dayKey: guessDayKey(), used: 0 },
+    dailyTrailRuns: { dayKey: guessDayKey(), used: 0 },
     weeklyBets: { weekKey: cstWeekKey(), usedIds: [] },
+    weeklyTrail: { weekKey: cstWeekKey(), usedIds: [] },
     unlocks: defaultUnlocks(),
   };
 }
@@ -333,7 +417,9 @@ function withFreshMeta(economy) {
     ...economy,
     daily: normalizeDaily(economy.daily),
     dailyBetRuns: normalizeDailyBetRuns(economy.dailyBetRuns),
+    dailyTrailRuns: normalizeDailyTrailRuns(economy.dailyTrailRuns),
     weeklyBets: normalizeWeekly(economy.weeklyBets),
+    weeklyTrail: normalizeWeeklyTrail(economy.weeklyTrail),
     unlocks: normalizeUnlocks(economy.unlocks),
   };
 }
@@ -497,6 +583,30 @@ function normalizeDailyBetRuns(dailyBetRuns) {
   };
 }
 
+function normalizeDailyTrailRuns(dailyTrailRuns) {
+  const dayKey = guessDayKey();
+  if (!dailyTrailRuns || dailyTrailRuns.dayKey !== dayKey) {
+    return { dayKey, used: 0 };
+  }
+  return {
+    dayKey,
+    used: Math.max(0, Number(dailyTrailRuns.used) || 0),
+  };
+}
+
+function normalizeWeeklyTrail(weekly) {
+  const weekKey = cstWeekKey();
+  if (!weekly || weekly.weekKey !== weekKey) {
+    return { weekKey, usedIds: [] };
+  }
+  return {
+    weekKey,
+    usedIds: Array.isArray(weekly.usedIds)
+      ? weekly.usedIds.filter((id) => typeof id === 'string')
+      : [],
+  };
+}
+
 function normalizeWeekly(weekly) {
   const weekKey = cstWeekKey();
   if (!weekly || weekly.weekKey !== weekKey) {
@@ -617,7 +727,9 @@ export function loadEconomy() {
   const state = read();
   state.daily = normalizeDaily(state.daily);
   state.dailyBetRuns = normalizeDailyBetRuns(state.dailyBetRuns);
+  state.dailyTrailRuns = normalizeDailyTrailRuns(state.dailyTrailRuns);
   state.weeklyBets = normalizeWeekly(state.weeklyBets);
+  state.weeklyTrail = normalizeWeeklyTrail(state.weeklyTrail);
   return write(state);
 }
 
@@ -913,4 +1025,70 @@ export function nextMondayLabel() {
     month: 'short',
     day: 'numeric',
   }).format(next);
+}
+
+export function getDailyTrailRunsRemaining(economy = loadEconomy()) {
+  const state = withFreshMeta(economy);
+  return Math.max(0, BASE_DAILY_TRAIL_RUNS - state.dailyTrailRuns.used);
+}
+
+export function canStartTrailRun(economy = loadEconomy()) {
+  return getDailyTrailRunsRemaining(economy) > 0;
+}
+
+export function spendTrailRun(economy = loadEconomy()) {
+  const state = withFreshMeta(economy);
+  if (state.dailyTrailRuns.used >= BASE_DAILY_TRAIL_RUNS) {
+    return { ok: false, reason: 'No Battle Bus Trail runs left today.', economy: state };
+  }
+  state.dailyTrailRuns = { ...state.dailyTrailRuns, used: state.dailyTrailRuns.used + 1 };
+  return { ok: true, economy: write(state) };
+}
+
+export function getLockedTrailSkinIds(economy = loadEconomy()) {
+  return new Set(normalizeWeeklyTrail(economy.weeklyTrail).usedIds);
+}
+
+export function lockTrailSkins(skinIds, economy = loadEconomy()) {
+  const state = withFreshMeta(economy);
+  const used = new Set(state.weeklyTrail.usedIds);
+  for (const id of skinIds) {
+    if (id) used.add(id);
+  }
+  state.weeklyTrail = { weekKey: state.weeklyTrail.weekKey, usedIds: [...used] };
+  return write(state);
+}
+
+export function getTrailUnlockedBossItems(economy = loadEconomy()) {
+  return [...normalizeUnlocks(economy.unlocks).trailBossItems];
+}
+
+export function isTrailShopUnlockOwned(unlockId, economy = loadEconomy()) {
+  const owned = new Set(getTrailUnlockedBossItems(economy));
+  const item = TRAIL_SHOP_UNLOCKS[unlockId];
+  if (!item?.item) return false;
+  return owned.has(item.item);
+}
+
+export function buyTrailShopUnlock(unlockId, economy = loadEconomy()) {
+  const state = withFreshMeta(economy);
+  const item = TRAIL_SHOP_UNLOCKS[unlockId];
+  if (!item?.item) return { ok: false, reason: 'Unknown Trail shop item.', economy: state };
+  if (isTrailShopUnlockOwned(unlockId, state)) {
+    return { ok: false, reason: 'Already unlocked.', economy: state };
+  }
+  if (state.points < item.cost) {
+    return { ok: false, reason: 'Not enough weebucks.', economy: state };
+  }
+  state.points -= item.cost;
+  const owned = new Set(state.unlocks.trailBossItems);
+  owned.add(item.item);
+  state.unlocks.trailBossItems = [...owned];
+  return { ok: true, economy: write(state) };
+}
+
+export function settleTrailPayout({ survivors = 0, fallen = 0 }, economy = loadEconomy()) {
+  const amount =
+    Math.max(0, survivors) * TRAIL_SURVIVOR_PAYOUT + Math.max(0, fallen) * TRAIL_FALLEN_PAYOUT;
+  return { amount, economy: addPoints(amount, economy) };
 }

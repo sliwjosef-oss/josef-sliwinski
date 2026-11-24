@@ -6,6 +6,7 @@ export default function CollectionCompleteScreen({
   onOpenSidekicks,
   onOpenShop,
   onOpenFortSort,
+  onOpenTrail,
   onOpenHelp,
   showImage = true,
 }) {
@@ -44,6 +45,11 @@ export default function CollectionCompleteScreen({
         {onOpenFortSort ? (
           <button type="button" className="secondary-button" onClick={onOpenFortSort}>
             Betting
+          </button>
+        ) : null}
+        {onOpenTrail ? (
+          <button type="button" className="secondary-button" onClick={onOpenTrail}>
+            Battle Bus Trail
           </button>
         ) : null}
         {onOpenHelp ? (

@@ -2050,3 +2050,45 @@
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+.trail-screen .trail-start-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: none;
+}
+
+.trail-log {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.trail-log-line {
+  margin: 0 0 0.35rem;
+  color: #dbeafe;
+  white-space: pre-wrap;
+}
+
+.trail-choices {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.45rem;
+  flex: none;
+}
+
+.trail-choices .primary-button {
+  width: 100%;
+  min-height: 44px;
+  text-align: left;
+}
+
+.trail-result {
+  flex: none;
+  padding: 0.75rem 0.2rem 0.2rem;
+  text-align: center;
+}
+
+.trail-result h2 {
+  margin: 0 0 0.4rem;
+}

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import BattleBusTrail from './components/BattleBusTrail';
 import FortSort from './components/FortSort';
 import HangmanGame from './components/HangmanGame';
 import HelpScreen from './components/HelpScreen';
@@ -31,6 +32,7 @@ const VIEWS = {
   SIDEKICKS: 'sidekicks',
   SHOP: 'shop',
   FORTSORT: 'fortsort',
+  TRAIL: 'trail',
   HELP: 'help',
 };
 
@@ -38,6 +40,7 @@ function initialView() {
   const params = new URLSearchParams(window.location.search);
   const view = params.get('view');
   if (view === 'fortsort' || window.location.hash === '#fortsort') return VIEWS.FORTSORT;
+  if (view === 'trail' || window.location.hash === '#trail') return VIEWS.TRAIL;
   if (view === 'shop') return VIEWS.SHOP;
   if (view === 'sidekicks') return VIEWS.SIDEKICKS;
   if (view === 'help') return VIEWS.HELP;
@@ -148,7 +151,11 @@ function App() {
   }
 
   return (
-    <main className={`app ${view === VIEWS.FORTSORT ? 'app-fortsort' : ''}`}>
+    <main
+      className={`app ${
+        view === VIEWS.FORTSORT || view === VIEWS.TRAIL ? 'app-fortsort' : ''
+      }`}
+    >
       {view === VIEWS.HANGMAN ? (
         <HangmanGame
           outfits={outfits}
@@ -160,6 +167,7 @@ function App() {
           onOpenSidekicks={() => setView(VIEWS.SIDEKICKS)}
           onOpenShop={() => setView(VIEWS.SHOP)}
           onOpenFortSort={() => setView(VIEWS.FORTSORT)}
+          onOpenTrail={() => setView(VIEWS.TRAIL)}
           onOpenHelp={() => setView(VIEWS.HELP)}
         />
       ) : view === VIEWS.CATALOGUE ? (
@@ -186,6 +194,18 @@ function App() {
         />
       ) : view === VIEWS.HELP ? (
         <HelpScreen onBack={() => setView(VIEWS.HANGMAN)} onDeleteAllData={handleDeleteAllData} />
+      ) : view === VIEWS.TRAIL ? (
+        <BattleBusTrail
+          outfits={outfits}
+          guessedSkinIds={guessedSkinIds}
+          sidekicks={sidekicks}
+          economy={economy}
+          onEconomyChange={setEconomy}
+          skinLevels={skinLevels}
+          onSkinLevelsChange={handleSkinLevelsChange}
+          onBack={() => setView(VIEWS.HANGMAN)}
+          onOpenShop={() => setView(VIEWS.SHOP)}
+        />
       ) : (
         <FortSort
           outfits={outfits}

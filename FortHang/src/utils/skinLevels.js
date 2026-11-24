@@ -126,3 +126,25 @@ export function awardPlacementXp(levels, awards) {
   saveSkinLevels(next);
   return { levels: next, gained };
 }
+
+/**
+ * @param {Record<string, {xp:number, level:number}>} levels
+ * @param {{ id: string, amount: number }[]} awards
+ */
+export function awardXpAmounts(levels, awards) {
+  const next = { ...levels };
+  const gained = [];
+  for (const award of awards) {
+    if (!award?.id) continue;
+    const amount = Math.max(0, Number(award.amount) || 0);
+    if (amount <= 0) continue;
+    const prevXp = getSkinXp(next, award.id);
+    const prevLevel = levelFromXp(prevXp);
+    const xp = prevXp + amount;
+    const level = levelFromXp(xp);
+    next[award.id] = { xp, level };
+    gained.push({ id: award.id, amount, prevLevel, level });
+  }
+  saveSkinLevels(next);
+  return { levels: next, gained };
+}

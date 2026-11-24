@@ -96,7 +96,14 @@ function OutfitGuessImage({ outfit, reveal = false }) {
   );
 }
 
-function MenuLinks({ onOpenCatalogue, onOpenSidekicks, onOpenShop, onOpenFortSort, onOpenHelp }) {
+function MenuLinks({
+  onOpenCatalogue,
+  onOpenSidekicks,
+  onOpenShop,
+  onOpenFortSort,
+  onOpenTrail,
+  onOpenHelp,
+}) {
   return (
     <div className="menu-actions">
       <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
@@ -111,6 +118,11 @@ function MenuLinks({ onOpenCatalogue, onOpenSidekicks, onOpenShop, onOpenFortSor
       <button type="button" className="secondary-button" onClick={onOpenFortSort}>
         Betting
       </button>
+      {onOpenTrail ? (
+        <button type="button" className="secondary-button" onClick={onOpenTrail}>
+          Battle Bus Trail
+        </button>
+      ) : null}
       {onOpenHelp ? (
         <button type="button" className="secondary-button" onClick={onOpenHelp}>
           Help
@@ -146,6 +158,7 @@ export default function HangmanGame({
   onOpenSidekicks,
   onOpenShop,
   onOpenFortSort,
+  onOpenTrail,
   onOpenHelp,
 }) {
   const [gameState, setGameState] = useState(GAME_STATES.IDLE);
@@ -328,6 +341,7 @@ export default function HangmanGame({
             onOpenSidekicks={onOpenSidekicks}
             onOpenShop={onOpenShop}
             onOpenFortSort={onOpenFortSort}
+            onOpenTrail={onOpenTrail}
             onOpenHelp={onOpenHelp}
           />
         ) : (
@@ -359,6 +373,7 @@ export default function HangmanGame({
                 onOpenSidekicks={onOpenSidekicks}
                 onOpenShop={onOpenShop}
                 onOpenFortSort={onOpenFortSort}
+                onOpenTrail={onOpenTrail}
                 onOpenHelp={onOpenHelp}
               />
             </>
@@ -373,6 +388,7 @@ export default function HangmanGame({
                 onOpenSidekicks={onOpenSidekicks}
                 onOpenShop={onOpenShop}
                 onOpenFortSort={onOpenFortSort}
+                onOpenTrail={onOpenTrail}
                 onOpenHelp={onOpenHelp}
               />
             </>
