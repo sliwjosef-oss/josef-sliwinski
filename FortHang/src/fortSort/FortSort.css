@@ -526,9 +526,11 @@
   width: 100%;
   padding: 8px;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .skin-card.is-compact img,
@@ -541,9 +543,12 @@
 
 .skin-card.is-compact .skin-name {
   margin: 0;
+  width: 100%;
   font-size: 0.82rem;
   line-height: 1.2;
-  text-align: left;
+  text-align: center;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .placement-xp {
@@ -710,7 +715,7 @@
 .fort-sort-select-grid .skin-dice {
   margin: 4px 0 0;
   font-size: 0.75rem;
-  justify-content: flex-start;
+  justify-content: center;
 }
 
 .results-list {
@@ -862,8 +867,8 @@
 
 .dice-matchup-arena .skin-card.is-compact {
   width: 100%;
-  min-height: 76px;
-  padding: 0.65rem 0.7rem;
+  min-height: 0;
+  padding: 0.65rem 0.55rem;
   border-radius: 14px;
   border: 1px solid rgba(148, 163, 184, 0.28);
   background:
@@ -879,8 +884,9 @@
 }
 
 .dice-matchup-arena .skin-card.is-compact .skin-name {
-  font-size: 0.92rem;
+  font-size: 0.85rem;
   font-weight: 800;
+  text-align: center;
 }
 
 .dice-versus {
@@ -1654,13 +1660,16 @@
 
 .fort-sort .fort-sort-pick {
   position: relative;
-  text-align: left;
+  text-align: center;
+  align-items: center;
   width: 100%;
   border: 1px solid #334155;
   border-radius: 12px;
   background: #1e293b;
   color: inherit;
   padding: 10px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .fort-sort .fort-sort-pick.is-selected {
@@ -1688,6 +1697,10 @@
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   margin-bottom: 16px;
+}
+
+.fort-sort-sort-tabs.fort-sort-sort-tabs--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .fort-sort-sort-tabs .mode-tab {
@@ -1871,7 +1884,11 @@
 
 .fort-sort .catalogue-name {
   margin: 0;
+  width: 100%;
   font-size: 0.85rem;
+  text-align: center;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .fort-sort .catalogue-number {
@@ -2227,6 +2244,13 @@
   border-radius: inherit;
   background: linear-gradient(90deg, #dc2626, #f87171);
   transition: width 160ms ease;
+}
+
+.trail-enemy-unknown {
+  margin: 0;
+  font-size: 0.72rem;
+  color: #fda4af;
+  opacity: 0.9;
 }
 
 .trail-event-panel.kind-enemy .trail-event-art {

@@ -214,9 +214,11 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           </li>
           <li>
             <strong>Event images</strong> — encounters show skin icons from Anime Legends, Anime
-            Originals, Cartoon Legends, Star Wars, Marvel, Icon, Gaming Legends, Sports, and Space
-            Explorer pools. Solos show 1 skin, squads show up to 4. Bosses use a random collab skin.
-            Loot drops show an item card (icons from fortnite.gg when available).
+            Originals, Cartoon Legends, TV Legends, WWE Legends, Star Wars, Marvel, DC, Icon, Gaming
+            Legends, Sports, Space Explorers, Peely, Food, Toys, Robots, Animals, Aliens, Midas
+            Family, Winterfest, and Fortnightmares pools. Solos show 1 skin, squads show up to 4.
+            Bosses use a random collab skin. Loot drops show an item card (icons from fortnite.gg
+            when available).
           </li>
           <li>
             <strong>Payout</strong> — {TRAIL_SURVIVOR_PAYOUT} weebucks per surviving squad member,{' '}
@@ -235,7 +237,8 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           </li>
           <li>
             <strong>Rest</strong> — use a healing item, or search for heals. Both can still draw the
-            Storm. Medkits and Shield Potions heal one squad member you pick (+50 HP or shield).
+            Storm. Medkits restore one squad member you pick to full HP (not shield). Shield Potions
+            add +50 shield to one member.
             Slurp Juice, found in chests (about 5%), fills one member's health and shield. Chug
             Jugs restore the whole squad and only drop after you unlock them.
           </li>

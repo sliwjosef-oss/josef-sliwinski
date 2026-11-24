@@ -15,6 +15,12 @@
   gap: 1.25rem;
 }
 
+.hangman-game--playing,
+.hangman-game--result {
+  width: min(520px, 100%);
+  gap: 0.85rem;
+}
+
 .game-header {
   text-align: center;
 }
@@ -23,6 +29,29 @@
   margin: 0;
   font-size: clamp(1.8rem, 4vw, 2.6rem);
   letter-spacing: 0.02em;
+}
+
+.play-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.attempts-left-heading {
+  margin: 0;
+  font-size: clamp(1.35rem, 4.2vw, 1.85rem);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #f4f7ff;
+}
+
+.play-catalogue-button {
+  width: auto;
+  min-width: min(220px, 70vw);
+  margin: 0;
+  border-radius: 999px;
+  padding: 0.55rem 1.35rem;
 }
 
 .game-title-image {
@@ -69,6 +98,25 @@
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
+}
+
+.hangman-stage--play {
+  gap: 0.55rem;
+}
+
+.hangman-stage--play .outfit-guess-board.playing {
+  width: 100%;
+  min-height: 0;
+}
+
+.peely-footer {
+  display: flex;
+  justify-content: center;
+  padding: 0.15rem 0 0.35rem;
+}
+
+.peely-footer .peely-image {
+  width: min(96px, 26vw);
 }
 
 .hangman-stage-layout {
@@ -910,6 +958,12 @@
     font-size: 0.72rem;
   }
 
+  .hangman-game--playing,
+  .hangman-game--result {
+    width: 100%;
+    gap: 0.7rem;
+  }
+
   .hangman-stage-layout:not(.idle) {
     flex-direction: column;
     align-items: center;
@@ -926,14 +980,22 @@
     padding: 0;
   }
 
-  .peely-image {
+  .peely-panel .peely-image {
     width: min(88px, 24vw);
     margin: 0 auto;
+  }
+
+  .peely-footer .peely-image {
+    width: min(88px, 24vw);
   }
 
   .outfit-guess-board {
     width: 100%;
     min-height: 200px;
+  }
+
+  .hangman-stage--play .outfit-guess-board.playing {
+    min-height: 0;
   }
 
   .keyboard {

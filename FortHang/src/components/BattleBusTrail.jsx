@@ -14,12 +14,21 @@ import {
   spendTrailRun,
 } from '../utils/economy';
 import { getOutfitIconFallbackSrc, getOutfitIconSrc } from '../utils/outfits';
+import { groupOutfitsBySeason, sortOutfitsByNumber } from '../utils/seasonSort';
+import { groupOutfitsBySeries } from '../utils/seriesSort';
 import {
   awardXpAmounts,
   getSkinLevel,
   getTrailFightDamageResist,
   getTrailStartHp,
 } from '../utils/skinLevels';
+import '../fortSort/FortSort.css';
+
+const SELECT_SORT = {
+  NUMBER: 'number',
+  SEASON: 'season',
+  SERIES: 'series',
+};
 
 function SkinThumb({ outfit }) {
   if (!outfit) return <div className="icon-placeholder">?</div>;
@@ -69,8 +78,9 @@ function EventVisualPanel({ visual }) {
   const isEnemy = visual.kind === 'enemy';
   const isDeath = visual.kind === 'death' || visual.crossedOut;
   const showIcons = outfits.length > 0 || (isItem && visual.iconUrls?.length);
+  const hpHidden = Boolean(visual.hpHidden);
   const enemyPct =
-    isEnemy && visual.maxHp > 0
+    isEnemy && !hpHidden && visual.maxHp > 0
       ? Math.max(0, Math.min(100, Math.round((visual.hp / visual.maxHp) * 100)))
       : 0;
 
@@ -81,16 +91,18 @@ function EventVisualPanel({ visual }) {
     >
       <p className="trail-event-caption">{visual.caption}</p>
       {isEnemy ? (
-        <div className="trail-enemy-hud">
+        <div className={`trail-enemy-hud ${hpHidden ? 'is-hp-hidden' : ''}`}>
           <div className="trail-enemy-meta">
             <strong>{visual.enemyLabel || 'Enemy'}</strong>
-            <span>
-              {Math.max(0, visual.hp ?? 0)}/{visual.maxHp ?? 0}
-            </span>
+            <span>{hpHidden ? 'HP ???' : `${Math.max(0, visual.hp ?? 0)}/${visual.maxHp ?? 0}`}</span>
           </div>
-          <div className="trail-enemy-bar" aria-hidden="true">
-            <span style={{ width: `${enemyPct}%` }} />
-          </div>
+          {!hpHidden ? (
+            <div className="trail-enemy-bar" aria-hidden="true">
+              <span style={{ width: `${enemyPct}%` }} />
+            </div>
+          ) : (
+            <p className="trail-enemy-unknown">Ambush them (or get ambushed) to reveal HP</p>
+          )}
         </div>
       ) : null}
       <div
@@ -232,7 +244,7 @@ export default function BattleBusTrail({
   onBack,
 }) {
   const discovered = useMemo(
-    () => outfits.filter((outfit) => guessedSkinIds.includes(outfit.id)),
+    () => sortOutfitsByNumber(outfits.filter((outfit) => guessedSkinIds.includes(outfit.id))),
     [outfits, guessedSkinIds],
   );
   const ownedSidekicks = useMemo(() => {
@@ -248,6 +260,7 @@ export default function BattleBusTrail({
   const [partyIds, setPartyIds] = useState([]);
   const [sidekickId, setSidekickId] = useState(null);
   const [search, setSearch] = useState('');
+  const [selectSort, setSelectSort] = useState(SELECT_SORT.NUMBER);
   const [logLines, setLogLines] = useState([]);
   const [choices, setChoices] = useState(null);
   const [result, setResult] = useState(null);
@@ -344,6 +357,9 @@ export default function BattleBusTrail({
         .includes(query);
     });
   }, [discovered, search]);
+
+  const seasonSections = useMemo(() => groupOutfitsBySeason(visibleSkins), [visibleSkins]);
+  const seriesSections = useMemo(() => groupOutfitsBySeries(visibleSkins), [visibleSkins]);
 
   const selectMembers = useMemo(
     () =>
@@ -632,6 +648,8 @@ export default function BattleBusTrail({
 
   const backToSelect = () => {
     setScreen(forFunMode || result?.forFun ? 'forFunSelect' : 'select');
+    setPartyIds([]);
+    setSidekickId(null);
     setLiveSquad(null);
     setEventVisual(null);
     setResult(null);
@@ -647,6 +665,48 @@ export default function BattleBusTrail({
     setForFunMode(false);
     setScreen('select');
   };
+
+  const renderSkinPick = (outfit) => {
+    const selected = partyIds.includes(outfit.id);
+    const locked = !isForFunSelect && lockedIds.has(outfit.id);
+    return (
+      <button
+        key={outfit.id}
+        type="button"
+        className={`catalogue-card fort-sort-pick revealed ${selected ? 'is-selected' : ''} ${
+          locked ? 'is-locked' : ''
+        }`}
+        onClick={() => toggleParty(outfit.id)}
+        disabled={partyIds.length >= 4 && !selected}
+      >
+        <span className="catalogue-number">{outfit.number}.</span>
+        <div className="catalogue-image-wrap">
+          <SkinThumb outfit={outfit} />
+        </div>
+        <p className="catalogue-name">{outfit.name}</p>
+        <span className="fort-sort-check" aria-hidden="true">
+          {locked ? '🔒' : selected ? '✓' : ''}
+        </span>
+      </button>
+    );
+  };
+
+  const renderPickGrid = (skins) => (
+    <div className="catalogue-grid fort-sort-select-grid">{skins.map(renderSkinPick)}</div>
+  );
+
+  const renderSections = (sections) => (
+    <div className="fort-sort-select-sections">
+      {sections.map((section) => (
+        <section key={section.key} className="fort-sort-select-section">
+          <h2 className="fort-sort-section-heading">
+            {section.label} ({section.outfits.length})
+          </h2>
+          {renderPickGrid(section.outfits)}
+        </section>
+      ))}
+    </div>
+  );
 
   if (screen === 'play' || screen === 'result') {
     return (
@@ -791,32 +851,42 @@ export default function BattleBusTrail({
             Clear squad
           </button>
         </div>
-        <div className="catalogue-grid fort-sort-select-grid">
-          {visibleSkins.map((outfit) => {
-            const selected = partyIds.includes(outfit.id);
-            const locked = !isForFunSelect && lockedIds.has(outfit.id);
-            return (
-              <button
-                key={outfit.id}
-                type="button"
-                className={`catalogue-card fort-sort-pick revealed ${selected ? 'is-selected' : ''} ${
-                  locked ? 'is-locked' : ''
-                }`}
-                onClick={() => toggleParty(outfit.id)}
-                disabled={partyIds.length >= 4 && !selected}
-              >
-                <span className="catalogue-number">{outfit.number}.</span>
-                <div className="catalogue-image-wrap">
-                  <SkinThumb outfit={outfit} />
-                </div>
-                <p className="catalogue-name">{outfit.name}</p>
-                <span className="fort-sort-check" aria-hidden="true">
-                  {locked ? '🔒' : selected ? '✓' : ''}
-                </span>
-              </button>
-            );
-          })}
+        <div
+          className="import-actions fort-sort-sort-tabs fort-sort-sort-tabs--three"
+          role="group"
+          aria-label="Sort skins"
+        >
+          <button
+            type="button"
+            className={`mode-tab ${selectSort === SELECT_SORT.NUMBER ? 'is-active' : ''}`}
+            onClick={() => setSelectSort(SELECT_SORT.NUMBER)}
+          >
+            Sort by Number
+          </button>
+          <button
+            type="button"
+            className={`mode-tab ${selectSort === SELECT_SORT.SEASON ? 'is-active' : ''}`}
+            onClick={() => setSelectSort(SELECT_SORT.SEASON)}
+          >
+            Sort by Season
+          </button>
+          <button
+            type="button"
+            className={`mode-tab ${selectSort === SELECT_SORT.SERIES ? 'is-active' : ''}`}
+            onClick={() => setSelectSort(SELECT_SORT.SERIES)}
+          >
+            Sort by Series
+          </button>
         </div>
+        {visibleSkins.length === 0 ? (
+          <p className="hint">No skins to show.</p>
+        ) : selectSort === SELECT_SORT.SEASON ? (
+          renderSections(seasonSections)
+        ) : selectSort === SELECT_SORT.SERIES ? (
+          renderSections(seriesSections)
+        ) : (
+          renderPickGrid(visibleSkins)
+        )}
       </div>
 
       <nav className="catalogue-sort-bar catalogue-sort-bar--two" aria-label="Trail">

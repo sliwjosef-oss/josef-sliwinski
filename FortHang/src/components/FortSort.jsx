@@ -1981,7 +1981,7 @@ export default function FortSort({
             ) : (
               <p className="hint">Skin status shows your bet skins. This mode has none.</p>
             )}
-            {!archiveReadOnly ? (
+            {!archiveReadOnly && !bracketState.done ? (
               <button type="button" className="danger-button" onClick={() => setConfirmRestart(true)}>
                 Start Over
               </button>

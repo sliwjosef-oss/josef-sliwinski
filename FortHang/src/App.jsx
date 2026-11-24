@@ -156,21 +156,25 @@ function App() {
         view === VIEWS.FORTSORT || view === VIEWS.TRAIL ? 'app-fortsort' : ''
       }`}
     >
-      {view === VIEWS.HANGMAN ? (
-        <HangmanGame
-          outfits={outfits}
-          guessedSkinIds={guessedSkinIds}
-          economy={economy}
-          onEconomyChange={setEconomy}
-          onSkinWon={handleSkinWon}
-          onOpenCatalogue={() => setView(VIEWS.CATALOGUE)}
-          onOpenSidekicks={() => setView(VIEWS.SIDEKICKS)}
-          onOpenShop={() => setView(VIEWS.SHOP)}
-          onOpenFortSort={() => setView(VIEWS.FORTSORT)}
-          onOpenTrail={() => setView(VIEWS.TRAIL)}
-          onOpenHelp={() => setView(VIEWS.HELP)}
-        />
-      ) : view === VIEWS.CATALOGUE ? (
+      {view === VIEWS.HANGMAN || view === VIEWS.CATALOGUE ? (
+        <div hidden={view !== VIEWS.HANGMAN}>
+          <HangmanGame
+            outfits={outfits}
+            guessedSkinIds={guessedSkinIds}
+            economy={economy}
+            onEconomyChange={setEconomy}
+            onSkinWon={handleSkinWon}
+            onOpenCatalogue={() => setView(VIEWS.CATALOGUE)}
+            onOpenSidekicks={() => setView(VIEWS.SIDEKICKS)}
+            onOpenShop={() => setView(VIEWS.SHOP)}
+            onOpenFortSort={() => setView(VIEWS.FORTSORT)}
+            onOpenTrail={() => setView(VIEWS.TRAIL)}
+            onOpenHelp={() => setView(VIEWS.HELP)}
+            inputEnabled={view === VIEWS.HANGMAN}
+          />
+        </div>
+      ) : null}
+      {view === VIEWS.CATALOGUE ? (
         <SkinCatalogue
           outfits={outfits}
           guessedSkinIds={guessedSkinIds}
@@ -178,23 +182,27 @@ function App() {
           onBack={() => setView(VIEWS.HANGMAN)}
           onOpenSidekicks={() => setView(VIEWS.SIDEKICKS)}
         />
-      ) : view === VIEWS.SIDEKICKS ? (
+      ) : null}
+      {view === VIEWS.SIDEKICKS ? (
         <SidekickCatalogue
           sidekicks={sidekicks}
           economy={economy}
           onBack={() => setView(VIEWS.HANGMAN)}
           onOpenCatalogue={() => setView(VIEWS.CATALOGUE)}
         />
-      ) : view === VIEWS.SHOP ? (
+      ) : null}
+      {view === VIEWS.SHOP ? (
         <Shop
           economy={economy}
           sidekicks={sidekicks}
           onEconomyChange={setEconomy}
           onBack={() => setView(VIEWS.HANGMAN)}
         />
-      ) : view === VIEWS.HELP ? (
+      ) : null}
+      {view === VIEWS.HELP ? (
         <HelpScreen onBack={() => setView(VIEWS.HANGMAN)} onDeleteAllData={handleDeleteAllData} />
-      ) : view === VIEWS.TRAIL ? (
+      ) : null}
+      {view === VIEWS.TRAIL ? (
         <BattleBusTrail
           outfits={outfits}
           guessedSkinIds={guessedSkinIds}
@@ -205,7 +213,8 @@ function App() {
           onSkinLevelsChange={handleSkinLevelsChange}
           onBack={() => setView(VIEWS.HANGMAN)}
         />
-      ) : (
+      ) : null}
+      {view === VIEWS.FORTSORT ? (
         <FortSort
           outfits={outfits}
           guessedSkinIds={guessedSkinIds}
@@ -215,7 +224,7 @@ function App() {
           onSkinLevelsChange={handleSkinLevelsChange}
           onBack={() => setView(VIEWS.HANGMAN)}
         />
-      )}
+      ) : null}
     </main>
   );
 }

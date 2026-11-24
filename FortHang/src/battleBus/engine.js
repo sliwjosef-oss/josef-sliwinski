@@ -144,15 +144,16 @@ export async function playTrailMatch({
       ...extra,
     });
   };
-  const emitEnemyStatus = (enemy, hp, maxHp, { hidden = false } = {}) => {
+  const emitEnemyStatus = (enemy, hp, maxHp, { hidden = false, hpHidden = false } = {}) => {
     const label = hidden ? '???' : enemy === 'Boss' ? 'Boss' : enemy;
     emitVisual({
       kind: 'enemy',
-      caption: `Fight vs ${label}`,
+      caption: hpHidden ? `Spotted: ${label}` : `Fight vs ${label}`,
       enemyLabel: label,
       enemyType: enemy,
       hp: Math.max(0, hp),
       maxHp,
+      hpHidden: Boolean(hpHidden),
       outfits: lastEncounterOutfits.slice(0, enemy.startsWith('Solo') ? 1 : 4),
     });
   };
@@ -625,8 +626,12 @@ export async function playTrailMatch({
       log(`${target} uses a Shield Potion! +${member.shield - before} shield`);
     } else if (item === 'Medkit') {
       const before = member.hp;
-      member.hp = Math.min(member.maxHp, member.hp + 50);
-      log(`${target} uses a Medkit! +${member.hp - before} HP`);
+      member.hp = member.maxHp;
+      log(
+        before >= member.maxHp
+          ? `${target} uses a Medkit, but was already at full HP.`
+          : `${target} uses a Medkit! Back to full HP (${member.maxHp}).`,
+      );
     }
     emitSquad();
   };
@@ -877,7 +882,7 @@ export async function playTrailMatch({
     let fleeBonus = 0;
     let odds = ambushOdds;
     const maxHp = enemyMaxHp(enemy);
-    emitEnemyStatus(enemy, maxHp, maxHp, { hidden: true });
+    emitEnemyStatus(enemy, maxHp, maxHp, { hidden: true, hpHidden: true });
     if (has('Bush')) {
       useItem('Bush');
       odds = Math.min(odds, inFinalCircle() ? 0.55 : 0.2);
@@ -909,6 +914,7 @@ export async function playTrailMatch({
     log(`Total: ${dealt} damage.`);
     const hpLeft = enemyMaxHp(enemy) - dealt;
     if (hpLeft <= 0) {
+      emitEnemyStatus(enemy, 0, maxHp);
       reward(enemy);
       return;
     }
@@ -1051,12 +1057,10 @@ export async function playTrailMatch({
     }
     log('You loot a chest.');
     if (rand() < 0.1) {
-      for (const s of Object.values(S.squad)) s.shield = Math.min(100, s.shield + 50);
-      log('Big Shield Potion! +50 shield to the whole squad!');
+      give('Shield Potion');
+      give('Shield Potion');
     } else if (rand() < 0.5) {
-      const target = Object.keys(S.squad).sort((a, b) => S.squad[a].shield - S.squad[b].shield)[0];
-      S.squad[target].shield = Math.min(100, S.squad[target].shield + 50);
-      log(`Shield Potion! ${target} gets +50 shield.`);
+      give('Shield Potion');
     }
     rollLoot();
   };
