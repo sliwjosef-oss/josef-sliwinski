@@ -56,7 +56,7 @@ export const SQUAD_VISUAL_POOLS = [
     groupLabel: 'sports skins',
     soloLabel: 'sports skin',
     series: ['sports', 'nfl'],
-    odds: [-20, -5, 25],
+    odds: [-47, -32, 80],
   },
   {
     key: 'space',
