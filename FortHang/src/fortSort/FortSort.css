@@ -1719,6 +1719,49 @@
   color: #fff;
 }
 
+.fort-sort-sort-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: stretch;
+  margin-bottom: 16px;
+}
+
+.fort-sort-sort-row--solo {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.fort-sort-sort-select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.9);
+  color: #f8fafc;
+  font: inherit;
+  font-size: 0.95rem;
+}
+
+.fort-sort-sort-row .mode-tab {
+  min-height: 44px;
+  box-sizing: border-box;
+  white-space: nowrap;
+  text-align: center;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(30, 41, 59, 0.9);
+  color: #e2e8f0;
+  border-radius: 10px;
+  padding: 0.45rem 0.75rem;
+  cursor: pointer;
+}
+
+.fort-sort-sort-row .mode-tab.is-active {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #fff;
+}
+
 .betting-header .betting-header-row {
   display: flex;
   align-items: flex-start;

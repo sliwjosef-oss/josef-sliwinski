@@ -69,6 +69,7 @@ import {
   levelFromXp,
   placementXp,
   saveSkinLevels,
+  sortOutfitsByLevel,
   xpProgress,
 } from '../utils/skinLevels';
 import '../fortSort/FortSort.css';
@@ -77,6 +78,7 @@ const SELECT_SORT = {
   NUMBER: 'number',
   SEASON: 'season',
   SERIES: 'series',
+  LEVEL: 'level',
 };
 
 const MAIN_MODE = {
@@ -649,6 +651,10 @@ function SelectScreen({
 
   const seasonSections = useMemo(() => groupOutfitsBySeason(visibleOutfits), [visibleOutfits]);
   const seriesSections = useMemo(() => groupOutfitsBySeries(visibleOutfits), [visibleOutfits]);
+  const levelSorted = useMemo(
+    () => sortOutfitsByLevel(visibleOutfits, skinLevels),
+    [visibleOutfits, skinLevels],
+  );
 
   const toggle = (id) => {
     if (isBetting) return;
@@ -899,28 +905,18 @@ function SelectScreen({
       )}
 
       {catalogue.length > 0 ? (
-        <div className="import-actions fort-sort-sort-tabs" role="group" aria-label="Sort skins">
-          <button
-            type="button"
-            className={`mode-tab ${selectSort === SELECT_SORT.NUMBER ? 'is-active' : ''}`}
-            onClick={() => setSelectSort(SELECT_SORT.NUMBER)}
+        <div className="fort-sort-sort-row">
+          <select
+            className="fort-sort-sort-select"
+            value={selectSort}
+            onChange={(event) => setSelectSort(event.target.value)}
+            aria-label="Sort skins"
           >
-            Sort by Number
-          </button>
-          <button
-            type="button"
-            className={`mode-tab ${selectSort === SELECT_SORT.SEASON ? 'is-active' : ''}`}
-            onClick={() => setSelectSort(SELECT_SORT.SEASON)}
-          >
-            Sort by Season
-          </button>
-          <button
-            type="button"
-            className={`mode-tab ${selectSort === SELECT_SORT.SERIES ? 'is-active' : ''}`}
-            onClick={() => setSelectSort(SELECT_SORT.SERIES)}
-          >
-            Sort by Series
-          </button>
+            <option value={SELECT_SORT.NUMBER}>Sort by Number</option>
+            <option value={SELECT_SORT.SEASON}>Sort by Season</option>
+            <option value={SELECT_SORT.SERIES}>Sort by Series</option>
+            <option value={SELECT_SORT.LEVEL}>Sort by Level</option>
+          </select>
           <button
             type="button"
             className={`mode-tab ${hideUnowned ? 'is-active' : ''}`}
@@ -939,6 +935,8 @@ function SelectScreen({
         renderSections(seasonSections)
       ) : selectSort === SELECT_SORT.SERIES ? (
         renderSections(seriesSections)
+      ) : selectSort === SELECT_SORT.LEVEL ? (
+        renderPickGrid(levelSorted)
       ) : (
         renderPickGrid(visibleOutfits)
       )}

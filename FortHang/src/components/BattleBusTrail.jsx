@@ -25,6 +25,7 @@ import {
   getTrailStartHp,
   getTrailStartHpBonus,
   getTrailStormDamageResist,
+  sortOutfitsByLevel,
 } from '../utils/skinLevels';
 import '../fortSort/FortSort.css';
 
@@ -32,6 +33,7 @@ const SELECT_SORT = {
   NUMBER: 'number',
   SEASON: 'season',
   SERIES: 'series',
+  LEVEL: 'level',
 };
 
 function SkinThumb({ outfit }) {
@@ -364,6 +366,10 @@ export default function BattleBusTrail({
 
   const seasonSections = useMemo(() => groupOutfitsBySeason(visibleSkins), [visibleSkins]);
   const seriesSections = useMemo(() => groupOutfitsBySeries(visibleSkins), [visibleSkins]);
+  const levelSorted = useMemo(
+    () => sortOutfitsByLevel(visibleSkins, skinLevels),
+    [visibleSkins, skinLevels],
+  );
 
   const selectMembers = useMemo(
     () =>
@@ -872,32 +878,18 @@ export default function BattleBusTrail({
             Clear squad
           </button>
         </div>
-        <div
-          className="import-actions fort-sort-sort-tabs fort-sort-sort-tabs--three"
-          role="group"
-          aria-label="Sort skins"
-        >
-          <button
-            type="button"
-            className={`mode-tab ${selectSort === SELECT_SORT.NUMBER ? 'is-active' : ''}`}
-            onClick={() => setSelectSort(SELECT_SORT.NUMBER)}
+        <div className="fort-sort-sort-row fort-sort-sort-row--solo">
+          <select
+            className="fort-sort-sort-select"
+            value={selectSort}
+            onChange={(event) => setSelectSort(event.target.value)}
+            aria-label="Sort skins"
           >
-            Sort by Number
-          </button>
-          <button
-            type="button"
-            className={`mode-tab ${selectSort === SELECT_SORT.SEASON ? 'is-active' : ''}`}
-            onClick={() => setSelectSort(SELECT_SORT.SEASON)}
-          >
-            Sort by Season
-          </button>
-          <button
-            type="button"
-            className={`mode-tab ${selectSort === SELECT_SORT.SERIES ? 'is-active' : ''}`}
-            onClick={() => setSelectSort(SELECT_SORT.SERIES)}
-          >
-            Sort by Series
-          </button>
+            <option value={SELECT_SORT.NUMBER}>Sort by Number</option>
+            <option value={SELECT_SORT.SEASON}>Sort by Season</option>
+            <option value={SELECT_SORT.SERIES}>Sort by Series</option>
+            <option value={SELECT_SORT.LEVEL}>Sort by Level</option>
+          </select>
         </div>
         {visibleSkins.length === 0 ? (
           <p className="hint">No skins to show.</p>
@@ -905,6 +897,8 @@ export default function BattleBusTrail({
           renderSections(seasonSections)
         ) : selectSort === SELECT_SORT.SERIES ? (
           renderSections(seriesSections)
+        ) : selectSort === SELECT_SORT.LEVEL ? (
+          renderPickGrid(levelSorted)
         ) : (
           renderPickGrid(visibleSkins)
         )}

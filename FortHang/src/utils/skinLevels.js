@@ -99,6 +99,15 @@ export function getSkinLevel(levels, skinId) {
   return levelFromXp(getSkinXp(levels, skinId));
 }
 
+/** Highest level first, then catalogue number. */
+export function sortOutfitsByLevel(outfits, levels) {
+  return [...outfits].sort((a, b) => {
+    const levelDiff = getSkinLevel(levels, b.id) - getSkinLevel(levels, a.id);
+    if (levelDiff !== 0) return levelDiff;
+    return (Number(a.number) || 0) - (Number(b.number) || 0);
+  });
+}
+
 export function getSkinMinRoll(levels, skinId) {
   return getMinRollForLevel(getSkinLevel(levels, skinId));
 }
