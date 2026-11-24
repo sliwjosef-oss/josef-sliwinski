@@ -2,17 +2,21 @@ import { useState } from 'react';
 import {
   BASE_BOOST_BETS,
   BASE_DAILY_BET_RUNS,
+  BASE_DAILY_TRAIL_RUNS,
   BASE_STAR_BETS,
   BET_WIN_POINTS,
   BOOST_BET_BONUS_DICE,
   CATALOG_COMPLETE_BONUS,
   DAILY_GUESS_BASE,
+  DAILY_TRAIL_RUNS_TIER1,
   STAR_BET_BONUS_DICE,
   SUPER_BET_ROUND_BONUS,
   TOURNAMENT_WIN_POINTS,
   TRAIL_FALLEN_PAYOUT,
+  TRAIL_FALLEN_PAYOUT_TIER1,
   TRAIL_FALLEN_XP,
   TRAIL_SURVIVOR_PAYOUT,
+  TRAIL_SURVIVOR_PAYOUT_TIER1,
   TRAIL_SURVIVOR_XP,
 } from '../utils/economy';
 import { FIVE_STAR_NAMES, THREE_STAR_NAMES } from '../fortSort/simulate';
@@ -193,13 +197,18 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
       <section id="help-trail" className="help-section">
         <h2>Battle Bus Trail</h2>
         <p>
-          An Oregon Trail–style Battle Royale run. Pick 4 discovered skins and 1 owned sidekick, then
-          Fight, Loot, Rest, or Rotate each turn while the Storm closes and enemies show up.
+          An Oregon Trail–style Battle Royale run. Fight, Loot, Rest, or Rotate each turn while the
+          Storm closes and enemies show up.
         </p>
         <ul>
           <li>
-            <strong>Squad HUD</strong> — the top row shows all 4 skins and your sidekick with live
-            HP (green) and shield (blue) bars. Fallen members are crossed out.
+            <strong>Squad</strong> — pick 4 discovered skins before you drop in. An owned sidekick
+            is optional. The top row shows live HP (green) and shield (blue) bars; fallen members
+            are crossed out.
+          </li>
+          <li>
+            <strong>Daily runs</strong> — {BASE_DAILY_TRAIL_RUNS} per day by default (shop can raise
+            to {DAILY_TRAIL_RUNS_TIER1}).
           </li>
           <li>
             <strong>Event images</strong> — encounters show skin icons from Anime, Cartoon, Star
@@ -209,15 +218,17 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           </li>
           <li>
             <strong>Payout</strong> — {TRAIL_SURVIVOR_PAYOUT} weebucks per surviving squad member,{' '}
-            {TRAIL_FALLEN_PAYOUT} per fallen member (sidekick counts).
+            {TRAIL_FALLEN_PAYOUT} per fallen member (sidekick counts). Shop can raise those to{' '}
+            {TRAIL_SURVIVOR_PAYOUT_TIER1} / {TRAIL_FALLEN_PAYOUT_TIER1}.
           </li>
           <li>
             <strong>XP</strong> — skins earn {TRAIL_SURVIVOR_XP} XP if they survive, {TRAIL_FALLEN_XP}{' '}
-            XP if they fall.
+            XP if they fall. Level 2+ skins start with +10 HP; level 4 skins take 5% less fight
+            damage; level 5 skins start with +20 HP.
           </li>
           <li>
-            <strong>Shop</strong> — unlock boss loot packs (Bending, Lightsabers, Infinity Blade,
-            Kamehameha, Mythic Goldfish) so bosses can drop them on later runs.
+            <strong>Shop</strong> — Trail upgrades (storm/fight resist, daily runs, payouts) plus
+            boss loot packs (Bending, Lightsabers, Infinity Blade, Kamehameha, Mythic Goldfish).
           </li>
         </ul>
       </section>
@@ -249,6 +260,18 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           </li>
           <li>
             <strong>Level 5</strong> — rolls below 21 are raised to 21
+          </li>
+        </ul>
+        <p>Battle Bus Trail bonuses also scale with skin level:</p>
+        <ul>
+          <li>
+            <strong>Level 2–4</strong> — +10 HP at the start of a run (110 max)
+          </li>
+          <li>
+            <strong>Level 4+</strong> — take 5% less damage from fights
+          </li>
+          <li>
+            <strong>Level 5</strong> — +20 HP at the start of a run (120 max)
           </li>
         </ul>
         <p>Check a skin’s level and XP in the Skin Catalogue.</p>

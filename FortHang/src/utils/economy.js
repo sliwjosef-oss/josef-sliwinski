@@ -29,8 +29,11 @@ export const SUPER_BET_ROUND_BONUS = 1;
 export const CATALOG_COMPLETE_BONUS = 10000;
 export const BASE_DAILY_BET_RUNS = 5;
 export const BASE_DAILY_TRAIL_RUNS = 3;
+export const DAILY_TRAIL_RUNS_TIER1 = 5;
 export const TRAIL_SURVIVOR_PAYOUT = 100;
+export const TRAIL_SURVIVOR_PAYOUT_TIER1 = 150;
 export const TRAIL_FALLEN_PAYOUT = 50;
+export const TRAIL_FALLEN_PAYOUT_TIER1 = 75;
 export const TRAIL_SURVIVOR_XP = 200;
 export const TRAIL_FALLEN_XP = 100;
 export const DAILY_BET_RUNS_TIER1 = 7;
@@ -229,9 +232,74 @@ export const TRAIL_SHOP_UNLOCKS = {
     label: 'Unlock Mythic Goldfish',
     blurb: 'Bosses can drop the Mythic Goldfish.',
   },
+  trailStormResist10: {
+    id: 'trailStormResist10',
+    cost: 1000,
+    kind: 'stormResist',
+    value: 0.1,
+    label: 'Storm damage −10%',
+    blurb: 'Take 10% less Storm damage on Battle Bus Trail runs.',
+  },
+  trailStormResist20: {
+    id: 'trailStormResist20',
+    cost: 2000,
+    kind: 'stormResist',
+    value: 0.2,
+    requires: 'trailStormResist10',
+    label: 'Storm damage −20%',
+    blurb: 'Take 20% less Storm damage on Battle Bus Trail runs.',
+  },
+  trailFightResist10: {
+    id: 'trailFightResist10',
+    cost: 1000,
+    kind: 'fightResist',
+    value: 0.1,
+    label: 'Fight damage −10%',
+    blurb: 'Take 10% less damage from enemy fights on Battle Bus Trail.',
+  },
+  trailFightResist20: {
+    id: 'trailFightResist20',
+    cost: 1000,
+    kind: 'fightResist',
+    value: 0.2,
+    requires: 'trailFightResist10',
+    label: 'Fight damage −20%',
+    blurb: 'Take 20% less damage from enemy fights on Battle Bus Trail.',
+  },
+  trailRunsTier1: {
+    id: 'trailRunsTier1',
+    cost: 750,
+    kind: 'dailyTrailRuns',
+    value: DAILY_TRAIL_RUNS_TIER1,
+    label: `Daily Trail runs → ${DAILY_TRAIL_RUNS_TIER1}`,
+    blurb: `Increase daily Battle Bus Trail runs from ${BASE_DAILY_TRAIL_RUNS} to ${DAILY_TRAIL_RUNS_TIER1}.`,
+  },
+  trailSurvivorPayoutTier1: {
+    id: 'trailSurvivorPayoutTier1',
+    cost: 400,
+    kind: 'survivorPayout',
+    value: TRAIL_SURVIVOR_PAYOUT_TIER1,
+    label: `Survivor payout → ${TRAIL_SURVIVOR_PAYOUT_TIER1}`,
+    blurb: `Surviving squad members pay ${TRAIL_SURVIVOR_PAYOUT_TIER1} weebucks instead of ${TRAIL_SURVIVOR_PAYOUT}.`,
+  },
+  trailFallenPayoutTier1: {
+    id: 'trailFallenPayoutTier1',
+    cost: 400,
+    kind: 'fallenPayout',
+    value: TRAIL_FALLEN_PAYOUT_TIER1,
+    label: `Fallen payout → ${TRAIL_FALLEN_PAYOUT_TIER1}`,
+    blurb: `Fallen squad members pay ${TRAIL_FALLEN_PAYOUT_TIER1} weebucks instead of ${TRAIL_FALLEN_PAYOUT}.`,
+  },
 };
 
 export const TRAIL_SHOP_ORDER = [
+  'trailRunsTier1',
+  'trailSurvivorPayoutTier1',
+  'trailFallenPayoutTier1',
+  'trailStormResist10',
+  'trailStormResist20',
+  'trailFightResist10',
+  'trailFightResist20',
   'trailBending',
   'trailLightsaber',
   'trailInfinity',
@@ -255,6 +323,11 @@ function defaultUnlocks() {
     superBetExtraLife: false,
     betSeeding: false,
     trailBossItems: [],
+    trailStormResist: 0,
+    trailFightResist: 0,
+    dailyTrailRuns: BASE_DAILY_TRAIL_RUNS,
+    trailSurvivorPayout: TRAIL_SURVIVOR_PAYOUT,
+    trailFallenPayout: TRAIL_FALLEN_PAYOUT,
   };
 }
 
@@ -304,6 +377,24 @@ function normalizeUnlocks(unlocks) {
     trailBossItems: Array.isArray(unlocks.trailBossItems)
       ? unlocks.trailBossItems.filter((name) => typeof name === 'string')
       : [],
+    trailStormResist:
+      unlocks.trailStormResist === 0.2 || unlocks.trailStormResist === 0.1
+        ? unlocks.trailStormResist
+        : 0,
+    trailFightResist:
+      unlocks.trailFightResist === 0.2 || unlocks.trailFightResist === 0.1
+        ? unlocks.trailFightResist
+        : 0,
+    dailyTrailRuns:
+      unlocks.dailyTrailRuns === DAILY_TRAIL_RUNS_TIER1 ? DAILY_TRAIL_RUNS_TIER1 : BASE_DAILY_TRAIL_RUNS,
+    trailSurvivorPayout:
+      unlocks.trailSurvivorPayout === TRAIL_SURVIVOR_PAYOUT_TIER1
+        ? TRAIL_SURVIVOR_PAYOUT_TIER1
+        : TRAIL_SURVIVOR_PAYOUT,
+    trailFallenPayout:
+      unlocks.trailFallenPayout === TRAIL_FALLEN_PAYOUT_TIER1
+        ? TRAIL_FALLEN_PAYOUT_TIER1
+        : TRAIL_FALLEN_PAYOUT,
   };
 }
 
@@ -1003,9 +1094,13 @@ export function nextMondayLabel() {
   }).format(next);
 }
 
+export function getMaxDailyTrailRuns(economy = loadEconomy()) {
+  return normalizeUnlocks(economy.unlocks).dailyTrailRuns;
+}
+
 export function getDailyTrailRunsRemaining(economy = loadEconomy()) {
   const state = withFreshMeta(economy);
-  return Math.max(0, BASE_DAILY_TRAIL_RUNS - state.dailyTrailRuns.used);
+  return Math.max(0, getMaxDailyTrailRuns(state) - state.dailyTrailRuns.used);
 }
 
 export function canStartTrailRun(economy = loadEconomy()) {
@@ -1014,11 +1109,28 @@ export function canStartTrailRun(economy = loadEconomy()) {
 
 export function spendTrailRun(economy = loadEconomy()) {
   const state = withFreshMeta(economy);
-  if (state.dailyTrailRuns.used >= BASE_DAILY_TRAIL_RUNS) {
+  const maxRuns = getMaxDailyTrailRuns(state);
+  if (state.dailyTrailRuns.used >= maxRuns) {
     return { ok: false, reason: 'No Battle Bus Trail runs left today.', economy: state };
   }
   state.dailyTrailRuns = { ...state.dailyTrailRuns, used: state.dailyTrailRuns.used + 1 };
   return { ok: true, economy: write(state) };
+}
+
+export function getTrailStormResist(economy = loadEconomy()) {
+  return normalizeUnlocks(economy.unlocks).trailStormResist;
+}
+
+export function getTrailFightResist(economy = loadEconomy()) {
+  return normalizeUnlocks(economy.unlocks).trailFightResist;
+}
+
+export function getTrailSurvivorPayout(economy = loadEconomy()) {
+  return normalizeUnlocks(economy.unlocks).trailSurvivorPayout;
+}
+
+export function getTrailFallenPayout(economy = loadEconomy()) {
+  return normalizeUnlocks(economy.unlocks).trailFallenPayout;
 }
 
 export function getLockedTrailSkinIds(economy = loadEconomy()) {
@@ -1046,33 +1158,73 @@ function trailUnlockItems(entry) {
   return [];
 }
 
+function isTrailMetaUnlockOwned(entry, unlocks) {
+  if (!entry?.kind) return false;
+  if (entry.kind === 'stormResist') return unlocks.trailStormResist >= entry.value;
+  if (entry.kind === 'fightResist') return unlocks.trailFightResist >= entry.value;
+  if (entry.kind === 'dailyTrailRuns') return unlocks.dailyTrailRuns >= entry.value;
+  if (entry.kind === 'survivorPayout') return unlocks.trailSurvivorPayout >= entry.value;
+  if (entry.kind === 'fallenPayout') return unlocks.trailFallenPayout >= entry.value;
+  return false;
+}
+
 export function isTrailShopUnlockOwned(unlockId, economy = loadEconomy()) {
+  const entry = TRAIL_SHOP_UNLOCKS[unlockId];
+  if (!entry) return false;
+  const unlocks = normalizeUnlocks(economy.unlocks);
+  if (entry.kind) return isTrailMetaUnlockOwned(entry, unlocks);
   const owned = new Set(getTrailUnlockedBossItems(economy));
-  const items = trailUnlockItems(TRAIL_SHOP_UNLOCKS[unlockId]);
+  const items = trailUnlockItems(entry);
   if (!items.length) return false;
   return items.every((item) => owned.has(item));
+}
+
+export function isTrailShopUnlockAvailable(unlockId, economy = loadEconomy()) {
+  const entry = TRAIL_SHOP_UNLOCKS[unlockId];
+  if (!entry) return false;
+  if (isTrailShopUnlockOwned(unlockId, economy)) return false;
+  if (entry.requires && !isTrailShopUnlockOwned(entry.requires, economy)) return false;
+  return true;
 }
 
 export function buyTrailShopUnlock(unlockId, economy = loadEconomy()) {
   const state = withFreshMeta(economy);
   const entry = TRAIL_SHOP_UNLOCKS[unlockId];
-  const items = trailUnlockItems(entry);
-  if (!items.length) return { ok: false, reason: 'Unknown Trail shop item.', economy: state };
+  if (!entry) return { ok: false, reason: 'Unknown Trail shop item.', economy: state };
   if (isTrailShopUnlockOwned(unlockId, state)) {
     return { ok: false, reason: 'Already unlocked.', economy: state };
+  }
+  if (entry.requires && !isTrailShopUnlockOwned(entry.requires, state)) {
+    const needed = TRAIL_SHOP_UNLOCKS[entry.requires]?.label || 'the previous upgrade';
+    return { ok: false, reason: `Buy ${needed} first.`, economy: state };
   }
   if (state.points < entry.cost) {
     return { ok: false, reason: 'Not enough weebucks.', economy: state };
   }
   state.points -= entry.cost;
-  const owned = new Set(state.unlocks.trailBossItems);
-  for (const item of items) owned.add(item);
-  state.unlocks.trailBossItems = [...owned];
+  if (entry.kind === 'stormResist') {
+    state.unlocks.trailStormResist = entry.value;
+  } else if (entry.kind === 'fightResist') {
+    state.unlocks.trailFightResist = entry.value;
+  } else if (entry.kind === 'dailyTrailRuns') {
+    state.unlocks.dailyTrailRuns = entry.value;
+  } else if (entry.kind === 'survivorPayout') {
+    state.unlocks.trailSurvivorPayout = entry.value;
+  } else if (entry.kind === 'fallenPayout') {
+    state.unlocks.trailFallenPayout = entry.value;
+  } else {
+    const items = trailUnlockItems(entry);
+    if (!items.length) return { ok: false, reason: 'Unknown Trail shop item.', economy: state };
+    const owned = new Set(state.unlocks.trailBossItems);
+    for (const item of items) owned.add(item);
+    state.unlocks.trailBossItems = [...owned];
+  }
   return { ok: true, economy: write(state) };
 }
 
 export function settleTrailPayout({ survivors = 0, fallen = 0 }, economy = loadEconomy()) {
-  const amount =
-    Math.max(0, survivors) * TRAIL_SURVIVOR_PAYOUT + Math.max(0, fallen) * TRAIL_FALLEN_PAYOUT;
-  return { amount, economy: addPoints(amount, economy) };
+  const survivorPay = getTrailSurvivorPayout(economy);
+  const fallenPay = getTrailFallenPayout(economy);
+  const amount = Math.max(0, survivors) * survivorPay + Math.max(0, fallen) * fallenPay;
+  return { amount, economy: addPoints(amount, economy), survivorPay, fallenPay };
 }

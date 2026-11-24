@@ -10,6 +10,7 @@ import {
   countOwnedSidekickKinds,
   isShopUnlockAvailable,
   isShopUnlockOwned,
+  isTrailShopUnlockAvailable,
   isTrailShopUnlockOwned,
   rollRandomSidekick,
 } from '../utils/economy';
@@ -92,7 +93,11 @@ export default function Shop({ economy, sidekicks, onEconomyChange, onBack }) {
     return isShopUnlockAvailable(item.id, economy);
   });
 
-  const trailCards = TRAIL_SHOP_ORDER.map((id) => TRAIL_SHOP_UNLOCKS[id]).filter(Boolean);
+  const trailCards = TRAIL_SHOP_ORDER.map((id) => TRAIL_SHOP_UNLOCKS[id]).filter((item) => {
+    if (!item) return false;
+    if (isTrailShopUnlockOwned(item.id, economy)) return true;
+    return isTrailShopUnlockAvailable(item.id, economy);
+  });
 
   return (
     <div className="skin-catalogue shop-screen">
@@ -159,11 +164,19 @@ export default function Shop({ economy, sidekicks, onEconomyChange, onBack }) {
       <div className="shop-grid">
         {trailCards.map((item) => {
           const owned = isTrailShopUnlockOwned(item.id, economy);
+          const available = isTrailShopUnlockAvailable(item.id, economy);
+          const meta = owned
+            ? 'Owned'
+            : item.kind
+              ? available
+                ? 'Trail upgrade'
+                : 'Locked'
+              : 'Adds to boss loot pool';
           return (
             <article key={item.id} className={`shop-card ${owned ? 'is-owned' : ''}`}>
               <h2>{item.label}</h2>
               <p>{item.blurb}</p>
-              <p className="shop-meta">{owned ? 'Owned' : 'Adds to boss loot pool'}</p>
+              <p className="shop-meta">{meta}</p>
               {owned ? (
                 <button type="button" className="ghost-button" disabled>
                   Owned
@@ -173,7 +186,7 @@ export default function Shop({ economy, sidekicks, onEconomyChange, onBack }) {
                   type="button"
                   className="primary-button"
                   onClick={() => buyTrailUnlock(item.id)}
-                  disabled={economy.points < item.cost}
+                  disabled={!available || economy.points < item.cost}
                 >
                   Buy for {item.cost} weebucks
                 </button>

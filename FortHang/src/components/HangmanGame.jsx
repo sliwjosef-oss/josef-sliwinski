@@ -112,17 +112,17 @@ function MenuLinks({
       <button type="button" className="secondary-button" onClick={onOpenSidekicks}>
         Sidekick Catalogue
       </button>
-      <button type="button" className="secondary-button" onClick={onOpenShop}>
-        Shop
-      </button>
-      <button type="button" className="secondary-button" onClick={onOpenFortSort}>
-        Betting
-      </button>
       {onOpenTrail ? (
         <button type="button" className="secondary-button" onClick={onOpenTrail}>
           Battle Bus Trail
         </button>
       ) : null}
+      <button type="button" className="secondary-button" onClick={onOpenFortSort}>
+        Betting
+      </button>
+      <button type="button" className="secondary-button" onClick={onOpenShop}>
+        Shop
+      </button>
       {onOpenHelp ? (
         <button type="button" className="secondary-button" onClick={onOpenHelp}>
           Help

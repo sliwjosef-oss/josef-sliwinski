@@ -26,6 +26,23 @@ export function getMinRollForLevel(level) {
   return 1;
 }
 
+/** Extra starting HP for Battle Bus Trail squad skins. */
+export function getTrailStartHpBonus(level) {
+  if (level >= 5) return 20;
+  if (level >= 2) return 10;
+  return 0;
+}
+
+export function getTrailStartHp(levels, skinId) {
+  return 100 + getTrailStartHpBonus(getSkinLevel(levels, skinId));
+}
+
+/** Fraction of fight damage ignored at this skin level. */
+export function getTrailFightDamageResist(level) {
+  if (level >= 4) return 0.05;
+  return 0;
+}
+
 export function placementXp(place, superBet = false) {
   const rank = Number(place) || 999;
   let xp = 25;

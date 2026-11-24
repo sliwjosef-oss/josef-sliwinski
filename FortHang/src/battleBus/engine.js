@@ -78,9 +78,13 @@ function weighted(entries) {
 /**
  * @param {{
  *   partyNames: string[],
- *   sidekickName: string,
+ *   sidekickName?: string | null,
  *   outfits?: object[],
  *   partyOutfits?: object[],
+ *   startingHpByName?: Record<string, number>,
+ *   fightResistByName?: Record<string, number>,
+ *   stormResist?: number,
+ *   fightResist?: number,
  *   unlockedBossItems?: string[] | Set<string>,
  *   log: (line: string) => void,
  *   clearLog?: () => void,
@@ -89,6 +93,7 @@ function weighted(entries) {
  *     name: string,
  *     sidekick: boolean,
  *     hp: number,
+ *     maxHp: number,
  *     shield: number,
  *     alive: boolean,
  *     afkTurns: number,
@@ -101,6 +106,10 @@ export async function playTrailMatch({
   sidekickName,
   outfits = [],
   partyOutfits = [],
+  startingHpByName = {},
+  fightResistByName = {},
+  stormResist = 0,
+  fightResist = 0,
   unlockedBossItems = [],
   log,
   clearLog,
@@ -109,12 +118,18 @@ export async function playTrailMatch({
   onEventVisual,
 }) {
   const unlocked = new Set(unlockedBossItems);
-  const names = [...partyNames.slice(0, 4), sidekickName];
-  const sidekick = sidekickName;
+  const sidekick = sidekickName || null;
+  const names = sidekick
+    ? [...partyNames.slice(0, 4), sidekick]
+    : [...partyNames.slice(0, 4)];
   const bySeries = groupOutfitsBySeriesKey(outfits);
   const partyByName = new Map(
     [...partyOutfits, ...outfits.filter((o) => names.includes(o.name))].map((o) => [o.name, o]),
   );
+  const startHpFor = (name) => {
+    const value = Number(startingHpByName[name]);
+    return Number.isFinite(value) && value > 0 ? Math.floor(value) : 100;
+  };
   let lastEncounterOutfits = [];
 
   const emitVisual = (visual) => {
@@ -143,7 +158,12 @@ export async function playTrailMatch({
   };
 
   const S = {
-    squad: Object.fromEntries(names.map((n) => [n, { hp: 100, shield: 0 }])),
+    squad: Object.fromEntries(
+      names.map((n) => {
+        const maxHp = startHpFor(n);
+        return [n, { hp: maxHp, maxHp, shield: 0 }];
+      }),
+    ),
     inventory: { Medkit: 1 },
     itemUses: {},
     fortRounds: 0,
@@ -175,6 +195,7 @@ export async function playTrailMatch({
           name,
           sidekick: name === sidekick,
           hp: member ? member.hp : 0,
+          maxHp: member ? member.maxHp : startHpFor(name),
           shield: member ? member.shield : 0,
           alive: Boolean(member),
           afkTurns: S.afk[name] || 0,
@@ -292,22 +313,31 @@ export async function playTrailMatch({
     return 'an enemy squad';
   };
 
+  const applyResist = (amount, resist) => {
+    const factor = Math.max(0, Math.min(0.95, Number(resist) || 0));
+    return Math.max(1, Math.floor(amount * (1 - factor)));
+  };
+
   const fightDamage = (name, amount, cause = 'an enemy') => {
     S.lastHit[name] = cause;
     const s = S.squad[name];
-    const absorbed = Math.min(s.shield, amount);
+    const personal = Number(fightResistByName[name]) || 0;
+    const reduced = applyResist(amount, fightResist + personal);
+    const absorbed = Math.min(s.shield, reduced);
     s.shield -= absorbed;
-    s.hp -= amount - absorbed;
-    S.damage += Math.floor((amount - absorbed) / 4);
+    s.hp -= reduced - absorbed;
+    S.damage += Math.floor((reduced - absorbed) / 4);
     if (absorbed && s.shield === 0) log(`${name}'s shield broke!`);
-    log(`${name} took ${amount} damage (${absorbed} shield, ${amount - absorbed} HP)`);
+    const note = reduced < amount ? ` (resisted to ${reduced})` : '';
+    log(`${name} took ${reduced} damage (${absorbed} shield, ${reduced - absorbed} HP)${note}`);
     emitSquad();
   };
 
   const stormHit = (name, amount) => {
     S.lastHit[name] = 'the Storm';
-    S.squad[name].hp -= amount;
-    S.damage += Math.floor(amount / 4);
+    const reduced = applyResist(amount, stormResist);
+    S.squad[name].hp -= reduced;
+    S.damage += Math.floor(reduced / 4);
     emitSquad();
   };
 
@@ -537,7 +567,7 @@ export async function playTrailMatch({
     }
     if (d.heal) {
       const target = Object.keys(S.squad).sort((a, b) => S.squad[a].hp - S.squad[b].hp)[0];
-      S.squad[target].hp = Math.min(100, S.squad[target].hp + d.heal);
+      S.squad[target].hp = Math.min(S.squad[target].maxHp, S.squad[target].hp + d.heal);
       log(`The water heals ${target} +${d.heal} HP.`);
     }
     if (d.burn) {
@@ -595,14 +625,15 @@ export async function playTrailMatch({
     }
     if (pickItem === 'Chug Jug') {
       for (const s of Object.values(S.squad)) {
-        s.hp = 100;
+        s.hp = s.maxHp;
         s.shield = 100;
       }
       log('Chug Jug! Everyone is fully restored!');
     } else {
       const stat = pickItem === 'Shield Potion' ? 'shield' : 'hp';
       const target = Object.keys(S.squad).sort((a, b) => S.squad[a][stat] - S.squad[b][stat])[0];
-      S.squad[target][stat] = Math.min(100, S.squad[target][stat] + 50);
+      const cap = stat === 'hp' ? S.squad[target].maxHp : 100;
+      S.squad[target][stat] = Math.min(cap, S.squad[target][stat] + 50);
       log(`${target} used a ${pickItem}! +50 ${stat}`);
     }
     return ['used', 0];
@@ -984,7 +1015,7 @@ export async function playTrailMatch({
     }
     const [, amount, mode] = ENV_HEAL[find];
     for (const m of healTargets(mode)) {
-      S.squad[m].hp = Math.min(100, S.squad[m].hp + amount);
+      S.squad[m].hp = Math.min(S.squad[m].maxHp, S.squad[m].hp + amount);
       log(`${m} +${amount} HP`);
     }
     if (find === 'Campfire') S.campfireTurns -= 1;
@@ -1056,7 +1087,15 @@ export async function playTrailMatch({
   log('BATTLE BUS TRAIL');
   log(`Survive the island. Outlast ${START_PLAYERS - names.length} other players. Win.`);
   log('='.repeat(40));
-  log(`Your squad: ${partyNames.join(', ')} + sidekick ${sidekick} (*)`);
+  log(
+    sidekick
+      ? `Your squad: ${partyNames.join(', ')} + sidekick ${sidekick} (*)`
+      : `Your squad: ${partyNames.join(', ')} (no sidekick)`,
+  );
+  for (const name of partyNames) {
+    const bonus = startHpFor(name) - 100;
+    if (bonus > 0) log(`${name} starts with ${startHpFor(name)} HP (+${bonus} from skin level).`);
+  }
   log('You jump from the Battle Bus...');
 
   let won = false;

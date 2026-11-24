@@ -1,15 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { playTrailMatch } from '../battleBus/engine';
 import {
-  TRAIL_FALLEN_PAYOUT,
   TRAIL_FALLEN_XP,
-  TRAIL_SURVIVOR_PAYOUT,
   TRAIL_SURVIVOR_XP,
+  canStartTrailRun,
+  getDailyTrailRunsRemaining,
+  getTrailFightResist,
+  getTrailStormResist,
   getTrailUnlockedBossItems,
   settleTrailPayout,
+  spendTrailRun,
 } from '../utils/economy';
 import { getOutfitIconFallbackSrc, getOutfitIconSrc } from '../utils/outfits';
-import { awardXpAmounts } from '../utils/skinLevels';
+import {
+  awardXpAmounts,
+  getSkinLevel,
+  getTrailFightDamageResist,
+  getTrailStartHp,
+} from '../utils/skinLevels';
 
 function SkinThumb({ outfit }) {
   if (!outfit) return <div className="icon-placeholder">?</div>;
@@ -137,8 +145,10 @@ function SquadStatusBar({ members }) {
   return (
     <div className="trail-squad-bar" aria-label="Squad status">
       {members.map((member) => {
-        const hp = Math.max(0, Math.min(100, member.hp ?? 0));
+        const maxHp = Math.max(1, member.maxHp ?? 100);
+        const hp = Math.max(0, Math.min(maxHp, member.hp ?? 0));
         const shield = Math.max(0, Math.min(100, member.shield ?? 0));
+        const hpPct = Math.round((hp / maxHp) * 100);
         const empty = member.empty;
         const dead = !empty && !member.alive;
         return (
@@ -164,7 +174,7 @@ function SquadStatusBar({ members }) {
                 <span style={{ width: `${empty ? 0 : shield}%` }} />
               </div>
               <div className="trail-bar trail-bar-hp">
-                <span style={{ width: `${empty ? 0 : hp}%` }} />
+                <span style={{ width: `${empty ? 0 : hpPct}%` }} />
               </div>
             </div>
             <p className="trail-squad-nums">
@@ -177,17 +187,19 @@ function SquadStatusBar({ members }) {
   );
 }
 
-function buildSelectMembers({ partyIds, sidekickId, outfits, sidekicks }) {
+function buildSelectMembers({ partyIds, sidekickId, outfits, sidekicks, skinLevels }) {
   const slots = [0, 1, 2, 3].map((index) => {
     const id = partyIds[index];
     const outfit = id ? outfits.find((entry) => entry.id === id) : null;
+    const maxHp = outfit ? getTrailStartHp(skinLevels, outfit.id) : 0;
     return {
       key: id || `slot-${index}`,
       empty: !outfit,
       name: outfit?.name || '',
       outfit,
       sidekick: false,
-      hp: outfit ? 100 : 0,
+      hp: maxHp,
+      maxHp: maxHp || 100,
       shield: 0,
       alive: Boolean(outfit),
     };
@@ -200,6 +212,7 @@ function buildSelectMembers({ partyIds, sidekickId, outfits, sidekicks }) {
     sidekickOutfit: sidekick,
     sidekick: true,
     hp: sidekick ? 100 : 0,
+    maxHp: 100,
     shield: 0,
     alive: Boolean(sidekick),
   });
@@ -331,13 +344,20 @@ export default function BattleBusTrail({
   }, [discovered, search]);
 
   const selectMembers = useMemo(
-    () => buildSelectMembers({ partyIds, sidekickId, outfits, sidekicks: ownedSidekicks }),
-    [partyIds, sidekickId, outfits, ownedSidekicks],
+    () =>
+      buildSelectMembers({
+        partyIds,
+        sidekickId,
+        outfits,
+        sidekicks: ownedSidekicks,
+        skinLevels,
+      }),
+    [partyIds, sidekickId, outfits, ownedSidekicks, skinLevels],
   );
 
   const playMembers = useMemo(() => {
     if (!liveSquad?.length) return selectMembers;
-    return liveSquad.map((member, index) => {
+    const members = liveSquad.map((member, index) => {
       const outfit =
         outfitByNameRef.current.get(member.name) ||
         (member.sidekick
@@ -351,13 +371,28 @@ export default function BattleBusTrail({
         sidekickOutfit: member.sidekick ? outfit : null,
         sidekick: member.sidekick,
         hp: member.hp,
+        maxHp: member.maxHp ?? 100,
         shield: member.shield,
         alive: member.alive,
       };
     });
+    if (!members.some((member) => member.sidekick)) {
+      members.push({
+        key: 'sidekick-empty',
+        empty: true,
+        name: '',
+        sidekick: true,
+        hp: 0,
+        maxHp: 100,
+        shield: 0,
+        alive: false,
+      });
+    }
+    return members;
   }, [liveSquad, selectMembers, outfits, ownedSidekicks]);
 
   const headerMembers = screen === 'select' ? selectMembers : playMembers;
+  const runsLeft = getDailyTrailRunsRemaining(economy);
 
   const toggleParty = (id) => {
     if (busy) return;
@@ -369,18 +404,30 @@ export default function BattleBusTrail({
   };
 
   const startRun = async () => {
-    if (busy || partyIds.length !== 4 || !sidekickId) return;
-
-    const party = partyIds.map((id) => outfits.find((outfit) => outfit.id === id)).filter(Boolean);
-    const sidekick = sidekicks.find((entry) => entry.id === sidekickId);
-    if (party.length !== 4 || !sidekick) {
-      window.alert('Could not start — missing skins or sidekick.');
+    if (busy || partyIds.length !== 4) return;
+    if (!canStartTrailRun(economy)) {
+      window.alert('No Battle Bus Trail runs left today.');
       return;
     }
 
+    const party = partyIds.map((id) => outfits.find((outfit) => outfit.id === id)).filter(Boolean);
+    const sidekick = sidekickId ? sidekicks.find((entry) => entry.id === sidekickId) : null;
+    if (party.length !== 4) {
+      window.alert('Could not start — pick 4 skins.');
+      return;
+    }
+
+    const spent = spendTrailRun(economy);
+    onEconomyChange(spent.economy);
+    if (!spent.ok) {
+      window.alert(spent.reason);
+      return;
+    }
+    const runEconomy = spent.economy;
+
     const nameMap = new Map();
     for (const outfit of party) nameMap.set(outfit.name, outfit);
-    nameMap.set(sidekick.name, sidekick);
+    if (sidekick) nameMap.set(sidekick.name, sidekick);
     outfitByNameRef.current = nameMap;
 
     forfeitedRef.current = false;
@@ -391,16 +438,31 @@ export default function BattleBusTrail({
     clearPlayLog();
     setChoices(null);
     setEventVisual(null);
+    const startingHpByName = Object.fromEntries([
+      ...party.map((outfit) => [outfit.name, getTrailStartHp(skinLevels, outfit.id)]),
+      ...(sidekick ? [[sidekick.name, 100]] : []),
+    ]);
+    const fightResistByName = Object.fromEntries(
+      party.map((outfit) => [
+        outfit.name,
+        getTrailFightDamageResist(getSkinLevel(skinLevels, outfit.id)),
+      ]),
+    );
     setLiveSquad(
-      [...party.map((outfit) => ({ name: outfit.name, sidekick: false })), { name: sidekick.name, sidekick: true }].map(
-        (entry) => ({
-          ...entry,
-          hp: 100,
-          shield: 0,
-          alive: true,
-          afkTurns: 0,
-        }),
-      ),
+      [
+        ...party.map((outfit) => ({
+          name: outfit.name,
+          sidekick: false,
+          maxHp: startingHpByName[outfit.name],
+        })),
+        ...(sidekick ? [{ name: sidekick.name, sidekick: true, maxHp: 100 }] : []),
+      ].map((entry) => ({
+        ...entry,
+        hp: entry.maxHp,
+        shield: 0,
+        alive: true,
+        afkTurns: 0,
+      })),
     );
 
     const log = (line) => {
@@ -422,10 +484,14 @@ export default function BattleBusTrail({
     try {
       const match = await playTrailMatch({
         partyNames: party.map((outfit) => outfit.name),
-        sidekickName: sidekick.name,
+        sidekickName: sidekick?.name || null,
         outfits,
         partyOutfits: party,
-        unlockedBossItems: getTrailUnlockedBossItems(economy),
+        startingHpByName,
+        fightResistByName,
+        stormResist: getTrailStormResist(runEconomy),
+        fightResist: getTrailFightResist(runEconomy),
+        unlockedBossItems: getTrailUnlockedBossItems(runEconomy),
         log,
         choose,
         onSquadUpdate: setLiveSquad,
@@ -444,7 +510,7 @@ export default function BattleBusTrail({
       const survivorCount = match.survivors.length;
       const payout = settleTrailPayout(
         { survivors: survivorCount, fallen: fallenCount },
-        economy,
+        runEconomy,
       );
       onEconomyChange(payout.economy);
 
@@ -464,6 +530,8 @@ export default function BattleBusTrail({
         weebucks: payout.amount,
         survivorCount,
         fallenCount,
+        survivorPay: payout.survivorPay,
+        fallenPay: payout.fallenPay,
         xpAwards,
       });
       setScreen('result');
@@ -573,8 +641,8 @@ export default function BattleBusTrail({
           <div className="trail-result">
             <h2>{result.won ? 'Victory Royale!' : `Placed #${result.placement}`}</h2>
             <p>
-              +{result.weebucks} weebucks ({result.survivorCount} alive × {TRAIL_SURVIVOR_PAYOUT},{' '}
-              {result.fallenCount} fallen × {TRAIL_FALLEN_PAYOUT})
+              +{result.weebucks} weebucks ({result.survivorCount} alive × {result.survivorPay},{' '}
+              {result.fallenCount} fallen × {result.fallenPay})
             </p>
             <p>
               Skin XP: survivors +{TRAIL_SURVIVOR_XP}, fallen +{TRAIL_FALLEN_XP}
@@ -599,20 +667,17 @@ export default function BattleBusTrail({
       <header className="catalogue-header trail-header">
         <h1>Battle Bus Trail</h1>
         <SquadStatusBar members={headerMembers} />
-        <p className="hint">
-          Pick 4 discovered skins and 1 owned sidekick. Alive members pay {TRAIL_SURVIVOR_PAYOUT}{' '}
-          weebucks, fallen pay {TRAIL_FALLEN_PAYOUT}.
-        </p>
       </header>
 
       <div className="trail-start-bar">
         <button
           type="button"
           className="betting-start"
-          disabled={partyIds.length !== 4 || !sidekickId || busy}
+          disabled={partyIds.length !== 4 || busy || runsLeft <= 0}
           onClick={startRun}
         >
-          Drop in ({partyIds.length}/4 skins · {sidekickId ? 'sidekick ready' : 'need sidekick'})
+          Drop in ({partyIds.length}/4 skins
+          {sidekickId ? ' · sidekick' : ''} · {runsLeft} run{runsLeft === 1 ? '' : 's'} left)
         </button>
         <div className="import-actions">
           <button type="button" className="ghost-button" onClick={onOpenShop}>
@@ -625,9 +690,9 @@ export default function BattleBusTrail({
       </div>
 
       <div className="catalogue-scroll" tabIndex={0} aria-label="Trail squad select">
-        <h2 className="shop-section-title">Sidekick</h2>
+        <h2 className="shop-section-title">Sidekick (optional)</h2>
         {ownedSidekicks.length === 0 ? (
-          <p className="hint">Buy sidekick rolls in the Shop first.</p>
+          <p className="hint">Optional — buy sidekick rolls in the Shop if you want one.</p>
         ) : (
           <div className="catalogue-grid fort-sort-select-grid">
             {ownedSidekicks.map((sidekick) => (
@@ -637,7 +702,9 @@ export default function BattleBusTrail({
                 className={`catalogue-card fort-sort-pick revealed ${
                   sidekickId === sidekick.id ? 'is-selected' : ''
                 }`}
-                onClick={() => setSidekickId(sidekick.id)}
+                onClick={() =>
+                  setSidekickId((current) => (current === sidekick.id ? null : sidekick.id))
+                }
               >
                 <p className="catalogue-name">{sidekick.name}</p>
                 <span className="fort-sort-check" aria-hidden="true">
