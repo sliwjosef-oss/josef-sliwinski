@@ -2131,22 +2131,34 @@ export default function FortSort({
             </div>
             {status ? <p className="hint">{status}</p> : null}
           </section>
-        ) : (
-          <section>
-            <div className="progress">
-              <p>
-                {tournament.history.length} picks · {tournament.entrants.length} skins · {pageLabel(page)}
-                {tournament.betting ? ` · +${tournament.pointsEarned ?? 0} weebucks` : ''}
-              </p>
+        ) : tournament.simulated ? (
+          <section className="dice-matchup">
+            <div className="dice-matchup-top">
+              <div className="dice-matchup-chips">
+                {bracketState.current ? (
+                  <span className="dice-chip is-round">
+                    {roundLabel(bracket, bracketState.current)}
+                  </span>
+                ) : null}
+                <span className="dice-chip">
+                  {pageLabel(bracket.pages[currentPage] ?? page)}
+                </span>
+                {tournament.betting ? <span className="dice-chip is-bet">Betting</span> : null}
+              </div>
+              <div className="dice-matchup-stats">
+                <span>
+                  {tournament.history.length} picks · {tournament.entrants.length} skins
+                </span>
+                {tournament.betting ? (
+                  <span className="dice-haul">+{tournament.pointsEarned ?? 0} weebucks</span>
+                ) : null}
+              </div>
             </div>
+
             {bracketState.current ? (
               <>
-                <p className="match-label">
-                  {roundLabel(bracket, bracketState.current)} · {pageLabel(bracket.pages[currentPage])}
-                  {tournament.betting ? ' · Betting' : tournament.simulated ? ' · Simulated' : ''}
-                </p>
-                <h2>{tournament.simulated ? 'Dice matchup' : 'Which skin advances?'}</h2>
-                {tournament.simulated ? (
+                <div className="dice-matchup-arena">
+                  <p className="dice-matchup-kicker">Next roll</p>
                   <div className="matchup matchup-vs">
                     <span className="vs-side">
                       <SkinCard compact outfit={outfitsById.get(currentOutcome?.participants[0])} />
@@ -2156,7 +2168,9 @@ export default function FortSort({
                         boostIds={new Set(tournament.boostBetIds ?? [])}
                       />
                     </span>
-                    <span className="versus">vs</span>
+                    <span className="versus dice-versus" aria-hidden="true">
+                      VS
+                    </span>
                     <span className="vs-side">
                       <SkinCard compact outfit={outfitsById.get(currentOutcome?.participants[1])} />
                       <BetMark
@@ -2166,57 +2180,70 @@ export default function FortSort({
                       />
                     </span>
                   </div>
-                ) : (
-                  <div className="matchup">
-                    <SkinCard
-                      outfit={outfitsById.get(currentOutcome?.participants[0])}
-                      onPick={() => chooseBracket(true)}
-                    />
-                    <span className="versus">vs</span>
-                    <SkinCard
-                      outfit={outfitsById.get(currentOutcome?.participants[1])}
-                      onPick={() => chooseBracket(false)}
-                    />
-                  </div>
-                )}
-                <div className="compare-actions">
-                  {tournament.simulated ? (
-                    <>
-                      <button type="button" className="primary-button" onClick={simNextMatch}>
-                        Roll match
-                      </button>
-                      <button type="button" className="primary-button" onClick={simNextRound}>
-                        Simulate round
-                      </button>
-                      {round1Pending ? (
-                        <button type="button" className="primary-button" onClick={simRound1Pools}>
-                          Finish Round 1 pools
-                        </button>
-                      ) : null}
-                      <button
-                        type="button"
-                        className="ghost-button"
-                        onClick={simAll}
-                        disabled={!canSimulateAll}
-                        title={
-                          canSimulateAll
-                            ? 'Simulate the entire bracket'
-                            : 'Unlock in the Shop for 5000 weebucks'
-                        }
-                      >
-                        {canSimulateAll ? 'Simulate all' : 'Simulate all (locked)'}
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      type="button"
-                      className="ghost-button"
-                      onClick={undoBracket}
-                      disabled={!tournament.history.length}
-                    >
-                      Undo
+                </div>
+
+                <div className="dice-matchup-actions">
+                  <button type="button" className="dice-action dice-action-roll" onClick={simNextMatch}>
+                    Roll match
+                  </button>
+                  <button type="button" className="dice-action dice-action-round" onClick={simNextRound}>
+                    Simulate round
+                  </button>
+                  {round1Pending ? (
+                    <button type="button" className="dice-action dice-action-pools" onClick={simRound1Pools}>
+                      Finish Round 1 pools
                     </button>
-                  )}
+                  ) : null}
+                  <button
+                    type="button"
+                    className="dice-action dice-action-all"
+                    onClick={simAll}
+                    disabled={!canSimulateAll}
+                    title={
+                      canSimulateAll
+                        ? 'Simulate the entire bracket'
+                        : 'Unlock in the Shop for 5000 weebucks'
+                    }
+                  >
+                    {canSimulateAll ? 'Simulate all' : 'Simulate all (locked)'}
+                  </button>
+                </div>
+              </>
+            ) : null}
+          </section>
+        ) : (
+          <section>
+            <div className="progress">
+              <p>
+                {tournament.history.length} picks · {tournament.entrants.length} skins · {pageLabel(page)}
+              </p>
+            </div>
+            {bracketState.current ? (
+              <>
+                <p className="match-label">
+                  {roundLabel(bracket, bracketState.current)} · {pageLabel(bracket.pages[currentPage])}
+                </p>
+                <h2>Which skin advances?</h2>
+                <div className="matchup">
+                  <SkinCard
+                    outfit={outfitsById.get(currentOutcome?.participants[0])}
+                    onPick={() => chooseBracket(true)}
+                  />
+                  <span className="versus">vs</span>
+                  <SkinCard
+                    outfit={outfitsById.get(currentOutcome?.participants[1])}
+                    onPick={() => chooseBracket(false)}
+                  />
+                </div>
+                <div className="compare-actions">
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    onClick={undoBracket}
+                    disabled={!tournament.history.length}
+                  >
+                    Undo
+                  </button>
                 </div>
               </>
             ) : null}
