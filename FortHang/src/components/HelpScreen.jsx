@@ -9,6 +9,7 @@ import {
   CATALOG_COMPLETE_BONUS,
   DAILY_GUESS_BASE,
   DAILY_TRAIL_RUNS_TIER1,
+  DAILY_TRAIL_RUNS_TIER2,
   STAR_BET_BONUS_DICE,
   SUPER_BET_ROUND_BONUS,
   TOURNAMENT_WIN_POINTS,
@@ -215,7 +216,8 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           </li>
           <li>
             <strong>Daily runs</strong> — {BASE_DAILY_TRAIL_RUNS} per day by default (shop can raise
-            to {DAILY_TRAIL_RUNS_TIER1}). Ranked Drop in locks those skins until Monday.{" "}
+            to {DAILY_TRAIL_RUNS_TIER1}, then {DAILY_TRAIL_RUNS_TIER2}). Ranked Drop in locks those
+            skins until Monday.{" "}
             <strong>For Fun</strong> opens a separate squad select with no locks or daily-run
             limit, and awards no weebucks or skin XP.
           </li>
@@ -223,9 +225,9 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             <strong>Event images</strong> — encounters show skin icons from Anime Legends, Anime
             Originals, Cartoon Legends, TV Legends, WWE Legends, Star Wars, Marvel, DC, Icon, Gaming
             Legends, Sports, Space Explorers, Peely, Food, Toys, Robots, Animals, Aliens, Midas
-            Family, Winterfest, and Fortnightmares pools. Solos show 1 skin, squads show up to 4.
-            Bosses use a random collab skin. Loot drops show an item card (icons from fortnite.gg
-            when available).
+            Family, Winterfest, and Fortnightmares pools. Those picks use the full catalogue —
+            owning the skin does not matter. Solos show 1 skin, squads show up to 4. Bosses use a
+            random collab skin. Loot drops show an item card (icons from fortnite.gg when available).
           </li>
           <li>
             <strong>Payout</strong> — {TRAIL_SURVIVOR_PAYOUT} weebucks per surviving squad member,{' '}
@@ -241,7 +243,8 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             <strong>Shop</strong> — Trail upgrades (storm/fight resist, daily runs, payouts) plus
             boss loot packs (Bending, Lightsabers, Infinity Blade, Kamehameha, Mythic Goldfish),
             Chug Jugs, and unlockable events (Legendary Supply Drop, Vending Machine, Floating
-            Island, Fishing Spot, Slurp Barrel) for 1000 weebucks each.
+            Island, Fishing Spot, Slurp Barrel, Pirate Shop Access Token — ranked only) for 1000
+            weebucks each.
           </li>
           <li>
             <strong>Rest</strong> — use a healing item, or search for heals. Both can still draw the

@@ -23,6 +23,8 @@ import {
   LOOT_AMBUSH,
   LOOT_TABLE,
   MAX_ITEMS,
+  PIRATE_SHOP_TOKEN_BONUS,
+  PIRATE_SHOP_TOKEN_CHANCE,
   MULTI_USE,
   PHASES,
   PLACES,
@@ -90,6 +92,7 @@ function weighted(entries) {
  *   fightResist?: number,
  *   unlockedBossItems?: string[] | Set<string>,
  *   unlockedEvents?: string[] | Set<string>,
+ *   forFun?: boolean,
  *   log: (line: string) => void,
  *   clearLog?: () => void,
  *   choose: (options: string[]) => Promise<string>,
@@ -117,6 +120,7 @@ export async function playTrailMatch({
   fightResist = 0,
   unlockedBossItems = [],
   unlockedEvents = [],
+  forFun = false,
   log,
   clearLog,
   choose,
@@ -125,10 +129,12 @@ export async function playTrailMatch({
 }) {
   const unlocked = new Set(unlockedBossItems);
   const eventUnlocks = new Set(unlockedEvents);
+  const isRanked = !forFun;
   const sidekick = sidekickName || null;
   const names = sidekick
     ? [...partyNames.slice(0, 4), sidekick]
     : [...partyNames.slice(0, 4)];
+  // `outfits` is the full game catalogue; encounter picks ignore hangman discovery.
   const bySeries = groupOutfitsBySeriesKey(outfits);
   const partyByName = new Map(
     [...partyOutfits, ...outfits.filter((o) => names.includes(o.name))].map((o) => [o.name, o]),
@@ -189,6 +195,7 @@ export async function playTrailMatch({
       .sort((a, b) => b - a),
     campfireTurns: 0,
     vaultTurns: 0,
+    bonusWeebucks: 0,
     turn: 1,
     afk: {},
     lastHit: {},
@@ -1341,6 +1348,16 @@ export async function playTrailMatch({
       give('Shield Potion');
     }
     rollLoot();
+    if (
+      isRanked &&
+      eventUnlocks.has('pirateShopToken') &&
+      rand() < PIRATE_SHOP_TOKEN_CHANCE
+    ) {
+      S.bonusWeebucks += PIRATE_SHOP_TOKEN_BONUS;
+      log(
+        `Pirate Shop Access Token! +${PIRATE_SHOP_TOKEN_BONUS} weebucks will be added to your end-of-run payout.`,
+      );
+    }
   };
 
   const healTargets = (mode) => {
@@ -1603,5 +1620,6 @@ export async function playTrailMatch({
     fallen: S.fallen,
     partyNames: [...partyNames],
     sidekickName: sidekick,
+    bonusWeebucks: S.bonusWeebucks || 0,
   };
 }

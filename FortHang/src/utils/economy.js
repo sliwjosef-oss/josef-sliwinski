@@ -30,6 +30,7 @@ export const CATALOG_COMPLETE_BONUS = 10000;
 export const BASE_DAILY_BET_RUNS = 5;
 export const BASE_DAILY_TRAIL_RUNS = 3;
 export const DAILY_TRAIL_RUNS_TIER1 = 5;
+export const DAILY_TRAIL_RUNS_TIER2 = 10;
 export const TRAIL_SURVIVOR_PAYOUT = 100;
 export const TRAIL_SURVIVOR_PAYOUT_TIER1 = 150;
 export const TRAIL_FALLEN_PAYOUT = 50;
@@ -281,6 +282,15 @@ export const TRAIL_SHOP_UNLOCKS = {
     label: `Daily Trail runs → ${DAILY_TRAIL_RUNS_TIER1}`,
     blurb: `Increase daily Battle Bus Trail runs from ${BASE_DAILY_TRAIL_RUNS} to ${DAILY_TRAIL_RUNS_TIER1}.`,
   },
+  trailRunsTier2: {
+    id: 'trailRunsTier2',
+    cost: 1500,
+    kind: 'dailyTrailRuns',
+    value: DAILY_TRAIL_RUNS_TIER2,
+    requires: 'trailRunsTier1',
+    label: `Daily Trail runs → ${DAILY_TRAIL_RUNS_TIER2}`,
+    blurb: `Increase daily Battle Bus Trail runs from ${DAILY_TRAIL_RUNS_TIER1} to ${DAILY_TRAIL_RUNS_TIER2}.`,
+  },
   trailSurvivorPayoutTier1: {
     id: 'trailSurvivorPayoutTier1',
     cost: 400,
@@ -338,10 +348,20 @@ export const TRAIL_SHOP_UNLOCKS = {
     label: 'Slurp Barrel',
     blurb: 'Rare find when you Rest and search for heals. Heals the whole squad to full health.',
   },
+  trailPirateShopToken: {
+    id: 'trailPirateShopToken',
+    cost: 1000,
+    kind: 'trailEvent',
+    eventId: 'pirateShopToken',
+    label: 'Pirate Shop Access Token',
+    blurb:
+      'Ranked only. Rare find when looting chests. Each token adds 500 weebucks to your Trail payout at the end of the run.',
+  },
 };
 
 export const TRAIL_SHOP_ORDER = [
   'trailRunsTier1',
+  'trailRunsTier2',
   'trailSurvivorPayoutTier1',
   'trailFallenPayoutTier1',
   'trailStormResist10',
@@ -359,6 +379,7 @@ export const TRAIL_SHOP_ORDER = [
   'trailFloatingIsland',
   'trailFishingSpot',
   'trailSlurpBarrel',
+  'trailPirateShopToken',
 ];
 
 function defaultUnlocks() {
@@ -444,7 +465,11 @@ function normalizeUnlocks(unlocks) {
         ? unlocks.trailFightResist
         : 0,
     dailyTrailRuns:
-      unlocks.dailyTrailRuns === DAILY_TRAIL_RUNS_TIER1 ? DAILY_TRAIL_RUNS_TIER1 : BASE_DAILY_TRAIL_RUNS,
+      unlocks.dailyTrailRuns === DAILY_TRAIL_RUNS_TIER2
+        ? DAILY_TRAIL_RUNS_TIER2
+        : unlocks.dailyTrailRuns === DAILY_TRAIL_RUNS_TIER1
+          ? DAILY_TRAIL_RUNS_TIER1
+          : BASE_DAILY_TRAIL_RUNS,
     trailSurvivorPayout:
       unlocks.trailSurvivorPayout === TRAIL_SURVIVOR_PAYOUT_TIER1
         ? TRAIL_SURVIVOR_PAYOUT_TIER1
@@ -1289,9 +1314,14 @@ export function buyTrailShopUnlock(unlockId, economy = loadEconomy()) {
   return { ok: true, economy: write(state) };
 }
 
-export function settleTrailPayout({ survivors = 0, fallen = 0 }, economy = loadEconomy()) {
+export function settleTrailPayout(
+  { survivors = 0, fallen = 0, bonusWeebucks = 0 },
+  economy = loadEconomy(),
+) {
   const survivorPay = getTrailSurvivorPayout(economy);
   const fallenPay = getTrailFallenPayout(economy);
-  const amount = Math.max(0, survivors) * survivorPay + Math.max(0, fallen) * fallenPay;
-  return { amount, economy: addPoints(amount, economy), survivorPay, fallenPay };
+  const bonus = Math.max(0, Math.floor(Number(bonusWeebucks) || 0));
+  const amount =
+    Math.max(0, survivors) * survivorPay + Math.max(0, fallen) * fallenPay + bonus;
+  return { amount, economy: addPoints(amount, economy), survivorPay, fallenPay, bonusWeebucks: bonus };
 }

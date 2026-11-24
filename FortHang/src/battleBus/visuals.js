@@ -267,6 +267,12 @@ export function pickOutfitsFromSeries(bySeries, seriesKeys, count) {
     const list = bySeries.get(key);
     if (list?.length) pool.push(...list);
   }
+  // Ownership never gates encounters — fall back to the full catalogue if needed.
+  if (!pool.length) {
+    for (const list of bySeries.values()) {
+      if (list?.length) pool.push(...list);
+    }
+  }
   if (!pool.length) return [];
   return shuffle(pool).slice(0, Math.max(1, count));
 }

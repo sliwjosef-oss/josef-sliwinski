@@ -12,6 +12,9 @@ export const PHASES = [
 ];
 
 export const LOOT_AMBUSH = [0.25, 0.15, 0.2, 0.3];
+/** Chance to find a Pirate Shop Access Token on a successful chest loot (when unlocked). */
+export const PIRATE_SHOP_TOKEN_CHANCE = 0.01;
+export const PIRATE_SHOP_TOKEN_BONUS = 500;
 export const REST_STORM = [0.05, 0.1, 0.25, 0.35];
 export const FIGHT_SNIPER = [0.04, 0.06, 0.08, 0.1];
 export const BOOK_IT_AMBUSH = [0.25, 0.25, 0.35, 0.4];

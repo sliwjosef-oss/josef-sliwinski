@@ -538,6 +538,7 @@ export default function BattleBusTrail({
       const match = await playTrailMatch({
         partyNames: party.map((outfit) => outfit.name),
         sidekickName: sidekick?.name || null,
+        // Full catalogue for encounter art — not limited to discovered/owned skins.
         outfits,
         partyOutfits: party,
         startingHpByName,
@@ -547,6 +548,7 @@ export default function BattleBusTrail({
         fightResist: getTrailFightResist(runEconomy),
         unlockedBossItems: getTrailUnlockedBossItems(runEconomy),
         unlockedEvents: getTrailUnlockedEvents(runEconomy),
+        forFun,
         log,
         choose,
         onSquadUpdate: setLiveSquad,
@@ -580,7 +582,11 @@ export default function BattleBusTrail({
 
       const survivorNames = new Set(match.survivors);
       const payout = settleTrailPayout(
-        { survivors: survivorCount, fallen: fallenCount },
+        {
+          survivors: survivorCount,
+          fallen: fallenCount,
+          bonusWeebucks: match.bonusWeebucks || 0,
+        },
         runEconomy,
       );
       onEconomyChange(payout.economy);
@@ -604,6 +610,7 @@ export default function BattleBusTrail({
         fallenCount,
         survivorPay: payout.survivorPay,
         fallenPay: payout.fallenPay,
+        bonusWeebucks: payout.bonusWeebucks || 0,
         xpAwards,
       });
       setScreen('result');
@@ -781,7 +788,11 @@ export default function BattleBusTrail({
               <>
                 <p>
                   +{result.weebucks} weebucks ({result.survivorCount} alive × {result.survivorPay},{' '}
-                  {result.fallenCount} fallen × {result.fallenPay})
+                  {result.fallenCount} fallen × {result.fallenPay}
+                  {result.bonusWeebucks
+                    ? `, Pirate Shop +${result.bonusWeebucks}`
+                    : ''}
+                  )
                 </p>
                 <p>
                   Skin XP: survivors +{TRAIL_SURVIVOR_XP}, fallen +{TRAIL_FALLEN_XP}
