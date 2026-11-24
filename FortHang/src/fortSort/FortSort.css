@@ -3,6 +3,10 @@
   color: #e2e8f0;
 }
 
+.fort-sort.is-bracket-wide {
+  width: min(1600px, 100%);
+}
+
 .fort-sort-screen {
   height: calc(100dvh - 3rem - env(safe-area-inset-bottom, 0px));
   max-height: calc(100dvh - 3rem - env(safe-area-inset-bottom, 0px));
@@ -1030,11 +1034,15 @@
 }
 
 .bracket-view {
-  padding: 0 24px 48px;
+  padding: 0 8px 24px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .bracket-nav {
-  margin-bottom: 12px;
+  flex: none;
+  margin: 0;
+  padding: 0.35rem 0.2rem 0.55rem;
 }
 
 .bracket-download-bar {
@@ -1168,12 +1176,19 @@
 }
 
 .bracket-board {
-  overflow: auto;
-  max-height: 80vh;
+  overflow: visible;
+  max-height: none;
+  width: max-content;
+  min-width: 100%;
   padding: 12px;
   border: 1px solid #1e293b;
   border-radius: 12px;
   background: #0b1222;
+}
+
+.catalogue-scroll.is-bracket-scroll {
+  overflow-x: auto;
+  overflow-y: auto;
 }
 
 .bracket-section + .bracket-section {
@@ -1502,6 +1517,73 @@
   color: #fff;
 }
 
+.betting-header .betting-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+.betting-header h1 {
+  margin: 0;
+  text-align: left;
+}
+
+.betting-header-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+  margin-top: 0.15rem;
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.betting-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-bottom: 0.85rem;
+}
+
+.betting-clear {
+  width: 100%;
+  min-height: 42px;
+}
+
+.betting-search-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.betting-skin-search {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.9);
+  color: #f8fafc;
+  font: inherit;
+  font-size: 0.95rem;
+}
+
+.betting-skin-search::placeholder {
+  color: #94a3b8;
+}
+
+.betting-search-row .primary-button,
+.betting-search-row .ghost-button {
+  min-height: 44px;
+  white-space: nowrap;
+}
+
 .betting-toolbar {
   display: flex;
   flex-direction: column;
@@ -1610,6 +1692,9 @@
 
 .app-fortsort {
   justify-content: flex-start;
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
 }
 
 .fort-sort .fort-sort-pick.level-max {
@@ -1667,11 +1752,23 @@
   gap: 10px;
 }
 
+.bet-status-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.bet-status-item.is-open {
+  grid-column: 1 / -1;
+}
+
 .bet-status-card {
   display: flex;
   gap: 10px;
   align-items: center;
   text-align: left;
+  width: 100%;
   padding: 8px 10px;
   border-radius: 10px;
   border: 1px solid rgba(148, 163, 184, 0.35);

@@ -199,26 +199,62 @@ function BettingStatusPanel({ tournament, bracketState, standings, outfitsById }
       })()
     : null;
 
+  const renderOverview = (rowId) => {
+    if (detailId !== rowId || !detail) return null;
+    return (
+      <div className="bet-status-detail" role="dialog" aria-label="Bet skin overview">
+        <div className="bet-status-detail-header">
+          <h3>{detail.outfit?.name ?? 'Skin'} overview</h3>
+          <button type="button" className="ghost-button" onClick={() => setDetailId(null)}>
+            Close
+          </button>
+        </div>
+        {detail.run.length === 0 ? (
+          <p className="hint">No matches played yet.</p>
+        ) : (
+          <ul className="bet-status-run">
+            {detail.run.map((entry) => (
+              <li key={entry.matchId}>
+                <strong>{entry.label}</strong> — {entry.result === 'win' ? 'Won' : 'Lost'} vs{' '}
+                {outfitsById.get(entry.opponentId)?.name ?? '—'}
+              </li>
+            ))}
+          </ul>
+        )}
+        {detail.rolls.length ? (
+          <div className="bet-status-rolls">
+            <h4>Dice rolls</h4>
+            {detail.rolls.map((roll) => (
+              <RollBreakdown key={roll.matchId} roll={roll} outfitsById={outfitsById} />
+            ))}
+          </div>
+        ) : null}
+      </div>
+    );
+  };
+
   const renderCards = (group) =>
     group.length ? (
       <div className="bet-status-grid">
         {group.map((row) => (
-          <button
-            key={row.id}
-            type="button"
-            className={`bet-status-card is-${row.lane}`}
-            onClick={() => setDetailId(row.id)}
-          >
-            <SkinIcon outfit={row.outfit} />
-            <div className="bet-status-text">
-              <strong>
-                {row.outfit?.name ?? row.id}
-                {row.hasExtraLife ? ' 💖' : ''}
-              </strong>
-              <span>{row.statusLabel}</span>
-              {row.hasExtraLife ? <span className="bet-status-tier">Extra life</span> : null}
-            </div>
-          </button>
+          <div key={row.id} className={`bet-status-item ${detailId === row.id ? 'is-open' : ''}`}>
+            <button
+              type="button"
+              className={`bet-status-card is-${row.lane}`}
+              onClick={() => setDetailId((current) => (current === row.id ? null : row.id))}
+            >
+              <SkinIcon outfit={row.outfit} />
+              <div className="bet-status-text">
+                <strong>
+                  {row.outfit?.name ?? row.id}
+                  {row.hasExtraLife ? ' 💖' : ''}
+                </strong>
+                <span>{row.statusLabel}</span>
+                {row.hasExtraLife ? <span className="bet-status-tier">Extra life</span> : null}
+              </div>
+            </button>
+            {renderOverview(row.id)}
+          </div>
         ))}
       </div>
     ) : (
@@ -235,37 +271,6 @@ function BettingStatusPanel({ tournament, bracketState, standings, outfitsById }
         <h2 className="bet-status-title">Bet skins status</h2>
         {renderCards(rows.filter((row) => !row.isStar))}
       </section>
-
-      {detail ? (
-        <div className="bet-status-detail" role="dialog" aria-label="Bet skin overview">
-          <div className="bet-status-detail-header">
-            <h3>{detail.outfit?.name ?? 'Skin'} overview</h3>
-            <button type="button" className="ghost-button" onClick={() => setDetailId(null)}>
-              Close
-            </button>
-          </div>
-          {detail.run.length === 0 ? (
-            <p className="hint">No matches played yet.</p>
-          ) : (
-            <ul className="bet-status-run">
-              {detail.run.map((entry) => (
-                <li key={entry.matchId}>
-                  <strong>{entry.label}</strong> — {entry.result === 'win' ? 'Won' : 'Lost'} vs{' '}
-                  {outfitsById.get(entry.opponentId)?.name ?? '—'}
-                </li>
-              ))}
-            </ul>
-          )}
-          {detail.rolls.length ? (
-            <div className="bet-status-rolls">
-              <h4>Dice rolls</h4>
-              {detail.rolls.map((roll) => (
-                <RollBreakdown key={roll.matchId} roll={roll} outfitsById={outfitsById} />
-              ))}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
     </>
   );
 }
@@ -304,9 +309,6 @@ function DiceBadge({ outfit, bonus = 0 }) {
   return (
     <p className="skin-dice" title={`${dice} × d100 — keep the highest`}>
       {'★'.repeat(Math.min(dice, 12))}
-      <span>
-        {dice}d100{bonus ? ` (+${bonus})` : ''}
-      </span>
     </p>
   );
 }
@@ -352,6 +354,8 @@ function revealOrder(roll) {
   return order;
 }
 
+const ROLL_DIE_MS = 2000;
+
 function RollResult({ roll, outfitsById, starIds, boostIds, onNext }) {
   const steps = useMemo(() => revealOrder(roll), [roll]);
   const [shown, setShown] = useState(0);
@@ -359,7 +363,7 @@ function RollResult({ roll, outfitsById, starIds, boostIds, onNext }) {
 
   useEffect(() => {
     if (finished) return undefined;
-    const timer = setTimeout(() => setShown((count) => count + 1), 2460);
+    const timer = setTimeout(() => setShown((count) => count + 1), ROLL_DIE_MS);
     return () => clearTimeout(timer);
   }, [shown, finished]);
 
@@ -426,7 +430,11 @@ function RollResult({ roll, outfitsById, starIds, boostIds, onNext }) {
         <button type="button" className="primary-button" onClick={onNext}>
           Next match
         </button>
-      ) : null}
+      ) : (
+        <button type="button" className="ghost-button" onClick={() => setShown(steps.length)}>
+          Finish
+        </button>
+      )}
     </section>
   );
 }
@@ -610,6 +618,7 @@ function SelectScreen({
   const [betTier, setBetTier] = useState('star'); // star | boost
   const [selectSort, setSelectSort] = useState(SELECT_SORT.NUMBER);
   const [hideUnowned, setHideUnowned] = useState(true);
+  const [skinSearch, setSkinSearch] = useState('');
   const starBonus = getStarBetBonusDice(economy);
   const boostBonus = getBoostBetBonusDice(economy);
   const maxStarBets = getMaxStarBets(economy);
@@ -620,9 +629,16 @@ function SelectScreen({
 
   const catalogueSorted = useMemo(() => sortOutfitsByNumber(catalogue), [catalogue]);
   const visibleOutfits = useMemo(() => {
-    if (hideUnowned) return discovered;
-    return catalogueSorted;
-  }, [hideUnowned, discovered, catalogueSorted]);
+    const base = hideUnowned ? discovered : catalogueSorted;
+    const query = skinSearch.trim().toLowerCase();
+    if (!query) return base;
+    return base.filter((outfit) => {
+      if (!discoveredIds.has(outfit.id)) return false;
+      return String(outfit.name || '')
+        .toLowerCase()
+        .includes(query);
+    });
+  }, [hideUnowned, discovered, catalogueSorted, skinSearch, discoveredIds]);
 
   const allSelected =
     discovered.length > 0 && selectedIds.length === discovered.length && hideUnowned
@@ -749,8 +765,20 @@ function SelectScreen({
 
   return (
     <div className="fort-sort fort-sort-screen">
-      <header className="catalogue-header">
-        <h1>Betting</h1>
+      <header className={`catalogue-header ${isBetting ? 'betting-header' : ''}`}>
+        {isBetting ? (
+          <div className="betting-header-row">
+            <h1>Betting</h1>
+            <div className="betting-header-stats">
+              <span>Weebucks: {economy.points}</span>
+              <span>
+                Runs {betRunsRemaining}/{betRunsLimit}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <h1>Betting</h1>
+        )}
         <p className="hint">
           {mode === 'rank'
             ? 'Pick discovered skins, then rank them favorite to least favorite.'
@@ -771,14 +799,14 @@ function SelectScreen({
               className={`mode-tab is-star ${betTier === 'star' ? 'is-active' : ''}`}
               onClick={() => setBetTier('star')}
             >
-              Pick super bet +{starBonus} dice
+              Pick super bets ({starBetIds.length}/{maxStarBets})
             </button>
             <button
               type="button"
               className={`mode-tab is-bet ${betTier === 'boost' ? 'is-active' : ''}`}
               onClick={() => setBetTier('boost')}
             >
-              Pick bet +{boostBonus} dice
+              Pick bets ({boostBetIds.length}/{maxBoostBets})
             </button>
           </div>
           <button type="button" className="betting-start" disabled={!canStart} onClick={onStart}>
@@ -788,38 +816,6 @@ function SelectScreen({
       ) : null}
 
       <div className="catalogue-scroll" tabIndex={0} aria-label="Betting skins">
-      {isBetting ? (
-        <>
-          <p className="hint">
-            Weebucks: {economy.points} · Betting runs today {betRunsRemaining}/{betRunsLimit} · Super
-            bets {starBetIds.length}/{maxStarBets} · Bets {boostBetIds.length}/{maxBoostBets}. Locked
-            skins were already bet this week.
-          </p>
-          {betRunsRemaining <= 0 ? (
-            <p className="hint">
-              No betting runs left today. Raise the daily cap in the Shop, or wait for the 6:00 AM CST
-              reset.
-            </p>
-          ) : null}
-          <div className="import-actions" style={{ marginBottom: 12 }}>
-            {canRandomSelect ? (
-              <button type="button" className="primary-button" onClick={selectRandomBets}>
-                Select random
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="ghost-button"
-                disabled
-                title="Unlock in the Shop for 1000 weebucks"
-              >
-                Select random (locked · 1000)
-              </button>
-            )}
-          </div>
-        </>
-      ) : null}
-
       {!isBetting ? (
         <div className="import-actions" style={{ marginBottom: 12 }}>
           <button type="button" className="primary-button" disabled={!canStart} onClick={onStart}>
@@ -849,10 +845,10 @@ function SelectScreen({
           <span className="hint">{selectedIds.length} selected</span>
         </div>
       ) : (
-        <div className="import-actions" style={{ marginBottom: 16 }}>
+        <div className="betting-tools">
           <button
             type="button"
-            className="ghost-button"
+            className="ghost-button betting-clear"
             onClick={() => {
               setStarBetIds([]);
               setBoostBetIds([]);
@@ -861,7 +857,34 @@ function SelectScreen({
           >
             Clear bets
           </button>
-          <span className="hint">{discovered.length} skins in bracket</span>
+          <div className="betting-search-row">
+            <input
+              type="search"
+              className="betting-skin-search"
+              value={skinSearch}
+              onChange={(event) => setSkinSearch(event.target.value)}
+              placeholder="Search skins"
+              enterKeyHint="search"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              aria-label="Search skins"
+            />
+            {canRandomSelect ? (
+              <button type="button" className="primary-button" onClick={selectRandomBets}>
+                Select random
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="ghost-button"
+                disabled
+                title="Unlock in the Shop for 1000 weebucks"
+              >
+                Select random (locked · 1000)
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -1309,10 +1332,18 @@ export default function FortSort({
     );
   };
 
+  const finishSimulationQuiet = (result, lives) => {
+    if (!result) return;
+    applySimResult(result, lives);
+    setRoundRolls([]);
+    setOpenRollId(null);
+    setMatchView('vs');
+  };
+
   const simRound1Pools = () => {
     if (!tournament || archiveReadOnly || !tournament.simulated) return;
     const lives = withExtraLives();
-    showRoundResults(
+    finishSimulationQuiet(
       simulateRound1Pools(
         tournament.bracket,
         tournament.history,
@@ -1328,7 +1359,7 @@ export default function FortSort({
   const simAll = () => {
     if (!tournament || archiveReadOnly || !tournament.simulated || !canSimulateAll) return;
     const lives = withExtraLives();
-    showRoundResults(
+    finishSimulationQuiet(
       simulateEntireBracket(
         tournament.bracket,
         tournament.history,
@@ -1891,9 +1922,53 @@ export default function FortSort({
       setPlayTab('bracket');
     };
 
+    const bracketNav =
+      playTab === 'bracket' && bracket.pages.length > 1 ? (
+        <div className="bracket-nav">
+          <div className="page-tabs">
+            {phases.map((group) => (
+              <button
+                key={group.phase}
+                type="button"
+                className={`page-tab ${group.phase === currentPhase ? 'is-active' : ''}`}
+                onClick={() => {
+                  setFollowPage(false);
+                  setPageIndex(group.pages[0].index);
+                }}
+              >
+                {group.phase}
+              </button>
+            ))}
+          </div>
+          {activeGroup?.pages.length > 1 ? (
+            <div className="page-tabs pool-tabs">
+              {activeGroup.pages.map(({ index, page: poolPage }) => (
+                <button
+                  key={poolPage.pool}
+                  type="button"
+                  className={`page-tab ${index === activePage ? 'is-active' : ''}`}
+                  onClick={() => {
+                    setFollowPage(false);
+                    setPageIndex(index);
+                  }}
+                >
+                  {poolPage.pool}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          <p className="page-title">{pageLabel(page)}</p>
+        </div>
+      ) : null;
+
     return (
-      <div className="fort-sort fort-sort-screen">
-        <div className="catalogue-scroll" tabIndex={0} aria-label="Tournament">
+      <div className={`fort-sort fort-sort-screen ${playTab === 'bracket' ? 'is-bracket-wide' : ''}`}>
+        {bracketNav}
+        <div
+          className={`catalogue-scroll ${playTab === 'bracket' ? 'is-bracket-scroll' : ''}`}
+          tabIndex={0}
+          aria-label="Tournament"
+        >
         {playTab === 'status' ? (
           <div className="status-tab">
             {tournament.betting ? (
@@ -2150,43 +2225,6 @@ export default function FortSort({
         </>
         ) : (
         <section className="bracket-view">
-          {bracket.pages.length > 1 ? (
-            <div className="bracket-nav">
-              <div className="page-tabs">
-                {phases.map((group) => (
-                  <button
-                    key={group.phase}
-                    type="button"
-                    className={`page-tab ${group.phase === currentPhase ? 'is-active' : ''}`}
-                    onClick={() => {
-                      setFollowPage(false);
-                      setPageIndex(group.pages[0].index);
-                    }}
-                  >
-                    {group.phase}
-                  </button>
-                ))}
-              </div>
-              {activeGroup?.pages.length > 1 ? (
-                <div className="page-tabs pool-tabs">
-                  {activeGroup.pages.map(({ index, page: poolPage }) => (
-                    <button
-                      key={poolPage.pool}
-                      type="button"
-                      className={`page-tab ${index === activePage ? 'is-active' : ''}`}
-                      onClick={() => {
-                        setFollowPage(false);
-                        setPageIndex(index);
-                      }}
-                    >
-                      {poolPage.pool}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-              <p className="page-title">{pageLabel(page)}</p>
-            </div>
-          ) : null}
           <div className="bracket-board">
             {page.sections.map((section) => {
               const rounds = section.rounds
