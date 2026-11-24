@@ -230,7 +230,20 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           </li>
           <li>
             <strong>Shop</strong> — Trail upgrades (storm/fight resist, daily runs, payouts) plus
-            boss loot packs (Bending, Lightsabers, Infinity Blade, Kamehameha, Mythic Goldfish).
+            boss loot packs (Bending, Lightsabers, Infinity Blade, Kamehameha, Mythic Goldfish) and
+            Chug Jugs (1000 weebucks).
+          </li>
+          <li>
+            <strong>Rest</strong> — use a healing item, or search for heals. Both can still draw the
+            Storm. Medkits and Shield Potions heal one squad member you pick (+50 HP or shield).
+            Slurp Juice, found in chests (about 5%), fills one member's health and shield. Chug
+            Jugs restore the whole squad and only drop after you unlock them.
+          </li>
+          <li>
+            <strong>Final 10</strong> — once 10 players are left, the others stop dying on their own.
+            They only go down if you attack them, or if they ambush you and you win the fight.
+            Ambushes jump sharply: looting, resting, and rotating all get jumped much more often,
+            and anyone you run into usually shoots first.
           </li>
         </ul>
       </section>

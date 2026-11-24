@@ -39898,5 +39898,33 @@
     "series": "Icon Series",
     "icon": "https://fortnite-api.com/images/cosmetics/br/character_yarnpuzzling/icon.png",
     "number": 2850
+  },
+  {
+    "id": "Character_HeaterVilla",
+    "name": "Ramona Flowers",
+    "description": "Do you know this one girl with hair like this?",
+    "added": "2026-11-24T18:00:21Z",
+    "chapter": "7",
+    "season": "5",
+    "introductionText": "Introduced in Chapter 7, Season 5.",
+    "setText": "Part of the Scott Pilgrim set.",
+    "setName": "Scott Pilgrim",
+    "series": null,
+    "icon": "https://fortnite-api.com/images/cosmetics/br/character_heatervilla/icon.png",
+    "number": 2851
+  },
+  {
+    "id": "Character_CedarHaze",
+    "name": "Scott Pilgrim",
+    "description": "Rating: Awesome.",
+    "added": "2026-11-24T18:00:21Z",
+    "chapter": "7",
+    "season": "5",
+    "introductionText": "Introduced in Chapter 7, Season 5.",
+    "setText": "Part of the Scott Pilgrim set.",
+    "setName": "Scott Pilgrim",
+    "series": null,
+    "icon": "https://fortnite-api.com/images/cosmetics/br/character_cedarhaze/icon.png",
+    "number": 2852
   }
 ]

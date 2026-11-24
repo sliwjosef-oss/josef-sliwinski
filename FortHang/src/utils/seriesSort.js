@@ -174,6 +174,8 @@ const CARTOON_OUTFIT_NAMES = new Set([
   'Alastor',
   'Princess Charlie Morningstar',
   'Vagatha',
+  'Scott Pilgrim',
+  'Ramona Flowers',
 ]);
 
 const ANIME_OUTFIT_NAMES = new Set([

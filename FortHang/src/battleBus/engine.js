@@ -280,7 +280,17 @@ export async function playTrailMatch({
   };
 
   const rollLoot = () => {
+    const oddsOf = (name) => LOOT_TABLE.find((row) => row[0] === name)?.[2] ?? 0;
+    if (unlocked.has('Chug Jug') && rand() < oddsOf('Chug Jug')) {
+      give('Chug Jug');
+      return;
+    }
+    if (rand() < oddsOf('Slurp Juice')) {
+      give('Slurp Juice');
+      return;
+    }
     for (const [item, , odds] of LOOT_TABLE) {
+      if (item === 'Chug Jug' || item === 'Slurp Juice') continue;
       if (rand() < odds) {
         give(item);
         return;
@@ -304,7 +314,7 @@ export async function playTrailMatch({
       give(weighted(entries));
       return;
     }
-    give(pick(RARE_ITEMS));
+    give(pick(RARE_ITEMS.filter((item) => item !== 'Chug Jug' || unlocked.has('Chug Jug'))));
   };
 
   const causeOf = (enemy) => {
@@ -375,8 +385,22 @@ export async function playTrailMatch({
     return true;
   };
 
-  const eliminateOthers = (n) => {
-    S.playersLeft = Math.max(Object.keys(S.squad).length, S.playersLeft - n);
+  const ENDGAME_LOCK = 10;
+  let endgameNoted = false;
+  const noteEndgame = () => {
+    if (endgameNoted || S.playersLeft > ENDGAME_LOCK) return;
+    endgameNoted = true;
+    log(
+      'Only 10 players left. From here, the others only go down if you attack them — or they ambush you. Ambushes are much more common now.',
+    );
+  };
+  const inFinalCircle = () => S.playersLeft <= ENDGAME_LOCK;
+  const eliminateOthers = (n, { fromFight = false } = {}) => {
+    if (!fromFight && S.playersLeft <= ENDGAME_LOCK) return;
+    const alive = Object.keys(S.squad).length;
+    const floor = fromFight ? alive : Math.max(ENDGAME_LOCK, alive);
+    S.playersLeft = Math.max(floor, S.playersLeft - n);
+    noteEndgame();
   };
 
   const enemyMaxHp = (enemy) => Math.floor(ENEMY_TEAMS[enemy].hp * ENEMY_HP_MULT);
@@ -498,7 +522,7 @@ export async function playTrailMatch({
 
   const reward = (enemy) => {
     const team = ENEMY_TEAMS[enemy];
-    eliminateOthers(team.elims);
+    eliminateOthers(team.elims, { fromFight: true });
     if (enemy === 'Boss') S.kills.boss += 1;
     else if (String(enemy).startsWith('Solo')) S.kills.solo += 1;
     else S.kills.squad += 1;
@@ -578,6 +602,46 @@ export async function playTrailMatch({
     return ['used', dmg];
   };
 
+  const livingMembers = () => Object.keys(S.squad);
+
+  const restoreSquad = () => {
+    for (const member of Object.values(S.squad)) {
+      member.hp = member.maxHp;
+      member.shield = 100;
+    }
+    emitSquad();
+  };
+
+  const healMember = (item, target) => {
+    const member = S.squad[target];
+    if (!member) return;
+    if (item === 'Slurp Juice') {
+      member.hp = member.maxHp;
+      member.shield = 100;
+      log(`${target} drinks a Slurp Juice and is back to full health and shield!`);
+    } else if (item === 'Shield Potion') {
+      const before = member.shield;
+      member.shield = Math.min(100, member.shield + 50);
+      log(`${target} uses a Shield Potion! +${member.shield - before} shield`);
+    } else if (item === 'Medkit') {
+      const before = member.hp;
+      member.hp = Math.min(member.maxHp, member.hp + 50);
+      log(`${target} uses a Medkit! +${member.hp - before} HP`);
+    }
+    emitSquad();
+  };
+
+  const chooseMember = async (prompt) => {
+    const names = livingMembers();
+    if (!names.length) return null;
+    log(prompt);
+    const pickName = await choose([...names, 'Back']);
+    if (pickName === 'Back') return null;
+    return pickName;
+  };
+
+  const HEAL_ITEMS = ['Medkit', 'Shield Potion', 'Slurp Juice', 'Chug Jug'];
+
   const useItemInFight = async (enemy) => {
     const order = [
       ...Object.keys(BOSS_ITEMS),
@@ -585,6 +649,7 @@ export async function playTrailMatch({
       'Rocket Launcher',
       'Shield Potion',
       'Medkit',
+      'Slurp Juice',
       'Chug Jug',
       'Infinity Blade',
       'Launch Pad',
@@ -617,25 +682,26 @@ export async function playTrailMatch({
       log(`You used the ${pickItem} and escaped the fight!`);
       return ['escaped', 0];
     }
+    if (pickItem === 'Chug Jug') {
+      useItem(pickItem);
+      restoreSquad();
+      log('Chug Jug! Everyone is fully restored!');
+      return ['used', 0];
+    }
+    if (pickItem === 'Medkit' || pickItem === 'Shield Potion' || pickItem === 'Slurp Juice') {
+      const target = await chooseMember(`Who should use the ${pickItem}?`);
+      if (!target) return ['cancel', 0];
+      useItem(pickItem);
+      healMember(pickItem, target);
+      return ['used', 0];
+    }
     useItem(pickItem);
     if (DAMAGE_ITEMS[pickItem]) {
       const dmg = randInt(...DAMAGE_ITEMS[pickItem]);
       log(`${user} used a ${pickItem} and dealt ${dmg} damage. BOOM!`);
       return ['used', dmg];
     }
-    if (pickItem === 'Chug Jug') {
-      for (const s of Object.values(S.squad)) {
-        s.hp = s.maxHp;
-        s.shield = 100;
-      }
-      log('Chug Jug! Everyone is fully restored!');
-    } else {
-      const stat = pickItem === 'Shield Potion' ? 'shield' : 'hp';
-      const target = Object.keys(S.squad).sort((a, b) => S.squad[a][stat] - S.squad[b][stat])[0];
-      const cap = stat === 'hp' ? S.squad[target].maxHp : 100;
-      S.squad[target][stat] = Math.min(cap, S.squad[target][stat] + 50);
-      log(`${target} used a ${pickItem}! +50 ${stat}`);
-    }
+    log(`You used a ${pickItem}.`);
     return ['used', 0];
   };
 
@@ -814,7 +880,7 @@ export async function playTrailMatch({
     emitEnemyStatus(enemy, maxHp, maxHp, { hidden: true });
     if (has('Bush')) {
       useItem('Bush');
-      odds = Math.min(odds, 0.2);
+      odds = Math.min(odds, inFinalCircle() ? 0.55 : 0.2);
       fleeBonus = 0.2;
       log("(You're wearing a Bush — harder to spot, easier to slip away.)");
     }
@@ -861,11 +927,19 @@ export async function playTrailMatch({
         await combat(enemyB, hpB, true);
       }
     } else if (pickOpt === 'Wait it out') {
-      const winner = pick([enemyA, enemyB]);
-      const hp = Math.floor(enemyMaxHp(winner) * (0.3 + rand() * 0.2));
-      log('You wait... the shooting stops. One squad is left standing, badly hurt.');
-      if ((await choose(['Ambush the winner', 'Leave'])) === 'Ambush the winner') {
-        await combat(winner, hp, true);
+      if (S.playersLeft <= ENDGAME_LOCK) {
+        log('You wait... the shooting stops. Both squads pull back. Nobody is eliminated.');
+        const target = pick([enemyA, enemyB]);
+        if ((await choose(['Attack them', 'Leave'])) === 'Attack them') {
+          await combat(target, enemyMaxHp(target), true);
+        }
+      } else {
+        const winner = pick([enemyA, enemyB]);
+        const hp = Math.floor(enemyMaxHp(winner) * (0.3 + rand() * 0.2));
+        log('You wait... the shooting stops. One squad is left standing, badly hurt.');
+        if ((await choose(['Ambush the winner', 'Leave'])) === 'Ambush the winner') {
+          await combat(winner, hp, true);
+        }
       }
     } else if (rand() < 0.1) {
       log('The winning squad spotted you leaving!');
@@ -876,17 +950,20 @@ export async function playTrailMatch({
   };
 
   const playerEncounter = async (ambushOdds = 0.35) => {
+    const finalCircle = inFinalCircle();
+    const odds = finalCircle ? Math.max(ambushOdds, 0.9) : ambushOdds;
     const roll = rand();
-    const soloChance = S.playersLeft < 10 ? 0.4 : 0.2;
-    if (roll < 0.15) {
+    const soloChance = finalCircle ? 0.45 : 0.2;
+    const thirdPartyChance = finalCircle ? 0.05 : 0.15;
+    if (roll < thirdPartyChance) {
       const [text, a, b] = describeSquadFight();
       await thirdParty(text, a, b);
-    } else if (roll < 0.15 + soloChance) {
+    } else if (roll < thirdPartyChance + soloChance) {
       const [text, enemy] = describeSolo();
-      await engage(text, enemy, ambushOdds);
+      await engage(text, enemy, odds);
     } else {
       const [text, enemy] = describeSquad();
-      await engage(text, enemy, ambushOdds);
+      await engage(text, enemy, odds);
     }
   };
 
@@ -943,7 +1020,7 @@ export async function playTrailMatch({
 
   const randomEvent = async () => {
     const roll = rand();
-    if (roll < 0.7) await playerEncounter();
+    if (roll < (inFinalCircle() ? 0.9 : 0.7)) await playerEncounter();
     else if (roll < 0.85) {
       const target = Object.keys(S.squad).sort((a, b) => S.squad[a].shield - S.squad[b].shield)[0];
       S.squad[target].shield = Math.min(100, S.squad[target].shield + 50);
@@ -966,8 +1043,9 @@ export async function playTrailMatch({
   };
 
   const actionLoot = async () => {
-    if (rand() < chance(LOOT_AMBUSH)) {
-      if (rand() < 0.25) await bossEncounter();
+    const lootAmbush = inFinalCircle() ? Math.max(chance(LOOT_AMBUSH), 0.8) : chance(LOOT_AMBUSH);
+    if (rand() < lootAmbush) {
+      if (rand() < (inFinalCircle() ? 0.05 : 0.25)) await bossEncounter();
       else await playerEncounter(1);
       return;
     }
@@ -990,7 +1068,38 @@ export async function playTrailMatch({
     return Object.keys(S.squad);
   };
 
-  const actionRest = async () => {
+  const restStormRisk = () => {
+    if (S.stormDistance === 1 && rand() < chance(REST_STORM)) {
+      S.stormDistance = 2;
+      S.campfireTurns = 0;
+      log('The Storm rolled in while you rested! Any fire goes out.');
+    }
+  };
+
+  const useHealingItem = async () => {
+    const owned = HEAL_ITEMS.filter((item) => has(item));
+    if (!owned.length) {
+      log("You don't have any healing items.");
+      return false;
+    }
+    const labels = owned.map((item) => (S.inventory[item] > 1 ? `${item} x${S.inventory[item]}` : item));
+    const pickLabel = await choose([...labels, 'Back']);
+    if (pickLabel === 'Back') return false;
+    const pickItem = owned[labels.indexOf(pickLabel)];
+    if (pickItem === 'Chug Jug') {
+      useItem(pickItem);
+      restoreSquad();
+      log('Chug Jug! Everyone is fully restored!');
+      return true;
+    }
+    const target = await chooseMember(`Who should use the ${pickItem}?`);
+    if (!target) return false;
+    useItem(pickItem);
+    healMember(pickItem, target);
+    return true;
+  };
+
+  const searchForHeals = async () => {
     let find;
     if (S.campfireTurns > 0) {
       find = 'Campfire';
@@ -1019,10 +1128,21 @@ export async function playTrailMatch({
       log(`${m} +${amount} HP`);
     }
     if (find === 'Campfire') S.campfireTurns -= 1;
-    if (S.stormDistance === 1 && rand() < chance(REST_STORM)) {
-      S.stormDistance = 2;
-      S.campfireTurns = 0;
-      log('The Storm rolled in while you rested! Any fire goes out.');
+    emitSquad();
+  };
+
+  const actionRest = async () => {
+    log('You stop to rest. Use something you are carrying, or search for heals.');
+    while (true) {
+      const pickOpt = await choose(['Use a healing item', 'Search for heals']);
+      if (pickOpt === 'Use a healing item') {
+        const used = await useHealingItem();
+        if (!used) continue;
+      } else {
+        await searchForHeals();
+      }
+      restStormRisk();
+      return;
     }
   };
 
@@ -1034,7 +1154,8 @@ export async function playTrailMatch({
       S.stormDistance = Math.max(0, S.stormDistance - 2);
       S.stormMult = 0.5;
       log(`Your squad sprints for the zone! Now: ${STATUS[S.stormDistance]}`);
-      if (rand() < chance(BOOK_IT_AMBUSH)) {
+      const bookAmbush = inFinalCircle() ? Math.max(chance(BOOK_IT_AMBUSH), 0.9) : chance(BOOK_IT_AMBUSH);
+      if (rand() < bookAmbush) {
         if (has('Launch Pad')) {
           useItem('Launch Pad');
           log('Someone spots you — but you hit a Launch Pad and fly right over them!');
@@ -1047,8 +1168,10 @@ export async function playTrailMatch({
       S.stormDistance = Math.max(0, S.stormDistance - 1);
       S.stormMult = 1;
       log(`You move carefully along the trees. Now: ${STATUS[S.stormDistance]}`);
-      if (rand() < chance(SAFE_ROUTE_AMBUSH)) {
-        await engage('a pack of bots wandering through the trees', 'Bots', 0.2);
+      const safeAmbush = inFinalCircle() ? Math.max(chance(SAFE_ROUTE_AMBUSH), 0.65) : chance(SAFE_ROUTE_AMBUSH);
+      if (rand() < safeAmbush) {
+        if (inFinalCircle()) await playerEncounter(0.9);
+        else await engage('a pack of bots wandering through the trees', 'Bots', 0.2);
       }
     }
   };
@@ -1134,7 +1257,9 @@ export async function playTrailMatch({
       elims = Math.max(1, elims - 2);
     }
 
-    if (Object.keys(S.squad).length && rand() < phase.eventChance + S.damage / 1500) {
+    const eventChance = phase.eventChance + S.damage / 1500;
+    const endgameEvent = inFinalCircle() ? Math.max(eventChance, 0.85) : eventChance;
+    if (Object.keys(S.squad).length && rand() < endgameEvent) {
       await randomEvent();
     }
     if (Object.keys(S.squad).length && rand() < SQUAD_EVENT_CHANCE) squadEvent();

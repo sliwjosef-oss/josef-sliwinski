@@ -232,6 +232,13 @@ export const TRAIL_SHOP_UNLOCKS = {
     label: 'Unlock Mythic Goldfish',
     blurb: 'Bosses can drop the Mythic Goldfish.',
   },
+  trailChugJug: {
+    id: 'trailChugJug',
+    cost: 1000,
+    items: ['Chug Jug'],
+    label: 'Unlock Chug Jug',
+    blurb: 'Chests can drop a Chug Jug (1%). Boss loot keeps its usual Chug Jug rate.',
+  },
   trailStormResist10: {
     id: 'trailStormResist10',
     cost: 1000,
@@ -305,6 +312,7 @@ export const TRAIL_SHOP_ORDER = [
   'trailInfinity',
   'trailKamehameha',
   'trailGoldfish',
+  'trailChugJug',
 ];
 
 function defaultUnlocks() {

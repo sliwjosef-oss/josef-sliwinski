@@ -91,6 +91,7 @@ export const FORTNITE_GG_ITEM_IDS = {
   'Shield Potion': null,
   Bandage: null,
   'Chug Jug': null,
+  'Slurp Juice': null,
   Grenade: null,
   'Rocket Launcher': null,
   'Launch Pad': null,

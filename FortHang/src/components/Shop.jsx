@@ -171,7 +171,9 @@ export default function Shop({ economy, sidekicks, onEconomyChange, onBack }) {
               ? available
                 ? 'Trail upgrade'
                 : 'Locked'
-              : 'Adds to boss loot pool';
+              : item.id === 'trailChugJug'
+                ? 'Chest and boss loot'
+                : 'Adds to boss loot pool';
           return (
             <article key={item.id} className={`shop-card ${owned ? 'is-owned' : ''}`}>
               <h2>{item.label}</h2>

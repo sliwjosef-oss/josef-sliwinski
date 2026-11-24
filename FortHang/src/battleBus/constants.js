@@ -131,8 +131,9 @@ export const GROUP_WORDS = ['a squad of', 'a group of', 'a pack of', 'a trio of'
 export const SOLO_WORDS = ['a lone', 'a solo', 'a single'];
 
 export const LOOT_TABLE = [
+  ['Slurp Juice', 'Epic', 0.05],
   ['Rift-To-Go', 'Legendary', 0.05],
-  ['Chug Jug', 'Legendary', 0.05],
+  ['Chug Jug', 'Legendary', 0.01],
   ['Launch Pad', 'Epic', 0.08],
   ['Rocket Launcher', 'Epic', 0.05],
   ['Port-a-Bunker', 'Rare', 0.06],
@@ -239,6 +240,7 @@ export const TRAIL_SHOP_UNLOCK_ITEMS = {
   'Infinity Blade': 1000,
   Kamehameha: 800,
   'Mythic Goldfish': 1000,
+  'Chug Jug': 1000,
 };
 
 export const MULTI_USE = {
