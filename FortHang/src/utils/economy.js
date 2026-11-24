@@ -48,7 +48,7 @@ export const STAR_BET_BONUS_DICE_UPGRADED = 5;
 export const BOOST_BET_BONUS_DICE_UPGRADED = 3;
 
 export const SHOP_UNLOCKS = {
-  simulateAll: { id: 'simulateAll', cost: 5000, label: 'Unlock Simulate all', blurb: 'Unlock the Simulate all button in FortSort.' },
+  simulateAll: { id: 'simulateAll', cost: 5000, label: 'Unlock Simulate all', blurb: 'Unlock the Simulate all button in Betting.' },
   top8Tier1: {
     id: 'top8Tier1',
     cost: 50,
@@ -885,6 +885,21 @@ export function lockBetSkins(skinIds, economy = loadEconomy()) {
     if (id) used.add(id);
   }
   state.weeklyBets = { weekKey: state.weeklyBets.weekKey, usedIds: [...used] };
+  return write(state);
+}
+
+/** Remove skins from this week's bet lock so a discarded run can be picked again. */
+export function unlockBetSkins(skinIds, economy = loadEconomy()) {
+  const state = {
+    ...economy,
+    daily: normalizeDaily(economy.daily),
+    weeklyBets: normalizeWeekly(economy.weeklyBets),
+  };
+  const drop = new Set(skinIds);
+  state.weeklyBets = {
+    weekKey: state.weeklyBets.weekKey,
+    usedIds: state.weeklyBets.usedIds.filter((id) => !drop.has(id)),
+  };
   return write(state);
 }
 

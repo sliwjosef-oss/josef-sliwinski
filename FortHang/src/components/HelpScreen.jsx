@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   BASE_BOOST_BETS,
   BASE_DAILY_BET_RUNS,
@@ -10,6 +11,7 @@ import {
   SUPER_BET_ROUND_BONUS,
   TOURNAMENT_WIN_POINTS,
 } from '../utils/economy';
+import { FIVE_STAR_NAMES } from '../fortSort/simulate';
 import { LEVEL_XP_THRESHOLDS, MAX_SKIN_LEVEL } from '../utils/skinLevels';
 
 const SECTIONS = [
@@ -17,17 +19,17 @@ const SECTIONS = [
   { id: 'sidekicks', title: 'Collecting sidekicks' },
   { id: 'weebucks', title: 'Weebucks' },
   { id: 'shop', title: 'Shop' },
-  { id: 'fortsort', title: 'FortSort' },
   { id: 'betting', title: 'Betting' },
   { id: 'levels', title: 'Skin levels' },
 ];
 
-export default function HelpScreen({ onBack }) {
+export default function HelpScreen({ onBack, onDeleteAllData }) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   return (
     <div className="help-screen">
       <header className="catalogue-header">
         <h1>Help</h1>
-        <p className="subtitle">How FortHang, the Shop, and FortSort fit together.</p>
+        <p className="subtitle">How FortHang, the Shop, and Betting fit together.</p>
         <div className="header-actions">
           <button type="button" className="secondary-button" onClick={onBack}>
             Back to Hangman
@@ -64,18 +66,17 @@ export default function HelpScreen({ onBack }) {
       <section id="help-sidekicks" className="help-section">
         <h2>Collecting sidekicks</h2>
         <p>
-          Sidekicks are collected in the Shop by spending weebucks on sidekick rolls (1, 3, or 5 at a
-          time). Each roll has a 10% rare chance and a 1% ultra-rare chance. Duplicates are allowed —
-          your Sidekick Catalogue tracks unique kinds and total copies.
+          Unlock sidekicks in the Shop. Rolls can duplicate. Rare collabs are 10%; SpongeBob, PAC-MAN,
+          and The Knight are 1% ultra rare. Unowned sidekicks show as silhouettes. Rolls come in packs
+          of 1, 3, or 5, and the Sidekick Catalogue tracks unique kinds and total copies.
         </p>
       </section>
 
       <section id="help-weebucks" className="help-section">
         <h2>Weebucks</h2>
         <p>
-          Weebucks are the FortHang currency. Earn them mainly in FortSort Betting mode when your bet
-          skins win matches. Extra sources include tournament-win bonuses and the catalogue-complete
-          reward.
+          Weebucks are the FortHang currency. Earn them mainly in Betting when your bet skins win
+          matches. Extra sources include tournament-win bonuses and the catalogue-complete reward.
         </p>
         <p>
           Spend weebucks in the Shop on more hangman attempts, sidekick rolls, and betting upgrades.
@@ -94,7 +95,7 @@ export default function HelpScreen({ onBack }) {
             <strong>Sidekick rolls</strong> — random sidekick pulls, including rares and ultra-rares.
           </li>
           <li>
-            <strong>Betting upgrades</strong> — permanently unlock better FortSort betting tools and
+            <strong>Betting upgrades</strong> — permanently unlock better Betting tools and
             payouts (more slots, stronger dice, higher Top 8 / Top 64 / tournament rewards, Simulate
             all, Select random, seeding, extra lives, and more daily betting runs).
           </li>
@@ -102,35 +103,58 @@ export default function HelpScreen({ onBack }) {
         <p>Many upgrades unlock in tiers — buy the earlier one before the next appears as Available.</p>
       </section>
 
-      <section id="help-fortsort" className="help-section">
-        <h2>FortSort</h2>
-        <p>FortSort is a ranking / tournament playground for skins you have already discovered.</p>
+      <section id="help-betting" className="help-section">
+        <h2>Betting</h2>
+        <p>
+          Betting is a ranking and tournament playground. Only skins you have discovered in FortHang can
+          enter. The main mode is Betting. Ranking, Bracket, and Simulate are side modes, opened from
+          Modes.
+        </p>
         <ul>
           <li>
-            <strong>Rank</strong> — pick skins and sort them favorite to least favorite.
+            <strong>Ranking</strong> — pick skins and sort them favorite to least favorite.
           </li>
           <li>
             <strong>Bracket</strong> — pick skins and manually choose winners in a double-elimination
             bracket.
           </li>
           <li>
-            <strong>Simulate</strong> — dice decide each matchup. Series and star skins roll more
-            d100s and keep the highest.
+            <strong>Simulate</strong> — dice decide each matchup. Each side rolls Nd100 and keeps the
+            highest.
           </li>
           <li>
             <strong>Betting</strong> — every discovered skin enters a simulated double-elim. You pick
-            which skins to bet on (see Betting below).
+            which skins to bet on.
+          </li>
+        </ul>
+        <p>Dice counts, before any bet bonus:</p>
+        <ul>
+          <li>
+            <strong>1</strong> — Other
+          </li>
+          <li>
+            <strong>2</strong> — default
+          </li>
+          <li>
+            <strong>3</strong> — DC, Icon, Other Collab, Marvel, Gaming Legends
+          </li>
+          <li>
+            <strong>4</strong> — TV, WWE, Anime, and Cartoon Legends
+          </li>
+          <li>
+            <strong>5</strong> — star skins: {[...FIVE_STAR_NAMES].join(', ')}
           </li>
         </ul>
         <p>Finished tournaments can be saved and reopened from the Saved list.</p>
-      </section>
-
-      <section id="help-betting" className="help-section">
-        <h2>Betting</h2>
         <p>
-          Betting uses weebucks and daily runs (base {BASE_DAILY_BET_RUNS} per day, upgradeable). Each
-          run starts a full field of discovered skins. You choose up to {BASE_STAR_BETS} super bet
-          (upgradeable) and {BASE_BOOST_BETS} bet skins (upgradeable).
+          All discovered skins enter. Pick up to {BASE_STAR_BETS} super bet skins (+{STAR_BET_BONUS_DICE}{' '}
+          dice, +{SUPER_BET_ROUND_BONUS} weebuck on every round payout, 2× XP) and up to {BASE_BOOST_BETS}{' '}
+          bet skins (+{BOOST_BET_BONUS_DICE} dice). Shop upgrades can raise those caps and dice bonuses.
+          Placement XP is 1st 200, 2nd–4th 100, 5th–7th 50, and 25 otherwise. Levels raise roll floors
+          (level 1: no 1–5, level 3: no 1–10, level 5: no 1–20). Base payout is {BET_WIN_POINTS} weebucks
+          per bet win. Winning the tournament pays {TOURNAMENT_WIN_POINTS} weebucks. Bets lock until
+          Monday at midnight America/Chicago. Daily runs start at {BASE_DAILY_BET_RUNS} and can be raised
+          in the Shop.
         </p>
         <ul>
           <li>
@@ -191,6 +215,49 @@ export default function HelpScreen({ onBack }) {
         </ul>
         <p>Check a skin’s level and XP in the Skin Catalogue.</p>
       </section>
+
+      <footer className="catalogue-footer">
+        <button type="button" className="danger-button" onClick={() => setShowDeleteConfirm(true)}>
+          Delete All Data
+        </button>
+      </footer>
+      {showDeleteConfirm ? (
+        <DeleteAllDataConfirm
+          onConfirm={() => {
+            setShowDeleteConfirm(false);
+            onDeleteAllData?.();
+          }}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function DeleteAllDataConfirm({ onConfirm, onCancel }) {
+  return (
+    <div className="modal-overlay" role="presentation" onClick={onCancel}>
+      <div
+        className="modal-dialog"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-all-data-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <h2 id="delete-all-data-title">Are you sure?</h2>
+        <p>
+          This permanently deletes everything: discovered skins, weebucks, shop unlocks, sidekicks, skin
+          levels, Betting saves, and resets daily hangman attempts and betting runs.
+        </p>
+        <div className="modal-actions">
+          <button type="button" className="secondary-button" onClick={onCancel}>
+            No
+          </button>
+          <button type="button" className="danger-button" onClick={onConfirm}>
+            Yes
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

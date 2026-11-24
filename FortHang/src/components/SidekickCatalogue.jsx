@@ -61,52 +61,42 @@ export default function SidekickCatalogue({
   sidekicks,
   economy,
   onBack,
-  onOpenShop,
   onOpenCatalogue,
-  onOpenFortSort,
 }) {
   const ownedCount = sidekicks.filter((sidekick) => isSidekickOwned(economy, sidekick.id)).length;
   const totalCopies = economy.ownedSidekickIds?.length ?? 0;
 
   return (
-    <div className="catalogue-screen">
+    <div className="skin-catalogue">
       <header className="catalogue-header">
         <h1>Sidekick Catalogue</h1>
         <p className="discovery-count">
           {ownedCount} / {sidekicks.length} unique · {totalCopies} total copies · {economy.points}{' '}
           weebucks
         </p>
-        <div className="header-actions">
-          <button type="button" className="secondary-button" onClick={onBack}>
-            Back to Hangman
-          </button>
-          <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
-            Skin Catalogue
-          </button>
-          <button type="button" className="secondary-button" onClick={onOpenShop}>
-            Shop
-          </button>
-          <button type="button" className="secondary-button" onClick={onOpenFortSort}>
-            FortSort
-          </button>
-        </div>
+        <button type="button" className="secondary-button catalogue-back-button" onClick={onBack}>
+          Back to Hangman
+        </button>
       </header>
 
-      <p className="hint">
-        Unlock sidekicks in the Shop. Rolls can duplicate. Rare collabs are 10%; SpongeBob, PAC-MAN, and The
-        Knight are 1% ultra rare. Unowned sidekicks show as silhouettes.
-      </p>
-
-      <div className="catalogue-grid">
-        {sidekicks.map((sidekick) => (
-          <SidekickCard
-            key={sidekick.id}
-            sidekick={sidekick}
-            owned={isSidekickOwned(economy, sidekick.id)}
-            count={getSidekickCount(economy, sidekick.id)}
-          />
-        ))}
+      <div className="catalogue-scroll" tabIndex={0} aria-label="Sidekick catalogue list">
+        <div className="catalogue-grid">
+          {sidekicks.map((sidekick) => (
+            <SidekickCard
+              key={sidekick.id}
+              sidekick={sidekick}
+              owned={isSidekickOwned(economy, sidekick.id)}
+              count={getSidekickCount(economy, sidekick.id)}
+            />
+          ))}
+        </div>
       </div>
+
+      <nav className="catalogue-sort-bar catalogue-sort-bar--single" aria-label="Sidekick catalogue actions">
+        <button type="button" className="catalogue-sort-button" onClick={onOpenCatalogue}>
+          Skin Catalogue
+        </button>
+      </nav>
     </div>
   );
 }

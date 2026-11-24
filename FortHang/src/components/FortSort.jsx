@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   BYE,
   buildPlayerRun,
@@ -37,8 +37,6 @@ import {
   simulateRound1Pools,
 } from '../fortSort/simulate';
 import {
-  BET_WIN_POINTS,
-  SUPER_BET_ROUND_BONUS,
   addPoints,
   canStartBettingRun,
   getBetWinPointsForPhase,
@@ -55,8 +53,8 @@ import {
   hasSimulateAllUnlock,
   hasSuperBetExtraLifeUnlock,
   lockBetSkins,
-  nextMondayLabel,
   spendBettingRun,
+  unlockBetSkins,
 } from '../utils/economy';
 import { getOutfitIconFallbackSrc, getOutfitIconSrc } from '../utils/outfits';
 import { isSkinGuessed } from '../utils/progress';
@@ -67,7 +65,11 @@ import {
   awardPlacementXp,
   getMinRollForLevel,
   getSkinLevel,
+  getSkinXp,
+  levelFromXp,
   placementXp,
+  saveSkinLevels,
+  xpProgress,
 } from '../utils/skinLevels';
 import '../fortSort/FortSort.css';
 
@@ -76,6 +78,38 @@ const SELECT_SORT = {
   SEASON: 'season',
   SERIES: 'series',
 };
+
+const MAIN_MODE = {
+  id: 'betting',
+  label: 'Betting',
+  blurb: 'Pick a super bet and your bets, then run the tournament for weebucks.',
+};
+
+const SIDE_MODES = [
+  { id: 'rank', label: 'Ranking', blurb: 'Order skins from favorite to least.' },
+  { id: 'bracket', label: 'Bracket', blurb: 'Choose each winner yourself.' },
+  { id: 'simulate', label: 'Simulate', blurb: 'Roll a dice bracket with no bets.' },
+];
+
+function FortSortBar({ onOpenArchive, onBack, onOpenModes, modesActive = false }) {
+  return (
+    <nav className="catalogue-sort-bar catalogue-sort-bar--three" aria-label="Betting">
+      <button type="button" className="catalogue-sort-button" onClick={onBack}>
+        Main Menu
+      </button>
+      <button type="button" className="catalogue-sort-button" onClick={onOpenArchive}>
+        Saved
+      </button>
+      <button
+        type="button"
+        className={`catalogue-sort-button ${modesActive ? 'active' : ''}`}
+        onClick={onOpenModes}
+      >
+        Modes
+      </button>
+    </nav>
+  );
+}
 
 function buildBonusById(starBetIds, boostBetIds, economy) {
   const starBonus = getStarBetBonusDice(economy);
@@ -165,17 +199,14 @@ function BettingStatusPanel({ tournament, bracketState, standings, outfitsById }
       })()
     : null;
 
-  if (!betIds.length) return null;
-
-  return (
-    <section className="bet-status-panel">
-      <h2 className="bet-status-title">Bet skins status</h2>
+  const renderCards = (group) =>
+    group.length ? (
       <div className="bet-status-grid">
-        {rows.map((row) => (
+        {group.map((row) => (
           <button
             key={row.id}
             type="button"
-            className={`bet-status-card is-${row.lane} ${row.isStar ? 'is-star' : ''}`}
+            className={`bet-status-card is-${row.lane}`}
             onClick={() => setDetailId(row.id)}
           >
             <SkinIcon outfit={row.outfit} />
@@ -185,14 +216,25 @@ function BettingStatusPanel({ tournament, bracketState, standings, outfitsById }
                 {row.hasExtraLife ? ' 💖' : ''}
               </strong>
               <span>{row.statusLabel}</span>
-              <span className="bet-status-tier">
-                {row.isStar ? 'Super bet' : 'Bet'}
-                {row.hasExtraLife ? ' · extra life' : ''}
-              </span>
+              {row.hasExtraLife ? <span className="bet-status-tier">Extra life</span> : null}
             </div>
           </button>
         ))}
       </div>
+    ) : (
+      <p className="hint">None this run.</p>
+    );
+
+  return (
+    <>
+      <section className="bet-status-panel is-super">
+        <h2 className="bet-status-title">Super Bet skins status</h2>
+        {renderCards(rows.filter((row) => row.isStar))}
+      </section>
+      <section className="bet-status-panel is-bet">
+        <h2 className="bet-status-title">Bet skins status</h2>
+        {renderCards(rows.filter((row) => !row.isStar))}
+      </section>
 
       {detail ? (
         <div className="bet-status-detail" role="dialog" aria-label="Bet skin overview">
@@ -224,7 +266,7 @@ function BettingStatusPanel({ tournament, bracketState, standings, outfitsById }
           ) : null}
         </div>
       ) : null}
-    </section>
+    </>
   );
 }
 
@@ -293,6 +335,162 @@ function SkinCard({ outfit, onPick, placeLabel, showDice = false, bonusDice = 0,
   );
 }
 
+function BetMark({ id, starIds, boostIds }) {
+  if (starIds?.has(id)) return <span className="bet-mark is-super">Super bet</span>;
+  if (boostIds?.has(id)) return <span className="bet-mark is-bet">Bet</span>;
+  return null;
+}
+
+function revealOrder(roll) {
+  const order = [];
+  const longest = Math.max(...roll.sides.map((side) => side.rolls.length), 0);
+  for (let index = 0; index < longest; index += 1) {
+    roll.sides.forEach((side, sideIndex) => {
+      if (index < side.rolls.length) order.push({ side: sideIndex, index });
+    });
+  }
+  return order;
+}
+
+function RollResult({ roll, outfitsById, starIds, boostIds, onNext }) {
+  const steps = useMemo(() => revealOrder(roll), [roll]);
+  const [shown, setShown] = useState(0);
+  const finished = shown >= steps.length;
+
+  useEffect(() => {
+    if (finished) return undefined;
+    const timer = setTimeout(() => setShown((count) => count + 1), 2460);
+    return () => clearTimeout(timer);
+  }, [shown, finished]);
+
+  const winnerId = roll.participants[roll.winnerSlot];
+  const winner = outfitsById.get(winnerId);
+  const revealed = new Set(steps.slice(0, shown).map((step) => `${step.side}:${step.index}`));
+  const latest = steps[shown - 1];
+
+  return (
+    <section className="roll-result">
+      {finished ? (
+        <>
+          <h2>{winner?.name ?? 'Winner'} won the round</h2>
+          <SkinIcon outfit={winner} className="roll-winner-image" />
+          <BetMark id={winnerId} starIds={starIds} boostIds={boostIds} />
+        </>
+      ) : (
+        <h2>Rolling...</h2>
+      )}
+      <div className="suspense-matchup">
+        {roll.sides.map((side, sideIndex) => {
+          const id = roll.participants[sideIndex];
+          const outfit = outfitsById.get(id);
+          let bestSoFar = null;
+          side.rolls.forEach((value, index) => {
+            if (!revealed.has(`${sideIndex}:${index}`)) return;
+            bestSoFar = bestSoFar == null ? value : Math.max(bestSoFar, value);
+          });
+          const won = finished && roll.winnerSlot === sideIndex;
+          return (
+            <div key={id ?? sideIndex} className="suspense-pair">
+              {sideIndex === 1 ? <span className="versus">vs</span> : null}
+              <div className={`suspense-side ${won ? 'is-winner' : ''}`}>
+                <strong>{outfit?.name ?? '—'}</strong>
+                <BetMark id={id} starIds={starIds} boostIds={boostIds} />
+                <span className="sim-roll-dice">
+                  {side.rolls.map((value, index) => {
+                    const isShown = revealed.has(`${sideIndex}:${index}`);
+                    const isLatest = latest?.side === sideIndex && latest?.index === index;
+                    const isBest = isShown && value === bestSoFar;
+                    return (
+                      <span
+                        key={`${id}-${index}`}
+                        className={`sim-die ${isShown ? '' : 'is-pending'} ${isBest ? 'is-best' : ''} ${
+                          isLatest ? 'is-fresh' : ''
+                        }`}
+                      >
+                        {isShown ? value : '–'}
+                      </span>
+                    );
+                  })}
+                </span>
+                <span className="sim-roll-best">{bestSoFar == null ? 'Best —' : `Best ${bestSoFar}`}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {finished && roll.extraLifeSavedId ? (
+        <p className="hint">Extra life saved {outfitsById.get(roll.extraLifeSavedId)?.name ?? 'a skin'}</p>
+      ) : null}
+      {finished && roll.attempts > 1 ? <p className="hint">{roll.attempts} rolls to break the tie</p> : null}
+      {finished ? (
+        <button type="button" className="primary-button" onClick={onNext}>
+          Next match
+        </button>
+      ) : null}
+    </section>
+  );
+}
+
+function RoundResults({ rolls, outfitsById, starIds, boostIds, openRollId, onToggle, onNext }) {
+  const [shown, setShown] = useState(1);
+  const latestRef = useRef(null);
+  const finished = shown >= rolls.length;
+
+  useEffect(() => {
+    if (finished) return undefined;
+    const timer = setTimeout(() => setShown((count) => count + 1), 90);
+    return () => clearTimeout(timer);
+  }, [shown, finished]);
+
+  useEffect(() => {
+    latestRef.current?.scrollIntoView({ block: 'center', inline: 'nearest' });
+  }, [shown]);
+
+  return (
+    <section className="round-results">
+      <h2>Round results</h2>
+      <div className="round-result-list">
+        {rolls.slice(0, shown).map((roll, index) => (
+          <div
+            key={roll.matchId}
+            className={`round-result-item ${index === shown - 1 ? 'is-latest' : ''}`}
+            ref={index === shown - 1 ? latestRef : null}
+          >
+            <button
+              type="button"
+              className={`round-matchup ${openRollId === roll.matchId ? 'is-open' : ''}`}
+              onClick={() => onToggle(roll.matchId)}
+            >
+              {roll.participants.map((id, slot) => {
+                const won = roll.winnerSlot === slot;
+                const outfit = outfitsById.get(id);
+                return (
+                  <span key={id} className="round-pair">
+                    {slot === 1 ? <span className="versus">vs</span> : null}
+                    <span className={`round-side ${won ? 'is-win' : 'is-loss'}`}>
+                      <span className="round-portrait">
+                        <SkinIcon outfit={outfit} className="round-skin-icon" />
+                      </span>
+                      <span className="round-name">{outfit?.name ?? '—'}</span>
+                      <BetMark id={id} starIds={starIds} boostIds={boostIds} />
+                    </span>
+                  </span>
+                );
+              })}
+            </button>
+            {openRollId === roll.matchId ? <RollBreakdown roll={roll} outfitsById={outfitsById} /> : null}
+          </div>
+        ))}
+      </div>
+      {finished ? (
+        <button type="button" className="primary-button" onClick={onNext}>
+          Next match
+        </button>
+      ) : null}
+    </section>
+  );
+}
+
 function RollBreakdown({ roll, outfitsById }) {
   if (!roll) return null;
   const winner = outfitsById.get(roll.participants[roll.winnerSlot]);
@@ -343,13 +541,43 @@ function xpEarnedById(tournament, standings) {
   return earned;
 }
 
-function PlacementName({ id, outfitsById, xpById }) {
-  const xp = xpById?.get(id) ?? 0;
+function PlacementName({ id, outfitsById, xpById, skinLevels }) {
+  const earned = xpById?.get(id) ?? 0;
+  const progress = xpProgress(skinLevels, id);
+  const prevLevel = earned > 0 ? levelFromXp(Math.max(0, progress.xp - earned)) : progress.level;
+  const leveledUp = earned > 0 && progress.level > prevLevel;
+  const maxed = progress.next == null;
+  const fill = maxed ? 100 : Math.max(0, Math.min(100, (progress.intoLevel / progress.needed) * 100));
   return (
     <span className="placement-skin">
       <SkinIcon outfit={outfitsById.get(id)} />
-      <span>{outfitsById.get(id)?.name ?? id}</span>
-      {xp > 0 ? <span className="placement-xp">+{xp} XP</span> : null}
+      <span className="placement-skin-body">
+        <span className="placement-skin-top">
+          <span className="placement-skin-name">{outfitsById.get(id)?.name ?? id}</span>
+          {earned > 0 ? <span className="placement-level">Lv {progress.level}</span> : null}
+          {leveledUp ? <span className="level-up-sign">Level up!</span> : null}
+        </span>
+        {earned > 0 ? (
+          <>
+            <span
+              className="xp-bar"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={maxed ? progress.xp : progress.needed}
+              aria-valuenow={maxed ? progress.xp : progress.intoLevel}
+              aria-label={maxed ? `Level ${progress.level}, max level` : `Level ${progress.level}`}
+            >
+              <span className="xp-bar-fill" style={{ width: `${fill}%` }} />
+            </span>
+            <span className="placement-xp-line">
+              <span className="placement-xp">+{earned} XP</span>
+              <span className="placement-xp-progress">
+                {maxed ? 'Max' : `${progress.intoLevel} / ${progress.needed}`}
+              </span>
+            </span>
+          </>
+        ) : null}
+      </span>
     </span>
   );
 }
@@ -371,8 +599,8 @@ function SelectScreen({
   skinLevels,
   onStart,
   onOpenArchive,
-  onOpenShop,
   onBack,
+  onOpenModes,
 }) {
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const starSet = useMemo(() => new Set(starBetIds), [starBetIds]);
@@ -520,67 +748,46 @@ function SelectScreen({
   );
 
   return (
-    <div className="fort-sort-select">
-      <header className="top-bar">
-        <h1>FortSort</h1>
-        <nav className="mode-tabs" aria-label="Mode">
-          <button
-            type="button"
-            className={`mode-tab ${mode === 'rank' ? 'is-active' : ''}`}
-            onClick={() => setMode('rank')}
-          >
-            Ranking
-          </button>
-          <button
-            type="button"
-            className={`mode-tab ${mode === 'bracket' ? 'is-active' : ''}`}
-            onClick={() => setMode('bracket')}
-          >
-            Bracket
-          </button>
-          <button
-            type="button"
-            className={`mode-tab ${mode === 'simulate' ? 'is-active' : ''}`}
-            onClick={() => setMode('simulate')}
-          >
-            Simulate
-          </button>
-          <button
-            type="button"
-            className={`mode-tab ${mode === 'betting' ? 'is-active' : ''}`}
-            onClick={() => setMode('betting')}
-          >
-            Betting
-          </button>
-        </nav>
-        <button type="button" className="ghost-button" onClick={onOpenShop}>
-          Shop
-        </button>
-        <button type="button" className="ghost-button" onClick={onOpenArchive}>
-          Saved
-        </button>
-        <button type="button" className="ghost-button" onClick={onBack}>
-          Back
-        </button>
+    <div className="fort-sort fort-sort-screen">
+      <header className="catalogue-header">
+        <h1>Betting</h1>
+        <p className="hint">
+          {mode === 'rank'
+            ? 'Pick discovered skins, then rank them favorite to least favorite.'
+            : mode === 'simulate'
+              ? 'Pick discovered skins for a dice-simulated double-elim bracket.'
+              : mode === 'betting'
+                ? 'Every discovered skin enters. Pick your super bet and your bets, then start.'
+                : 'Pick discovered skins, then run a double-elimination bracket.'}{' '}
+          {mode === 'betting' ? 'Rules are in Help.' : 'Only discovered skins can enter.'}
+        </p>
       </header>
 
-      <p className="hint">
-        {mode === 'rank'
-          ? 'Pick discovered skins, then rank them favorite to least favorite.'
-          : mode === 'simulate'
-            ? 'Pick discovered skins for a dice-simulated double-elim bracket. Each side rolls Nd100 and keeps the highest — series and star skins set N.'
-            : mode === 'betting'
-              ? `All discovered skins enter. Pick up to ${maxStarBets} super bet skins (+${starBonus} dice, +${SUPER_BET_ROUND_BONUS} weebuck on every round payout, 2× XP) and up to ${maxBoostBets} bet skins (+${boostBonus} dice). Placement XP: 1st 200 · 2nd–4th 100 · 5th–7th 50 · else 25. Levels raise roll floors (Lv1: no 1–5, Lv3: no 1–10, Lv5: no 1–20). ${hasBetSeedingUnlock(economy) ? 'Your bets are seeded (super bets first, then bets). ' : ''}Base payout is ${BET_WIN_POINTS} weebucks per bet win. Winning the tournament pays ${getTournamentWinPoints(economy)} weebucks. Bets lock until Monday CST (${nextMondayLabel()}).`
-              : 'Pick discovered skins, then run a double-elimination bracket.'}{' '}
-        Only skins you have discovered in FortHang can enter.
-      </p>
-      {mode === 'simulate' || mode === 'betting' ? (
-        <p className="hint sim-rules">
-          Dice: Other 1 · default 2 · DC / Icon / Other Collab / Marvel / Gaming Legends 3 · TV / WWE / Anime /
-          Cartoon Legends 4 · star skins (Peter Griffin, Spider-Man, Peely, Son Goku, Naruto Uzumaki, Monkey D.
-          Luffy, Homer Simpson, Hatsune Miku, John Cena, Batman (Pen &amp; Ink), Sonic the Hedgehog) 5.
-        </p>
+      {isBetting ? (
+        <div className="betting-toolbar">
+          <div className="betting-pick-row">
+            <button
+              type="button"
+              className={`mode-tab is-star ${betTier === 'star' ? 'is-active' : ''}`}
+              onClick={() => setBetTier('star')}
+            >
+              Pick super bet +{starBonus} dice
+            </button>
+            <button
+              type="button"
+              className={`mode-tab is-bet ${betTier === 'boost' ? 'is-active' : ''}`}
+              onClick={() => setBetTier('boost')}
+            >
+              Pick bet +{boostBonus} dice
+            </button>
+          </div>
+          <button type="button" className="betting-start" disabled={!canStart} onClick={onStart}>
+            {startLabel}
+          </button>
+        </div>
       ) : null}
+
+      <div className="catalogue-scroll" tabIndex={0} aria-label="Betting skins">
       {isBetting ? (
         <>
           <p className="hint">
@@ -595,20 +802,6 @@ function SelectScreen({
             </p>
           ) : null}
           <div className="import-actions" style={{ marginBottom: 12 }}>
-            <button
-              type="button"
-              className={`mode-tab ${betTier === 'star' ? 'is-active' : ''}`}
-              onClick={() => setBetTier('star')}
-            >
-              Pick super bet +{starBonus} dice
-            </button>
-            <button
-              type="button"
-              className={`mode-tab ${betTier === 'boost' ? 'is-active' : ''}`}
-              onClick={() => setBetTier('boost')}
-            >
-              Pick bet +{boostBonus} dice
-            </button>
             {canRandomSelect ? (
               <button type="button" className="primary-button" onClick={selectRandomBets}>
                 Select random
@@ -627,11 +820,13 @@ function SelectScreen({
         </>
       ) : null}
 
-      <div className="import-actions" style={{ marginBottom: 12 }}>
-        <button type="button" className="primary-button" disabled={!canStart} onClick={onStart}>
-          {startLabel}
-        </button>
-      </div>
+      {!isBetting ? (
+        <div className="import-actions" style={{ marginBottom: 12 }}>
+          <button type="button" className="primary-button" disabled={!canStart} onClick={onStart}>
+            {startLabel}
+          </button>
+        </div>
+      ) : null}
 
       {!isBetting ? (
         <div className="import-actions" style={{ marginBottom: 16 }}>
@@ -704,7 +899,7 @@ function SelectScreen({
       ) : null}
 
       {discovered.length === 0 && hideUnowned ? (
-        <p className="hint">Discover skins in hangman first, then come back to FortSort.</p>
+        <p className="hint">Discover skins in hangman first, then come back to Betting.</p>
       ) : visibleOutfits.length === 0 ? (
         <p className="hint">No skins to show.</p>
       ) : selectSort === SELECT_SORT.SEASON ? (
@@ -714,6 +909,13 @@ function SelectScreen({
       ) : (
         renderPickGrid(visibleOutfits)
       )}
+      </div>
+
+      <FortSortBar
+        onOpenArchive={onOpenArchive}
+        onBack={onBack}
+        onOpenModes={onOpenModes}
+      />
     </div>
   );
 }
@@ -726,7 +928,6 @@ export default function FortSort({
   skinLevels = {},
   onSkinLevelsChange,
   onBack,
-  onOpenShop,
 }) {
   const outfitsById = useMemo(() => new Map(outfits.map((outfit) => [outfit.id, outfit])), [outfits]);
   const discovered = useMemo(
@@ -742,7 +943,7 @@ export default function FortSort({
   );
   const [starBetIds, setStarBetIds] = useState([]);
   const [boostBetIds, setBoostBetIds] = useState([]);
-  const [screen, setScreen] = useState('select'); // select | play | archive
+  const [screen, setScreen] = useState('select'); // select | modes | play | archive
   const [rankProgress, setRankProgress] = useState(null);
   const [tournament, setTournament] = useState(null);
   const [pageIndex, setPageIndex] = useState(0);
@@ -751,6 +952,13 @@ export default function FortSort({
   const [showFullResults, setShowFullResults] = useState(false);
   const [playerRunId, setPlayerRunId] = useState(null);
   const [status, setStatus] = useState('');
+  const [playTab, setPlayTab] = useState('match');
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  const [confirmRestart, setConfirmRestart] = useState(false);
+  const [matchView, setMatchView] = useState('vs');
+  const [roundRolls, setRoundRolls] = useState([]);
+  const [openRollId, setOpenRollId] = useState(null);
+  const hubModeRef = useRef('betting');
 
   const maxStarBets = getMaxStarBets(economy);
   const maxBoostBets = getMaxBoostBets(economy);
@@ -1073,12 +1281,22 @@ export default function FortSort({
       },
       lives,
     );
+    setMatchView('roll');
+    setOpenRollId(null);
+  };
+
+  const showRoundResults = (result, lives) => {
+    if (!result.rolls?.length) return;
+    applySimResult(result, lives);
+    setRoundRolls(result.rolls);
+    setOpenRollId(null);
+    setMatchView('round');
   };
 
   const simNextRound = () => {
     if (!tournament || archiveReadOnly || !tournament.simulated) return;
     const lives = withExtraLives();
-    applySimResult(
+    showRoundResults(
       simulateCurrentRound(
         tournament.bracket,
         tournament.history,
@@ -1094,7 +1312,7 @@ export default function FortSort({
   const simRound1Pools = () => {
     if (!tournament || archiveReadOnly || !tournament.simulated) return;
     const lives = withExtraLives();
-    applySimResult(
+    showRoundResults(
       simulateRound1Pools(
         tournament.bracket,
         tournament.history,
@@ -1110,7 +1328,7 @@ export default function FortSort({
   const simAll = () => {
     if (!tournament || archiveReadOnly || !tournament.simulated || !canSimulateAll) return;
     const lives = withExtraLives();
-    applySimResult(
+    showRoundResults(
       simulateEntireBracket(
         tournament.bracket,
         tournament.history,
@@ -1210,12 +1428,76 @@ export default function FortSort({
     setScreen('select');
   };
 
+  const playAgain = () => {
+    if ((mode === 'bracket' || mode === 'simulate' || mode === 'betting') && bracketState?.done) {
+      saveFinishedTournament(true);
+    }
+    if (mode === 'rank') {
+      clearRankProgress();
+      setRankProgress(null);
+    } else if (mode === 'simulate' || mode === 'betting') {
+      clearSimBracketProgress();
+      setTournament(null);
+    } else {
+      clearBracketProgress();
+      setTournament(null);
+    }
+    setShowFullResults(false);
+    setPlayerRunId(null);
+    setRoundRolls([]);
+    setOpenRollId(null);
+    setMatchView('vs');
+    setPlayTab('match');
+    setStatus('');
+    setScreen('select');
+  };
+
+  const abandonTournament = () => {
+    if (!tournament || archiveReadOnly) {
+      setConfirmRestart(false);
+      setScreen('select');
+      return;
+    }
+    const earned = Math.max(0, Number(tournament.pointsEarned) || 0);
+    const betIds = [...(tournament.starBetIds ?? []), ...(tournament.boostBetIds ?? [])];
+    let nextEconomy = economy;
+    if (earned > 0) nextEconomy = addPoints(-earned, nextEconomy);
+    if (tournament.betting && betIds.length) nextEconomy = unlockBetSkins(betIds, nextEconomy);
+    if (nextEconomy !== economy) onEconomyChange(nextEconomy);
+
+    if (tournament.betting && tournament.xpAwarded && standings?.placeById) {
+      const stars = new Set(tournament.starBetIds ?? []);
+      const nextLevels = { ...skinLevels };
+      for (const id of betIds) {
+        const place = standings.placeById.get(id);
+        if (place == null) continue;
+        const amount = placementXp(place, stars.has(id));
+        const xp = Math.max(0, getSkinXp(nextLevels, id) - amount);
+        nextLevels[id] = { xp, level: levelFromXp(xp) };
+      }
+      saveSkinLevels(nextLevels);
+      onSkinLevelsChange?.(nextLevels);
+    }
+
+    if (tournament.simulated || mode === 'simulate' || mode === 'betting') clearSimBracketProgress();
+    else clearBracketProgress();
+    setTournament(null);
+    setRoundRolls([]);
+    setOpenRollId(null);
+    setMatchView('vs');
+    setPlayTab('match');
+    setConfirmRestart(false);
+    setStatus('');
+    setScreen('select');
+  };
+
   const openArchiveEntry = (entry) => {
     if (!entry.entrants.every((id) => outfitsById.has(id))) {
       setStatus('That saved tournament uses skins missing from the catalogue.');
       return;
     }
     setArchiveReadOnly(true);
+    hubModeRef.current = mode;
     setTournament({
       entrants: entry.entrants,
       history: entry.history,
@@ -1236,6 +1518,31 @@ export default function FortSort({
     setShowFullResults(false);
     setPlayerRunId(null);
     setStatus('');
+  };
+
+  const returnToHub = () => {
+    setArchiveReadOnly(false);
+    setShowFullResults(false);
+    setPlayerRunId(null);
+    setRoundRolls([]);
+    setOpenRollId(null);
+    setMatchView('vs');
+    setPlayTab('match');
+    setConfirmLeave(false);
+    setStatus('');
+    const hubMode = hubModeRef.current;
+    setMode(hubMode);
+    const saved = hubMode === 'simulate' || hubMode === 'betting' ? loadSimBracketProgress() : loadBracketProgress();
+    if (saved?.entrants.every((id) => discoveredIds.has(id))) {
+      setTournament({
+        ...saved,
+        simulated: !!(saved.simulated || hubMode === 'simulate' || hubMode === 'betting'),
+        bracket: createBracket(saved.entrants, saved.version ?? 4),
+      });
+    } else {
+      setTournament(null);
+    }
+    setScreen('select');
   };
 
   // Bracket page follow
@@ -1296,33 +1603,84 @@ export default function FortSort({
     );
   }
 
-  if (screen === 'select') {
+  if (screen === 'modes') {
     return (
-      <div className="fort-sort">
-        <SelectScreen
-          discovered={discovered}
-          catalogue={outfits}
-          discoveredIds={discoveredIds}
-          selectedIds={selectedIds}
-          setSelectedIds={setSelectedIds}
-          mode={mode}
-          setMode={(next) => {
-            setMode(next);
-            setScreen('select');
-          }}
-          starBetIds={starBetIds}
-          setStarBetIds={setStarBetIds}
-          boostBetIds={boostBetIds}
-          setBoostBetIds={setBoostBetIds}
-          lockedBetIds={lockedBetIds}
-          economy={economy}
-          skinLevels={skinLevels}
-          onStart={start}
+      <div className="fort-sort fort-sort-screen">
+        <header className="catalogue-header">
+          <h1>Modes</h1>
+        </header>
+        <div className="catalogue-scroll" tabIndex={0} aria-label="Betting modes">
+          <div className="fort-sort-mode-list">
+            <button
+              type="button"
+              className={`mode-feature ${mode === MAIN_MODE.id ? 'is-current' : ''}`}
+              onClick={() => {
+                setMode(MAIN_MODE.id);
+                setScreen('select');
+              }}
+            >
+              <span className="mode-feature-kicker">Main mode</span>
+              <span className="mode-feature-title">{MAIN_MODE.label}</span>
+              <span className="mode-feature-blurb">{MAIN_MODE.blurb}</span>
+              {mode === MAIN_MODE.id ? <span className="mode-current">Current</span> : null}
+            </button>
+            <p className="mode-side-label">Side modes</p>
+            <div className="mode-side-list">
+              {SIDE_MODES.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`mode-side-button ${mode === item.id ? 'is-current' : ''}`}
+                  onClick={() => {
+                    setMode(item.id);
+                    setScreen('select');
+                  }}
+                >
+                  <span className="mode-side-title">
+                    {item.label}
+                    {mode === item.id ? <span className="mode-current">Current</span> : null}
+                  </span>
+                  <span>{item.blurb}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <FortSortBar
           onOpenArchive={() => setScreen('archive')}
-          onOpenShop={onOpenShop}
           onBack={onBack}
+          onOpenModes={() => setScreen('modes')}
+          modesActive
         />
       </div>
+    );
+  }
+
+  if (screen === 'select') {
+    return (
+      <SelectScreen
+        discovered={discovered}
+        catalogue={outfits}
+        discoveredIds={discoveredIds}
+        selectedIds={selectedIds}
+        setSelectedIds={setSelectedIds}
+        mode={mode}
+        setMode={(next) => {
+          setMode(next);
+          setScreen('select');
+        }}
+        starBetIds={starBetIds}
+        setStarBetIds={setStarBetIds}
+        boostBetIds={boostBetIds}
+        setBoostBetIds={setBoostBetIds}
+        lockedBetIds={lockedBetIds}
+        economy={economy}
+        skinLevels={skinLevels}
+        onStart={start}
+        onOpenArchive={() => setScreen('archive')}
+        onBack={onBack}
+        onOpenModes={() => setScreen('modes')}
+      />
     );
   }
 
@@ -1338,11 +1696,11 @@ export default function FortSort({
         <div className="fort-sort">
           <header className="top-bar">
             <h1>Your ranking</h1>
+            <button type="button" className="ghost-button" onClick={onBack}>
+              Main Menu
+            </button>
             <button type="button" className="ghost-button" onClick={startOver}>
               Start over
-            </button>
-            <button type="button" className="ghost-button" onClick={onBack}>
-              Back to FortHang
             </button>
           </header>
           <div className="results-actions">
@@ -1373,12 +1731,12 @@ export default function FortSort({
     return (
       <div className="fort-sort">
         <header className="top-bar">
-          <h1>FortSort</h1>
+          <h1>Betting</h1>
+          <button type="button" className="ghost-button" onClick={onBack}>
+            Main Menu
+          </button>
           <button type="button" className="ghost-button" onClick={startOver}>
             Start over
-          </button>
-          <button type="button" className="ghost-button" onClick={onBack}>
-            Back
           </button>
         </header>
         <div className="progress">
@@ -1522,36 +1880,61 @@ export default function FortSort({
       ? bracketState.outcomes.get(bracketState.current.id)
       : null;
 
+    const openBracketTab = () => {
+      setFollowPage(true);
+      if (bracketState.current) {
+        const nextPage = bracket.pageOf.get(bracketState.current.id);
+        if (nextPage != null) setPageIndex(nextPage);
+      } else if (bracketState.done) {
+        setPageIndex(Math.max(0, bracket.pages.length - 1));
+      }
+      setPlayTab('bracket');
+    };
+
     return (
-      <div className="fort-sort">
-        <header className="top-bar">
-          <h1>FortSort</h1>
-          {onOpenShop ? (
-            <button type="button" className="ghost-button" onClick={onOpenShop}>
-              Shop
-            </button>
-          ) : null}
-          <button type="button" className="ghost-button" onClick={() => setScreen('archive')}>
-            Saved
-          </button>
-          <button type="button" className="ghost-button" onClick={startOver}>
-            {archiveReadOnly ? 'Close saved tournament' : 'Start over'}
-          </button>
-          <button type="button" className="ghost-button" onClick={onBack}>
-            Back to FortHang
-          </button>
-        </header>
-
-        {tournament.betting ? (
-          <BettingStatusPanel
-            tournament={tournament}
-            bracketState={bracketState}
-            standings={standings}
+      <div className="fort-sort fort-sort-screen">
+        <div className="catalogue-scroll" tabIndex={0} aria-label="Tournament">
+        {playTab === 'status' ? (
+          <div className="status-tab">
+            {tournament.betting ? (
+              <BettingStatusPanel
+                tournament={tournament}
+                bracketState={bracketState}
+                standings={standings}
+                outfitsById={outfitsById}
+              />
+            ) : (
+              <p className="hint">Skin status shows your bet skins. This mode has none.</p>
+            )}
+            {!archiveReadOnly ? (
+              <button type="button" className="danger-button" onClick={() => setConfirmRestart(true)}>
+                Start Over
+              </button>
+            ) : null}
+          </div>
+        ) : playTab === 'match' ? (
+        <>
+        {matchView === 'roll' && lastRoll ? (
+          <RollResult
+            key={lastRoll.matchId}
+            roll={lastRoll}
             outfitsById={outfitsById}
+            starIds={new Set(tournament.starBetIds ?? [])}
+            boostIds={new Set(tournament.boostBetIds ?? [])}
+            onNext={() => setMatchView('vs')}
           />
-        ) : null}
-
-        {bracketState.done ? (
+        ) : matchView === 'round' && roundRolls.length ? (
+          <RoundResults
+            key={roundRolls[0]?.matchId ?? 'round'}
+            rolls={roundRolls}
+            outfitsById={outfitsById}
+            starIds={new Set(tournament.starBetIds ?? [])}
+            boostIds={new Set(tournament.boostBetIds ?? [])}
+            openRollId={openRollId}
+            onToggle={(matchId) => setOpenRollId((current) => (current === matchId ? null : matchId))}
+            onNext={() => setMatchView('vs')}
+          />
+        ) : bracketState.done ? (
           <section className="champion-view-inline">
             <h2>{archiveReadOnly ? 'Saved tournament' : 'Tournament complete'}</h2>
             {archiveReadOnly ? (
@@ -1571,21 +1954,19 @@ export default function FortSort({
                     <ol className="placements-list">
                       {standings.placements
                         .filter((entry) => entry.place <= PREVIEW_PLACE_LIMIT)
-                        .map(({ place, ids }) => (
-                          <li key={place} className="placement-row">
-                            <span className="placement-rank">{formatPlace(place)}</span>
-                            <div className="placement-names">
-                              {ids.map((id) => (
-                                <PlacementName
-                                  key={id}
-                                  id={id}
-                                  outfitsById={outfitsById}
-                                  xpById={xpById}
-                                />
-                              ))}
-                            </div>
-                          </li>
-                        ))}
+                        .flatMap(({ place, ids }) =>
+                          ids.map((id) => (
+                            <li key={id} className="placement-row">
+                              <span className="placement-rank">{formatPlace(place)}</span>
+                              <PlacementName
+                                id={id}
+                                outfitsById={outfitsById}
+                                xpById={xpById}
+                                skinLevels={skinLevels}
+                              />
+                            </li>
+                          )),
+                        )}
                     </ol>
                     <button type="button" className="primary-button" onClick={() => setShowFullResults(true)}>
                       Full results
@@ -1610,7 +1991,12 @@ export default function FortSort({
                             onClick={() => setPlayerRunId(id)}
                           >
                             <span className="placement-rank">{formatPlace(place)}</span>
-                            <PlacementName id={id} outfitsById={outfitsById} xpById={xpById} />
+                            <PlacementName
+                              id={id}
+                              outfitsById={outfitsById}
+                              xpById={xpById}
+                              skinLevels={skinLevels}
+                            />
                           </button>
                         )),
                       )}
@@ -1648,7 +2034,12 @@ export default function FortSort({
             ) : null}
             <div className="compare-actions">
               {!archiveReadOnly ? (
-                <button type="button" className="primary-button" onClick={() => saveFinishedTournament(false)}>
+                <button type="button" className="primary-button" onClick={playAgain}>
+                  Play Again
+                </button>
+              ) : null}
+              {!archiveReadOnly ? (
+                <button type="button" className="ghost-button" onClick={() => saveFinishedTournament(false)}>
                   Save tournament
                 </button>
               ) : null}
@@ -1681,41 +2072,25 @@ export default function FortSort({
                 </p>
                 <h2>{tournament.simulated ? 'Dice matchup' : 'Which skin advances?'}</h2>
                 {tournament.simulated ? (
-                  <>
-                    <div className="sim-play-row">
-                      <div className="sim-play-roll">
-                        {lastRoll ? (
-                          <RollBreakdown roll={lastRoll} outfitsById={outfitsById} />
-                        ) : (
-                          <p className="hint">Roll the match to see the dice.</p>
-                        )}
-                      </div>
-                      <div className="matchup matchup-side">
-                        <SkinCard
-                          compact
-                          outfit={outfitsById.get(
-                            (lastRoll ? lastRoll.participants : currentOutcome?.participants)?.[0],
-                          )}
-                        />
-                        <span className="versus">vs</span>
-                        <SkinCard
-                          compact
-                          outfit={outfitsById.get(
-                            (lastRoll ? lastRoll.participants : currentOutcome?.participants)?.[1],
-                          )}
-                        />
-                      </div>
-                    </div>
-                    {lastRoll &&
-                    currentOutcome &&
-                    (currentOutcome.participants[0] !== lastRoll.participants[0] ||
-                      currentOutcome.participants[1] !== lastRoll.participants[1]) ? (
-                      <p className="hint sim-next-match">
-                        Next: {outfitsById.get(currentOutcome.participants[0])?.name ?? 'TBD'} vs{' '}
-                        {outfitsById.get(currentOutcome.participants[1])?.name ?? 'TBD'}
-                      </p>
-                    ) : null}
-                  </>
+                  <div className="matchup matchup-vs">
+                    <span className="vs-side">
+                      <SkinCard compact outfit={outfitsById.get(currentOutcome?.participants[0])} />
+                      <BetMark
+                        id={currentOutcome?.participants[0]}
+                        starIds={new Set(tournament.starBetIds ?? [])}
+                        boostIds={new Set(tournament.boostBetIds ?? [])}
+                      />
+                    </span>
+                    <span className="versus">vs</span>
+                    <span className="vs-side">
+                      <SkinCard compact outfit={outfitsById.get(currentOutcome?.participants[1])} />
+                      <BetMark
+                        id={currentOutcome?.participants[1]}
+                        starIds={new Set(tournament.starBetIds ?? [])}
+                        boostIds={new Set(tournament.boostBetIds ?? [])}
+                      />
+                    </span>
+                  </div>
                 ) : (
                   <div className="matchup">
                     <SkinCard
@@ -1767,22 +2142,13 @@ export default function FortSort({
                       Undo
                     </button>
                   )}
-                  <button
-                    type="button"
-                    className="ghost-button"
-                    onClick={() => {
-                      setFollowPage(true);
-                      setPageIndex(currentPage);
-                    }}
-                  >
-                    Show in bracket
-                  </button>
                 </div>
               </>
             ) : null}
           </section>
         )}
-
+        </>
+        ) : (
         <section className="bracket-view">
           {bracket.pages.length > 1 ? (
             <div className="bracket-nav">
@@ -1822,13 +2188,21 @@ export default function FortSort({
             </div>
           ) : null}
           <div className="bracket-board">
-            {page.sections.map((section) => (
+            {page.sections.map((section) => {
+              const rounds = section.rounds
+                .filter((round) => round.length)
+                .filter((round) => {
+                  if (round[0].id !== 'GF2') return true;
+                  const outcome = bracketState.outcomes.get('GF2');
+                  if (!outcome || outcome.skipped) return false;
+                  return outcome.winnerSlot != null || bracketState.current?.id === 'GF2';
+                });
+              if (!rounds.length) return null;
+              return (
               <div key={section.title} className="bracket-section">
                 <h3>{section.title}</h3>
                 <div className="bracket-rounds">
-                  {section.rounds
-                    .filter((round) => round.length)
-                    .map((round) => (
+                  {rounds.map((round) => (
                       <div key={round[0].id} className="bracket-round">
                         <h4>{roundLabel(bracket, round[0])}</h4>
                         <div className="bracket-matches">{round.map(renderMatch)}</div>
@@ -1836,9 +2210,95 @@ export default function FortSort({
                     ))}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </section>
+        )}
+        </div>
+        <nav className="catalogue-sort-bar" aria-label="Tournament actions">
+          <button
+            type="button"
+            className={`catalogue-sort-button ${playTab === 'match' ? 'active' : ''}`}
+            onClick={() => setPlayTab('match')}
+          >
+            Match
+          </button>
+          <button
+            type="button"
+            className={`catalogue-sort-button ${playTab === 'status' ? 'active' : ''}`}
+            onClick={() => setPlayTab('status')}
+          >
+            Skin Status
+          </button>
+          <button
+            type="button"
+            className={`catalogue-sort-button ${playTab === 'bracket' ? 'active' : ''}`}
+            onClick={openBracketTab}
+          >
+            Bracket
+          </button>
+          {archiveReadOnly ? (
+            <button type="button" className="catalogue-sort-button sort-divider" onClick={returnToHub}>
+              Return
+            </button>
+          ) : (
+            <button type="button" className="catalogue-sort-button sort-divider" onClick={() => setConfirmLeave(true)}>
+              Main Menu
+            </button>
+          )}
+        </nav>
+        {confirmLeave ? (
+          <div className="modal-overlay" role="presentation" onClick={() => setConfirmLeave(false)}>
+            <div
+              className="modal-dialog"
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="leave-tournament-title"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <h2 id="leave-tournament-title">Leave this tournament?</h2>
+              <p>Are you sure? Your progress will be saved.</p>
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={() => {
+                    if (tournament && !archiveReadOnly) persistTournament(tournament);
+                    onBack();
+                  }}
+                >
+                  Yes
+                </button>
+                <button type="button" className="secondary-button" onClick={() => setConfirmLeave(false)}>
+                  No
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+        {confirmRestart ? (
+          <div className="modal-overlay" role="presentation" onClick={() => setConfirmRestart(false)}>
+            <div
+              className="modal-dialog"
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="restart-tournament-title"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <h2 id="restart-tournament-title">Start over?</h2>
+              <p>Are you sure? All data and weebucks will be lost.</p>
+              <div className="modal-actions">
+                <button type="button" className="danger-button" onClick={abandonTournament}>
+                  Yes
+                </button>
+                <button type="button" className="secondary-button" onClick={() => setConfirmRestart(false)}>
+                  No
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
     );
   }

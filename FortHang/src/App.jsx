@@ -169,9 +169,6 @@ function App() {
           skinLevels={skinLevels}
           onBack={() => setView(VIEWS.HANGMAN)}
           onOpenSidekicks={() => setView(VIEWS.SIDEKICKS)}
-          onOpenShop={() => setView(VIEWS.SHOP)}
-          onOpenFortSort={() => setView(VIEWS.FORTSORT)}
-          onDeleteAllData={handleDeleteAllData}
         />
       ) : view === VIEWS.SIDEKICKS ? (
         <SidekickCatalogue
@@ -179,8 +176,6 @@ function App() {
           economy={economy}
           onBack={() => setView(VIEWS.HANGMAN)}
           onOpenCatalogue={() => setView(VIEWS.CATALOGUE)}
-          onOpenShop={() => setView(VIEWS.SHOP)}
-          onOpenFortSort={() => setView(VIEWS.FORTSORT)}
         />
       ) : view === VIEWS.SHOP ? (
         <Shop
@@ -188,12 +183,9 @@ function App() {
           sidekicks={sidekicks}
           onEconomyChange={setEconomy}
           onBack={() => setView(VIEWS.HANGMAN)}
-          onOpenCatalogue={() => setView(VIEWS.CATALOGUE)}
-          onOpenSidekicks={() => setView(VIEWS.SIDEKICKS)}
-          onOpenFortSort={() => setView(VIEWS.FORTSORT)}
         />
       ) : view === VIEWS.HELP ? (
-        <HelpScreen onBack={() => setView(VIEWS.HANGMAN)} />
+        <HelpScreen onBack={() => setView(VIEWS.HANGMAN)} onDeleteAllData={handleDeleteAllData} />
       ) : (
         <FortSort
           outfits={outfits}
@@ -203,7 +195,6 @@ function App() {
           skinLevels={skinLevels}
           onSkinLevelsChange={handleSkinLevelsChange}
           onBack={() => setView(VIEWS.HANGMAN)}
-          onOpenShop={() => setView(VIEWS.SHOP)}
         />
       )}
     </main>

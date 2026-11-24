@@ -50,15 +50,7 @@ const BETTING_UNLOCK_ORDER = [
   'boostDicePlus',
 ];
 
-export default function Shop({
-  economy,
-  sidekicks,
-  onEconomyChange,
-  onBack,
-  onOpenSidekicks,
-  onOpenCatalogue,
-  onOpenFortSort,
-}) {
+export default function Shop({ economy, sidekicks, onEconomyChange, onBack }) {
   const ownedKinds = countOwnedSidekickKinds(economy);
   const totalOwned = economy.ownedSidekickIds?.length ?? 0;
 
@@ -91,34 +83,16 @@ export default function Shop({
   });
 
   return (
-    <div className="shop-screen">
+    <div className="skin-catalogue shop-screen">
       <header className="catalogue-header">
         <h1>Shop</h1>
         <GuessStatus economy={economy} onEconomyChange={onEconomyChange} />
         <p className="discovery-count">
           {ownedKinds}/{sidekicks.length} unique sidekicks · {totalOwned} total copies
         </p>
-        <div className="header-actions">
-          <button type="button" className="secondary-button" onClick={onBack}>
-            Back to Hangman
-          </button>
-          <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
-            Skin Catalogue
-          </button>
-          <button type="button" className="secondary-button" onClick={onOpenSidekicks}>
-            Sidekick Catalogue
-          </button>
-          <button type="button" className="secondary-button" onClick={onOpenFortSort}>
-            FortSort
-          </button>
-        </div>
       </header>
 
-      <p className="hint">
-        Earn weebucks in FortSort Betting mode. Sidekick rolls can duplicate. Each roll has a 10% rare and 1%
-        ultra-rare chance (SpongeBob, PAC-MAN, The Knight).
-      </p>
-
+      <div className="catalogue-scroll" tabIndex={0} aria-label="Shop items">
         <h2 className="shop-section-title">Skin attempt packs</h2>
       <div className="shop-grid">
         {GUESS_PACKS.map((pack) => (
@@ -191,6 +165,13 @@ export default function Shop({
           </article>
         ))}
       </div>
+      </div>
+
+      <nav className="catalogue-sort-bar catalogue-sort-bar--single" aria-label="Shop">
+        <button type="button" className="catalogue-sort-button" onClick={onBack}>
+          Main Menu
+        </button>
+      </nav>
     </div>
   );
 }

@@ -8,7 +8,7 @@ import {
   loadEconomy,
 } from '../utils/economy';
 
-export default function GuessStatus({ economy, onEconomyChange, className = '' }) {
+export default function GuessStatus({ economy, onEconomyChange, className = '', showResetHint = true }) {
   const remaining = getDailyGuessesRemaining(economy);
   const limit = getDailyGuessLimit(economy);
   const [msLeft, setMsLeft] = useState(() => getMsUntilGuessReset());
@@ -31,15 +31,16 @@ export default function GuessStatus({ economy, onEconomyChange, className = '' }
         Attempts left today: <strong>{remaining}</strong> / {limit}
         {economy.points ? ` · ${economy.points} weebucks` : ''}
       </p>
-      {remaining <= 0 ? (
+      {showResetHint && remaining <= 0 ? (
         <p className="guess-reset-countdown" role="status">
           Out of attempts · resets in <strong>{formatCountdown(msLeft)}</strong> (6:00 AM CST)
         </p>
-      ) : (
+      ) : null}
+      {showResetHint && remaining > 0 ? (
         <p className="guess-reset-hint">
           One attempt per skin (win or lose) · resets at 6:00 AM CST
         </p>
-      )}
+      ) : null}
     </div>
   );
 }

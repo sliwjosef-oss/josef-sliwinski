@@ -96,6 +96,30 @@ function OutfitGuessImage({ outfit, reveal = false }) {
   );
 }
 
+function MenuLinks({ onOpenCatalogue, onOpenSidekicks, onOpenShop, onOpenFortSort, onOpenHelp }) {
+  return (
+    <div className="menu-actions">
+      <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
+        Skin Catalogue
+      </button>
+      <button type="button" className="secondary-button" onClick={onOpenSidekicks}>
+        Sidekick Catalogue
+      </button>
+      <button type="button" className="secondary-button" onClick={onOpenShop}>
+        Shop
+      </button>
+      <button type="button" className="secondary-button" onClick={onOpenFortSort}>
+        Betting
+      </button>
+      {onOpenHelp ? (
+        <button type="button" className="secondary-button" onClick={onOpenHelp}>
+          Help
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 function WordDisplay({ word, guessedLetters }) {
   const words = word.split(' ');
 
@@ -145,6 +169,13 @@ export default function HangmanGame({
   const collectionComplete = isCollectionComplete(outfits, guessedSkinIds);
 
   const peelyStage = gameState === GAME_STATES.WON ? 0 : wrongGuesses;
+
+  const returnToMenu = useCallback(() => {
+    setGameState(GAME_STATES.IDLE);
+    setCurrentOutfit(null);
+    setGuessedLetters(new Set());
+    setWrongGuesses(0);
+  }, []);
 
   const startGame = useCallback(() => {
     if (!canSpendGuess(economy)) return;
@@ -225,32 +256,15 @@ export default function HangmanGame({
           <h1>Fortnite Hangman</h1>
         )}
         <p className="subtitle">Guess the outfit name before Peely gets bananated!</p>
-        <GuessStatus economy={economy} onEconomyChange={onEconomyChange} />
+        <GuessStatus
+          economy={economy}
+          onEconomyChange={onEconomyChange}
+          showResetHint={gameState === GAME_STATES.IDLE}
+        />
         {gameState !== GAME_STATES.IDLE ? (
-          <>
-            <p className="discovery-count">
-              Catalogue: {discoveredCount} / {outfits.length} skins discovered
-            </p>
-            <div className="header-actions">
-              <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
-                Skin Catalogue
-              </button>
-              <button type="button" className="secondary-button" onClick={onOpenSidekicks}>
-                Sidekick Catalogue
-              </button>
-              <button type="button" className="secondary-button" onClick={onOpenShop}>
-                Shop
-              </button>
-              <button type="button" className="secondary-button" onClick={onOpenFortSort}>
-                FortSort
-              </button>
-              {onOpenHelp ? (
-                <button type="button" className="secondary-button" onClick={onOpenHelp}>
-                  Help
-                </button>
-              ) : null}
-            </div>
-          </>
+          <p className="discovery-count">
+            Catalogue: {discoveredCount} / {outfits.length} skins discovered
+          </p>
         ) : null}
       </header>
 
@@ -340,23 +354,13 @@ export default function HangmanGame({
               <p className="discovery-count">
                 Catalogue: {discoveredCount} / {outfits.length} skins discovered
               </p>
-              <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
-                Skin Catalogue
-              </button>
-              <button type="button" className="secondary-button" onClick={onOpenSidekicks}>
-                Sidekick Catalogue
-              </button>
-              <button type="button" className="secondary-button" onClick={onOpenShop}>
-                Shop
-              </button>
-              <button type="button" className="secondary-button" onClick={onOpenFortSort}>
-                FortSort
-              </button>
-              {onOpenHelp ? (
-                <button type="button" className="secondary-button" onClick={onOpenHelp}>
-                  Help
-                </button>
-              ) : null}
+              <MenuLinks
+                onOpenCatalogue={onOpenCatalogue}
+                onOpenSidekicks={onOpenSidekicks}
+                onOpenShop={onOpenShop}
+                onOpenFortSort={onOpenFortSort}
+                onOpenHelp={onOpenHelp}
+              />
             </>
           ) : (
             <>
@@ -364,23 +368,13 @@ export default function HangmanGame({
               <p className="discovery-count">
                 Catalogue: {discoveredCount} / {outfits.length} skins discovered
               </p>
-              <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
-                Skin Catalogue
-              </button>
-              <button type="button" className="secondary-button" onClick={onOpenSidekicks}>
-                Sidekick Catalogue
-              </button>
-              <button type="button" className="secondary-button" onClick={onOpenShop}>
-                Shop
-              </button>
-              <button type="button" className="secondary-button" onClick={onOpenFortSort}>
-                FortSort
-              </button>
-              {onOpenHelp ? (
-                <button type="button" className="secondary-button" onClick={onOpenHelp}>
-                  Help
-                </button>
-              ) : null}
+              <MenuLinks
+                onOpenCatalogue={onOpenCatalogue}
+                onOpenSidekicks={onOpenSidekicks}
+                onOpenShop={onOpenShop}
+                onOpenFortSort={onOpenFortSort}
+                onOpenHelp={onOpenHelp}
+              />
             </>
           )}
         </div>
@@ -413,14 +407,6 @@ export default function HangmanGame({
       )}
 
       {(gameState === GAME_STATES.WON || gameState === GAME_STATES.LOST) && currentOutfit && (
-        collectionComplete && gameState === GAME_STATES.WON ? (
-          <CollectionCompleteScreen
-            onOpenCatalogue={onOpenCatalogue}
-            onOpenSidekicks={onOpenSidekicks}
-            onOpenShop={onOpenShop}
-            onOpenFortSort={onOpenFortSort}
-          />
-        ) : (
         <div className="result-panel">
           {gameState === GAME_STATES.WON ? (
             <>
@@ -436,29 +422,30 @@ export default function HangmanGame({
           )}
           {remainingOutfits.length > 0 ? (
             guessesRemaining > 0 ? (
-              <>
-                <p className="play-again-prompt">Would you like to play again?</p>
-                <button type="button" className="primary-button" onClick={startGame}>
-                  Play Again
-                </button>
-              </>
+              <p className="play-again-prompt">Would you like to play again?</p>
             ) : (
-              <>
-                <GuessStatus economy={economy} onEconomyChange={onEconomyChange} />
-                <p className="play-again-prompt">
-                  Out of daily attempts (wins and losses both count) — visit the Shop or wait for 6:00 AM
-                  CST.
-                </p>
-                <button type="button" className="primary-button" onClick={onOpenShop}>
-                  Open Shop
-                </button>
-              </>
+              <p className="play-again-prompt">
+                Out of daily attempts (wins and losses both count) — visit the Shop or wait for 6:00 AM CST.
+              </p>
             )
           ) : (
             <p className="play-again-prompt">You have discovered every outfit in the catalogue!</p>
           )}
+          <div className="result-actions">
+            {remainingOutfits.length > 0 && guessesRemaining > 0 ? (
+              <button type="button" className="primary-button" onClick={startGame}>
+                Play Again
+              </button>
+            ) : remainingOutfits.length > 0 ? (
+              <button type="button" className="primary-button" onClick={onOpenShop}>
+                Open Shop
+              </button>
+            ) : null}
+            <button type="button" className="secondary-button" onClick={returnToMenu}>
+              Main Menu
+            </button>
+          </div>
         </div>
-        )
       )}
     </div>
   );

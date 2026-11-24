@@ -27,29 +27,31 @@ export default function CollectionCompleteScreen({
           </h2>
         </>
       ) : null}
-      <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
-        Skin Catalogue
-      </button>
-      {onOpenSidekicks ? (
-        <button type="button" className="secondary-button" onClick={onOpenSidekicks}>
-          Sidekick Catalogue
+      <div className="menu-actions">
+        <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
+          Skin Catalogue
         </button>
-      ) : null}
-      {onOpenShop ? (
-        <button type="button" className="secondary-button" onClick={onOpenShop}>
-          Shop
-        </button>
-      ) : null}
-      {onOpenFortSort ? (
-        <button type="button" className="secondary-button" onClick={onOpenFortSort}>
-          FortSort
-        </button>
-      ) : null}
-      {onOpenHelp ? (
-        <button type="button" className="secondary-button" onClick={onOpenHelp}>
-          Help
-        </button>
-      ) : null}
+        {onOpenSidekicks ? (
+          <button type="button" className="secondary-button" onClick={onOpenSidekicks}>
+            Sidekick Catalogue
+          </button>
+        ) : null}
+        {onOpenShop ? (
+          <button type="button" className="secondary-button" onClick={onOpenShop}>
+            Shop
+          </button>
+        ) : null}
+        {onOpenFortSort ? (
+          <button type="button" className="secondary-button" onClick={onOpenFortSort}>
+            Betting
+          </button>
+        ) : null}
+        {onOpenHelp ? (
+          <button type="button" className="secondary-button" onClick={onOpenHelp}>
+            Help
+          </button>
+        ) : null}
+      </div>
     </section>
   );
 }
