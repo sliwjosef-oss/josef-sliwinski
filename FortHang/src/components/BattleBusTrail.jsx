@@ -679,14 +679,6 @@ export default function BattleBusTrail({
           Drop in ({partyIds.length}/4 skins
           {sidekickId ? ' · sidekick' : ''} · {runsLeft} run{runsLeft === 1 ? '' : 's'} left)
         </button>
-        <div className="import-actions">
-          <button type="button" className="ghost-button" onClick={onOpenShop}>
-            Shop
-          </button>
-          <button type="button" className="ghost-button" onClick={onBack}>
-            Main Menu
-          </button>
-        </div>
       </div>
 
       <div className="catalogue-scroll" tabIndex={0} aria-label="Trail squad select">
@@ -758,6 +750,15 @@ export default function BattleBusTrail({
           })}
         </div>
       </div>
+
+      <nav className="catalogue-sort-bar catalogue-sort-bar--two" aria-label="Trail">
+        <button type="button" className="catalogue-sort-button" onClick={onOpenShop}>
+          Shop
+        </button>
+        <button type="button" className="catalogue-sort-button" onClick={onBack}>
+          Main Menu
+        </button>
+      </nav>
     </div>
   );
 }
