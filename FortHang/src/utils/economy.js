@@ -507,6 +507,7 @@ export const RARE_SIDEKICK_NAMES = new Set([
   'Toy Story Alien',
   'Super Meat Boy',
   'Dante',
+  'Snowball',
 ]);
 
 /** Ultra rare sidekicks (1% roll tier). */

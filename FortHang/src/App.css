@@ -1045,12 +1045,25 @@
   }
 
   .shop-roll-grid {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 0.65rem;
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+    gap: 0.5rem;
+  }
+
+  .shop-roll-icon-wrap {
+    width: min(100%, 96px);
+  }
+
+  .shop-roll-grid.is-single .shop-roll-icon-wrap {
+    width: min(100%, 160px);
   }
 
   .shop-roll-name {
-    font-size: 0.95rem;
+    font-size: 0.8rem;
+  }
+
+  .shop-roll-card {
+    padding: 0.55rem 0.4rem 0.65rem;
+    gap: 0.3rem;
   }
 
   .discovery-count {
@@ -1538,23 +1551,32 @@
   margin-bottom: 0.25rem;
 }
 
+.shop-roll-screen {
+  overflow: hidden;
+}
+
 .shop-roll-scroll {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .shop-roll-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0.85rem;
-  width: min(720px, 100%);
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 0.65rem;
+  width: min(640px, 100%);
   margin: 0 auto;
-  padding: 0.35rem 0 0.75rem;
+  padding: 0.35rem 0.15rem 0.75rem;
+  box-sizing: border-box;
 }
 
 .shop-roll-grid.is-single {
-  grid-template-columns: minmax(180px, 260px);
+  grid-template-columns: minmax(160px, 220px);
   justify-content: center;
 }
 
@@ -1563,14 +1585,18 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.55rem;
-  padding: 1rem 0.85rem 1.1rem;
+  gap: 0.4rem;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0.75rem 0.55rem 0.85rem;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background:
     radial-gradient(circle at 30% 15%, rgba(103, 232, 249, 0.18), transparent 45%),
     rgba(12, 18, 40, 0.92);
   text-align: center;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .shop-roll-card.sidekick-rarity-rare {
@@ -1583,7 +1609,8 @@
 }
 
 .shop-roll-icon-wrap {
-  width: min(160px, 42vw);
+  width: min(100%, 120px);
+  max-width: 100%;
   aspect-ratio: 1;
   display: flex;
   align-items: center;
@@ -1591,15 +1618,18 @@
   border-radius: 14px;
   background: radial-gradient(circle at 30% 20%, #67e8f9, #2563eb 55%, #0f172a);
   overflow: hidden;
+  flex: 0 0 auto;
 }
 
 .shop-roll-grid.is-single .shop-roll-icon-wrap {
-  width: min(220px, 58vw);
+  width: min(100%, 200px);
 }
 
 .shop-roll-icon {
   width: 88%;
   height: 88%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
 }
 
@@ -1611,15 +1641,28 @@
 
 .shop-roll-name {
   margin: 0;
-  font-size: 1.05rem;
+  width: 100%;
+  font-size: 0.92rem;
   font-weight: 700;
   color: #eef2ff;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .shop-roll-dupe {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: #94a3b8;
+}
+
+.shop-roll-card .sidekick-rarity-badge {
+  top: 6px;
+  right: 6px;
+  max-width: calc(100% - 12px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sidekick-avatar-wrap {
