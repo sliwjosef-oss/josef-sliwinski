@@ -433,13 +433,18 @@ export default function HangmanGame({
           </button>
         </header>
 
-        <p
-          className={`result-message result-lead ${gameState === GAME_STATES.WON ? 'win' : 'lose'}`}
-        >
-          {gameState === GAME_STATES.WON
-            ? `You guessed it! The outfit was ${currentOutfit.name}.`
-            : `Game over! The outfit was ${currentOutfit.name}.`}
-        </p>
+        <div className="result-lead">
+          <p className={`result-message ${gameState === GAME_STATES.WON ? 'win' : 'lose'}`}>
+            {gameState === GAME_STATES.WON
+              ? `You guessed it! The outfit was ${currentOutfit.name}.`
+              : `Game over! The outfit was ${currentOutfit.name}.`}
+          </p>
+          {gameState === GAME_STATES.WON ? (
+            <p className="catalogue-unlock">
+              Catalogue #{currentOutfit.number} — added to your skin catalogue!
+            </p>
+          ) : null}
+        </div>
 
         <section className="hangman-stage hangman-stage--play">
           <div className="play-board">
@@ -466,11 +471,6 @@ export default function HangmanGame({
         <WordDisplay word={currentOutfit.name} guessedLetters={guessedLetters} />
 
         <div className="result-panel">
-          {gameState === GAME_STATES.WON ? (
-            <p className="catalogue-unlock">
-              Catalogue #{currentOutfit.number} — added to your skin catalogue!
-            </p>
-          ) : null}
           {remainingOutfits.length > 0 ? (
             guessesRemaining > 0 ? null : (
               <p className="play-again-prompt">
