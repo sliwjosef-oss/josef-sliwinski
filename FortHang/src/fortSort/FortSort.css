@@ -2599,8 +2599,21 @@
   color: #c4b5fd;
 }
 
-.trail-storm-status.is-deep-storm {
-  color: #fb7185;
+.trail-result-squad {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin: 0.75rem 0 0.25rem;
+}
+
+.trail-result-skin {
+  align-items: flex-start;
+}
+
+.trail-result-skin img,
+.trail-result-skin .icon-placeholder {
+  width: 40px;
+  height: 40px;
 }
 
 .trail-choices {

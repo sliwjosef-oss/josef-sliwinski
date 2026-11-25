@@ -28,7 +28,9 @@ import {
   getTrailFightDamageResist,
   getTrailStartHp,
   getTrailStormDamageResist,
+  levelFromXp,
   sortOutfitsByLevel,
+  xpProgress,
 } from '../utils/skinLevels';
 import '../fortSort/FortSort.css';
 
@@ -81,6 +83,42 @@ function formatTrailLogLine(line) {
     remaining = remaining.slice(earliest + match.length);
   }
   return nodes;
+}
+
+function TrailSquadXp({ outfit, earned, skinLevels }) {
+  const progress = xpProgress(skinLevels, outfit.id);
+  const prevLevel = earned > 0 ? levelFromXp(Math.max(0, progress.xp - earned)) : progress.level;
+  const leveledUp = earned > 0 && progress.level > prevLevel;
+  const maxed = progress.next == null;
+  const fill = maxed ? 100 : Math.max(0, Math.min(100, (progress.intoLevel / progress.needed) * 100));
+  return (
+    <div className="placement-skin trail-result-skin">
+      <SkinThumb outfit={outfit} />
+      <span className="placement-skin-body">
+        <span className="placement-skin-top">
+          <span className="placement-skin-name">{outfit.name}</span>
+          <span className="placement-level">Lv {progress.level}</span>
+          {leveledUp ? <span className="level-up-sign">Level up!</span> : null}
+        </span>
+        <span
+          className="xp-bar"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={maxed ? progress.xp : progress.needed}
+          aria-valuenow={maxed ? progress.xp : progress.intoLevel}
+          aria-label={maxed ? `Level ${progress.level}, max level` : `Level ${progress.level}`}
+        >
+          <span className="xp-bar-fill" style={{ width: `${fill}%` }} />
+        </span>
+        <span className="placement-xp-line">
+          <span className="placement-xp">+{earned} XP</span>
+          <span className="placement-xp-progress">
+            {maxed ? 'Max' : `${progress.intoLevel} / ${progress.needed}`}
+          </span>
+        </span>
+      </span>
+    </div>
+  );
 }
 
 function SkinThumb({ outfit }) {
@@ -822,12 +860,12 @@ export default function BattleBusTrail({
       onEconomyChange(payout.economy);
 
       const xpAwards = [];
+      const squadXp = [];
       for (const outfit of party) {
         const survived = survivorNames.has(outfit.name);
-        xpAwards.push({
-          id: outfit.id,
-          amount: survived ? TRAIL_SURVIVOR_XP : TRAIL_FALLEN_XP,
-        });
+        const amount = survived ? TRAIL_SURVIVOR_XP : TRAIL_FALLEN_XP;
+        xpAwards.push({ id: outfit.id, amount });
+        squadXp.push({ id: outfit.id, earned: amount });
       }
       const xpResult = awardXpAmounts(skinLevels, xpAwards);
       onSkinLevelsChange?.(xpResult.levels);
@@ -842,6 +880,8 @@ export default function BattleBusTrail({
         fallenPay: payout.fallenPay,
         bonusWeebucks: payout.bonusWeebucks || 0,
         xpAwards,
+        squadXp,
+        levelsAfter: xpResult.levels,
       });
       setScreen('result');
     } catch (error) {
@@ -1144,9 +1184,20 @@ export default function BattleBusTrail({
                     : ''}
                   )
                 </p>
-                <p>
-                  Skin XP: survivors +{TRAIL_SURVIVOR_XP}, fallen +{TRAIL_FALLEN_XP}
-                </p>
+                <div className="trail-result-squad">
+                  {(result.squadXp || []).map((entry) => {
+                    const outfit = outfits.find((item) => item.id === entry.id);
+                    if (!outfit) return null;
+                    return (
+                      <TrailSquadXp
+                        key={entry.id}
+                        outfit={outfit}
+                        earned={entry.earned}
+                        skinLevels={result.levelsAfter || skinLevels}
+                      />
+                    );
+                  })}
+                </div>
               </>
             )}
             <div className="import-actions">
