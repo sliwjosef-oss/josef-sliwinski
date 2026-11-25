@@ -1,0 +1,436 @@
+# FortHang — Program Overview
+
+FortHang (also styled **Fort Hang**) is a Fortnite-themed collection game built around hangman. Guessing outfit names unlocks a catalogue, a currency economy (**weebucks**), a shop, a tournament betting mode, and an Oregon Trail–style Battle Royale mode called **Battle Bus Trail**.
+
+This document describes how the whole program fits together: architecture, screens, progression, economy, and the major game modes.
+
+---
+
+## 1. What it is
+
+| Layer | Role |
+| --- | --- |
+| **Hangman** | Core loop: guess Fortnite outfit names, discover skins |
+| **Catalogues** | Browse discovered skins and owned sidekicks |
+| **Weebucks** | Soft currency earned from Betting, Trail, login, and catalogue completion |
+| **Shop** | Spend weebucks on attempts, sidekick rolls, Betting upgrades, Trail upgrades |
+| **Betting (FortSort)** | Simulated double-elim tournaments with dice, bets, and skin XP |
+| **Battle Bus Trail** | Turn-based BR run with a living lobby, Storm, fights, and loot |
+| **Help** | In-app rules + wipe-all-save data |
+
+Progress is **local-only** (browser `localStorage`). There is no account server.
+
+---
+
+## 2. Tech stack and layout
+
+### Stack
+
+- **React 19** + **Vite 8**
+- Optional **Capacitor** Android shell (`capacitor.config.json`, app name “Fort Hang”)
+- Static JSON data: `public/outfits.json`, `public/sidekicks.json`
+- Production build writes to sibling folder `../fort-hang` (served from the personal site)
+
+### Source map
+
+```
+FortHang/
+├── public/                 # outfits.json, sidekicks.json, audio
+├── src/
+│   ├── App.jsx             # View router, data load, unlock gates
+│   ├── main.jsx
+│   ├── components/         # Screens (Hangman, Shop, Trail UI, etc.)
+│   ├── battleBus/          # Trail engine, lobby, loot, combat rules
+│   ├── fortSort/           # Betting / ranking / bracket / simulate
+│   └── utils/              # Economy, progress, hangman, outfits, levels
+├── vite.config.js          # base: './', outDir: '../fort-hang'
+└── FORTHANG.md             # This file
+```
+
+### Views (`App.jsx`)
+
+| View key | Screen |
+| --- | --- |
+| `hangman` | Main hangman game |
+| `catalogue` | Skin Catalogue |
+| `sidekicks` | Sidekick Catalogue |
+| `shop` | Shop |
+| `fortsort` | Betting / FortSort |
+| `trail` | Battle Bus Trail |
+| `help` | Help + delete all data |
+
+Deep links: `?view=shop|sidekicks|help|fortsort|trail`, or `#fortsort` / `#trail`.
+
+### Build / deploy
+
+```bash
+cd FortHang
+npm run build   # → ../fort-hang/
+```
+
+The hashed JS/CSS under `fort-hang/` is what the live site loads. Capacitor’s `webDir` points at the same folder.
+
+---
+
+## 3. Data and persistence
+
+### Loaded at startup
+
+1. `outfits.json` — Fortnite outfits (filtered into playable skins)
+2. `sidekicks.json` — sidekick roster for rolls / Trail companion
+
+Outfit cleaning (`utils/outfits.js`) drops placeholders, NPC/LOD variants, and names without a real season.
+
+### `localStorage` keys
+
+| Key | Contents |
+| --- | --- |
+| `fort-hang-guessed-skins` | Discovered outfit IDs |
+| `fort-hang-economy-v1` | Weebucks, unlocks, daily counters, owned sidekicks, Trail locks |
+| `fort-hang-skin-levels-v1` | Per-skin XP / level |
+| `fort-sort-*` | Ranking, bracket, simulate, betting archives, selected skins, mode |
+
+**Help → Delete All Data** clears guessed skins, skin levels, economy, and all FortSort storage.
+
+### Day reset
+
+Many “daily” systems reset at **6:00 AM Central Time**:
+
+- Free hangman attempts
+- Daily login weebucks
+- Betting / Trail run counters (and related daily state in economy)
+
+Bet / Trail **skin locks** clear **Monday 00:00 Central Time**.
+
+---
+
+## 4. Progression and feature unlocks
+
+Discovery count = number of playable outfits whose IDs are in guessed skins.
+
+| Unlocked feature | Skins required |
+| --- | --- |
+| Battle Bus Trail | **4** |
+| Betting | **16** |
+| Shop | **32** |
+
+If a locked mode is opened via URL, App redirects back to hangman.
+
+**Catalogue complete** (every playable skin discovered) pays a **one-time 10,000 weebucks** bonus.
+
+---
+
+## 5. Hangman (core loop)
+
+**Files:** `components/HangmanGame.jsx`, `utils/hangman.js`, `components/GuessStatus.jsx`
+
+### Rules
+
+- Word = outfit **name** (letters only count toward completion).
+- Up to **6** wrong guesses; Peely hangman art advances each miss (`hangman_0` … `hangman_6`).
+- Hints: season / introduction text and flavor from the outfit record.
+- Only **undiscovered** playable outfits are queued.
+- Each round (win or loss) spends **one skin attempt**.
+
+### Attempts
+
+- Base: **50** free attempts per day.
+- Shop packs add more attempts for the current day (they stack until the CT reset).
+
+### On win
+
+- Outfit ID is added to discovered skins.
+- Skin appears in the Skin Catalogue.
+- May unlock Trail / Betting / Shop thresholds.
+- May trigger catalogue-complete bonus.
+
+---
+
+## 6. Catalogues
+
+### Skin Catalogue
+
+Browse discovered outfits. Supports season / series grouping and level display. Undiscovered skins are not hangman targets once guessed.
+
+### Sidekick Catalogue
+
+Tracks owned sidekick kinds and copy counts. Unowned entries show as silhouettes. Sidekicks are obtained only from Shop rolls (duplicates allowed).
+
+---
+
+## 7. Weebucks and economy
+
+**File:** `utils/economy.js` (central constants + purchase helpers)
+
+### Earn
+
+| Source | Amount / notes |
+| --- | --- |
+| Daily login (once per CT day) | **+100** |
+| Betting match wins | Base **2** weebucks per bet-skin win (shop raises Top 8 / Top 64) |
+| Tournament win | Base **30** (shop tiers up to 100 / 200) |
+| Super bet round bonus | **+1** weebuck on every round payout for that skin |
+| Catalogue complete | **10,000** once |
+| Ranked Trail end | Per survivor / fallen squad member (sidekick counts); Pirate tokens add **+500** each |
+
+For Fun Trail runs pay **no** weebucks and grant **no** XP.
+
+### Spend
+
+Shop sections (when unlocked):
+
+1. **Skin attempt packs** — 5 / 50 / 125 attempts  
+2. **Sidekick rolls** — 1 / 3 / 5 pulls  
+3. **Betting upgrades** — slots, dice, payouts, runs, Simulate all, seeding, extra life, etc.  
+4. **Trail upgrades** — resists, run caps, payouts, boss loot packs, events, Chug Jug, Pirate token unlock  
+
+Many upgrades are **tiered** (`requires` another unlock before they appear as available).
+
+---
+
+## 8. Shop details
+
+### Sidekick rolls
+
+- Rare collabs: **10%**
+- Ultra rare (SpongeBob, PAC-MAN, The Knight): **1%**
+- Otherwise normal pool
+
+### Betting shop highlights
+
+- Raise Top 8 / Top 64 win payouts and tournament-win bonus  
+- More super-bet and bet slots  
+- Stronger bonus dice for bets  
+- More daily Betting runs (base **3** → 5 → 7)  
+- Trail **For Fun** mode unlock (5000 weebucks)
+- Unlock **Simulate all**, **Select random**, **bet seeding**, **super bet extra life**
+
+### Trail shop highlights
+
+| Kind | Examples |
+| --- | --- |
+| Daily runs | 3 → 5 → 7 |
+| For Fun mode | 5000 weebucks |
+| Payouts | Survivor 100→150, Fallen 50→75 |
+| Resists | Storm −10%/−20%, Fight −10%/−20% |
+| Boss loot packs | Bending, Lightsabers, Infinity Blade, Kamehameha, Mythic Goldfish |
+| Consumable unlock | Chug Jug in chests |
+| Events | Legendary Supply Drop, Vending Machine, Floating Island, Fishing Spot, Slurp Barrel, Pirate Shop Access Token |
+
+---
+
+## 9. Betting (FortSort)
+
+**UI:** `components/FortSort.jsx`  
+**Logic:** `fortSort/simulate.js`, `bracket.js`, `sorter.js`, `storage.js`
+
+### Modes
+
+| Mode | What it does |
+| --- | --- |
+| **Ranking** | Manually sort favorites |
+| **Bracket** | Manual double-elim winners |
+| **Simulate** | Dice resolve matchups |
+| **Betting** | Full discovered-skin double-elim; you wager on skins |
+
+Finished tournaments can be saved and reopened.
+
+### Dice model
+
+Each side rolls **N d100** and keeps the **highest**. Base N depends on series / special names (1–5). Then:
+
+- **Bet skin:** +2 dice (shop → +3)  
+- **Super bet:** +4 dice (shop → +5), +1 weebuck per round payout, **2×** placement XP  
+- **Skin level:** permanent extra dice and roll floors (see Skin levels)
+
+### Betting run flow
+
+1. All discovered skins enter.  
+2. Pick up to N **super bets** and M **bets** (caps from shop).  
+3. Optional seeding unlock: super bets top seeds, then bets.  
+4. Simulate the tournament (Watch / Auto / Finish style controls).  
+5. Collect weebucks from wins + tournament bonus.  
+6. Award placement XP to bet skins.  
+7. Bet skins stay **locked** until Monday midnight CT.  
+8. Daily Betting **run** counter decrements.
+
+**Super bet extra life** (shop): once per run per super bet, first loss flips to a win.
+
+---
+
+## 10. Skin levels
+
+**File:** `utils/skinLevels.js`  
+Levels **0–5**. XP thresholds are triangular: level *n* costs *n* × 100 XP (totals 100, 300, 600, 1000, 1500).
+
+### XP sources
+
+**Betting (bet / super-bet skins only):**
+
+| Place | XP (×2 if super bet) |
+| --- | --- |
+| 1st | 200 |
+| 2nd–4th | 100 |
+| 5th–7th | 50 |
+| Else | 25 |
+
+**Ranked Trail:**
+
+| Outcome | XP |
+| --- | --- |
+| Survive | 200 |
+| Fall | 100 |
+
+### Permanent combat bonuses (Betting / Simulate)
+
+| Level | Effect |
+| --- | --- |
+| 1+ | Min roll raised to 6 |
+| 2+ | +1 die |
+| 3+ | Min roll raised to 11 |
+| 4+ | +2 dice total |
+| 5 | +3 dice total; min roll raised to 21 |
+
+### Permanent Trail bonuses
+
+| Level | Effect |
+| --- | --- |
+| 1+ | −5% Storm damage |
+| 2–4 | +10 starting HP (110) |
+| 4+ | −5% fight damage |
+| 5 | +20 starting HP (120) |
+
+---
+
+## 11. Battle Bus Trail
+
+**UI:** `components/BattleBusTrail.jsx`  
+**Engine:** `battleBus/engine.js`  
+**Support:** `lobby.js`, `loot.js`, `combatRules.js`, `constants.js`, `visuals.js`
+
+Trail is a text + icon BR adventure: pick a squad, survive the Storm and lobby, loot gear, and chase Victory Royale.
+
+### Setup
+
+- Choose **4 discovered skins** (+ optional owned **sidekick**).  
+- **Ranked Drop in** — uses a daily Trail run, locks those skins until Monday CT, pays weebucks + XP.  
+- **For Fun** — locked until purchased in the Shop (**5000** weebucks). Separate select; no locks, no run spend, no payouts / XP.  
+- Default daily ranked runs: **3** (shop → 5 → 7). Same ladder for Betting runs.
+
+### Match structure
+
+- Lobby size starts at **100** (you + 95 others).  
+- Others spawn in themed squads of 4 (one squad of 3), typed as **Bots / Players / Sweats**.  
+- Each turn you choose **Fight**, **Loot**, **Rest**, or **Rotate**.  
+- Off-screen elims shrink the lobby each turn until the **final 10**, when passive deaths stop.  
+- When **no rivals remain** and your squad still lives → **Victory Royale** (no fake leftover “stray player” encounters).
+
+### Combat / reads
+
+- Encounter icons show skins; undiscovered names show as **???**.  
+- Enemy **type** is hidden (`Type: ???`); a **Read** hint can be wrong.  
+- Ambushes expand to the **whole living lobby squad**, not a random subset.  
+- Third-parties put two squads on screen with chunked HP bars.  
+- Killer portraits appear in the **elimination event panel**, not on the top party status bar.
+
+### Actions (summary)
+
+| Action | Idea |
+| --- | --- |
+| **Fight** | Seek a fight / sniper risk |
+| **Loot** | Chests, ambush chance, rare Pirate token if unlocked |
+| **Rest** | Heal / search heals / rare Slurp Barrel; **5%** Vending Machine if unlocked |
+| **Rotate** | Book it (high ambush; guaranteed in final 10) or safer route (Storm tick, no ambush) |
+
+### Inventory
+
+- Max **10** slots (stacks each take a slot).  
+- Weapons, heals, throwables (Grenade, Clinger, Boogie Bomb, Bush, Kneecapper / 10% Leekcapper, etc.).  
+- Shop-unlocked mythics can enter boss / special pools.
+
+### Choice / unlockable events
+
+Between turns (and via unlocks): noisy bush, teaming offer (disabled in final 10), vault, sky rift, car, Legendary Supply Drop, Floating Island, Fishing Spot, Vending Machine, Slurp Barrel, etc.
+
+### Vending Machine
+
+- Unlock in Shop.  
+- On Rest: **5%** spawn chance.  
+- Trade one inventory item → **80%** Epic / **20%** Legendary or Mythic (from unlocked-eligible pools).
+
+### End payout (ranked)
+
+- Survivor / fallen weebucks per squad member (including sidekick).  
+- Skin XP as above.  
+- Pirate Shop Access Tokens (ranked loot) add flat weebucks to the run payout.
+
+---
+
+## 12. Help screen
+
+`components/HelpScreen.jsx` is the player-facing rules manual (mirrors much of this doc). It also hosts **Delete All Data**.
+
+---
+
+## 13. Typical player journey
+
+1. Play hangman → discover skins with daily attempts.  
+2. At **4** skins, try Battle Bus Trail (learn combat / Storm).  
+3. At **16** skins, open Betting → earn weebucks + skin XP.  
+4. At **32** skins, open Shop → buy attempts, sidekicks, upgrades.  
+5. Level favorite skins; push Trail runs and betting for currency and power.  
+6. Aim for full catalogue (+10k) and high-level favorites.
+
+---
+
+## 14. Dev notes
+
+### Scripts (`package.json`)
+
+| Script | Purpose |
+| --- | --- |
+| `npm run dev` | Local Vite server |
+| `npm run build` | Production → `../fort-hang` |
+| `npm run preview` | Preview production build |
+| `fetch-outfits` / `update-outfits` | Maintain outfit data |
+| `generate-silhouettes` / `generate-hangman` | Asset helpers |
+
+### Design principles baked into the code
+
+- **Discovery gates modes** so new players aren’t dumped into Betting/Shop immediately.  
+- **Weebucks** tie hangman collection to long-term meta (bets, Trail power).  
+- **Skin levels** make permanent favorites matter in both dice sports and Trail survivability.  
+- **Trail lobby** is a real simulation (themed squads, off-screen deaths, ambush rules), not just random flavor text.  
+- **Saves are client-side** — easy to wipe from Help; no cloud sync.
+
+### Related in-repo paths
+
+- Live static build: `josef-sliwinski/fort-hang/`  
+- Parent site README: `josef-sliwinski/README.md`  
+- App Capacitor id: `com.yourname.forthang` (placeholder package id in config)
+
+---
+
+## 15. Quick reference — important constants
+
+| Constant | Value |
+| --- | --- |
+| Max wrong hangman guesses | 6 |
+| Daily free hangman attempts | 50 |
+| Daily login bonus | 100 weebucks |
+| Trail / Betting / Shop unlock | 4 / 16 / 32 skins |
+| Catalogue complete bonus | 10,000 weebucks |
+| Base daily Trail / Betting runs | 3 / 3 (shop → 5 → 7) |
+| Trail For Fun unlock | 5000 weebucks |
+| Base Trail survivor / fallen payout | 100 / 50 |
+| Trail survivor / fallen XP | 200 / 100 |
+| Vending Machine Rest chance | 5% |
+| Vending rarity split | 80% Epic / 20% Leg+Mythic |
+| Max skin level | 5 |
+| Inventory slots | 10 |
+| Starting lobby size | 100 |
+| Final circle (no passive elims) | ≤ 10 players left |
+
+---
+
+*Generated from the FortHang source as of the current `main` branch. When behavior changes, update this file or the in-app Help screen so they stay aligned.*

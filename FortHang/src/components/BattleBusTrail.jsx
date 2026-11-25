@@ -11,6 +11,7 @@ import {
   getTrailStormResist,
   getTrailUnlockedBossItems,
   getTrailUnlockedEvents,
+  hasTrailForFun,
   lockTrailSkins,
   settleTrailPayout,
   spendTrailRun,
@@ -633,8 +634,14 @@ export default function BattleBusTrail({
     });
   };
 
+  const forFunUnlocked = hasTrailForFun(economy);
+
   const startRun = async ({ forFun = false } = {}) => {
     if (busy || partyIds.length !== 4) return;
+    if (forFun && !hasTrailForFun(economy)) {
+      window.alert('For Fun mode is locked. Unlock it in the Shop for 5000 weebucks.');
+      return;
+    }
     if (!forFun) {
       if (!canStartTrailRun(economy)) {
         window.alert('No Battle Bus Trail runs left today.');
@@ -883,7 +890,9 @@ export default function BattleBusTrail({
   };
 
   const backToSelect = () => {
-    setScreen(forFunMode || result?.forFun ? 'forFunSelect' : 'select');
+    const preferForFun = (forFunMode || result?.forFun) && hasTrailForFun(economy);
+    setScreen(preferForFun ? 'forFunSelect' : 'select');
+    if (!preferForFun) setForFunMode(false);
     setPartyIds([]);
     setSidekickId(null);
     setLiveSquad(null);
@@ -894,6 +903,10 @@ export default function BattleBusTrail({
   };
 
   const openForFunSelect = () => {
+    if (!hasTrailForFun(economy)) {
+      window.alert('For Fun mode is locked. Unlock it in the Shop for 5000 weebucks.');
+      return;
+    }
     setForFunMode(true);
     setScreen('forFunSelect');
   };
@@ -1246,8 +1259,14 @@ export default function BattleBusTrail({
             Ranked
           </button>
         ) : (
-          <button type="button" className="catalogue-sort-button" onClick={openForFunSelect}>
-            For Fun
+          <button
+            type="button"
+            className={`catalogue-sort-button ${forFunUnlocked ? '' : 'is-locked'}`}
+            onClick={openForFunSelect}
+            title={forFunUnlocked ? 'For Fun' : 'Unlock in the Shop for 5000 weebucks'}
+            aria-disabled={!forFunUnlocked}
+          >
+            {forFunUnlocked ? 'For Fun' : 'For Fun 🔒'}
           </button>
         )}
       </nav>

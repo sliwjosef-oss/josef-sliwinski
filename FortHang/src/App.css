@@ -647,6 +647,11 @@
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
+.catalogue-sort-button.is-locked {
+  opacity: 0.55;
+  color: #8b95b5;
+}
+
 .catalogue-season-sections {
   display: flex;
   flex-direction: column;

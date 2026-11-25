@@ -29,18 +29,22 @@ export const SUPER_BET_ROUND_BONUS = 1;
 export const CATALOG_COMPLETE_BONUS = 10000;
 /** Weebucks granted once per guess-day (6:00 AM Central) when the player opens the game. */
 export const DAILY_LOGIN_BONUS = 100;
-export const BASE_DAILY_BET_RUNS = 5;
+export const BASE_DAILY_BET_RUNS = 3;
 export const BASE_DAILY_TRAIL_RUNS = 3;
 export const DAILY_TRAIL_RUNS_TIER1 = 5;
-export const DAILY_TRAIL_RUNS_TIER2 = 10;
+export const DAILY_TRAIL_RUNS_TIER2 = 7;
+/** Previous betting free default before base dropped to 3. */
+const LEGACY_DAILY_BET_RUNS_BASE = 5;
+/** Previous max daily runs before the cap was lowered to 7. */
+const LEGACY_DAILY_RUNS_TIER2 = 10;
 export const TRAIL_SURVIVOR_PAYOUT = 100;
 export const TRAIL_SURVIVOR_PAYOUT_TIER1 = 150;
 export const TRAIL_FALLEN_PAYOUT = 50;
 export const TRAIL_FALLEN_PAYOUT_TIER1 = 75;
 export const TRAIL_SURVIVOR_XP = 200;
 export const TRAIL_FALLEN_XP = 100;
-export const DAILY_BET_RUNS_TIER1 = 7;
-export const DAILY_BET_RUNS_TIER2 = 10;
+export const DAILY_BET_RUNS_TIER1 = 5;
+export const DAILY_BET_RUNS_TIER2 = 7;
 export const BASE_STAR_BETS = 1;
 export const STAR_BETS_TIER1 = 3;
 export const STAR_BETS_TIER2 = 7;
@@ -293,6 +297,14 @@ export const TRAIL_SHOP_UNLOCKS = {
     label: `Trail runs → ${DAILY_TRAIL_RUNS_TIER2}`,
     blurb: `Increase Trail runs from ${DAILY_TRAIL_RUNS_TIER1} to ${DAILY_TRAIL_RUNS_TIER2}.`,
   },
+  trailForFun: {
+    id: 'trailForFun',
+    cost: 5000,
+    kind: 'forFun',
+    label: 'Unlock For Fun mode',
+    blurb:
+      'Unlock the For Fun button on Battle Bus Trail. For Fun runs skip locks, daily run limits, weebucks, and skin XP.',
+  },
   trailSurvivorPayoutTier1: {
     id: 'trailSurvivorPayoutTier1',
     cost: 400,
@@ -365,6 +377,7 @@ export const TRAIL_SHOP_UNLOCKS = {
 export const TRAIL_SHOP_ORDER = [
   'trailRunsTier1',
   'trailRunsTier2',
+  'trailForFun',
   'trailSurvivorPayoutTier1',
   'trailFallenPayoutTier1',
   'trailStormResist10',
@@ -407,7 +420,30 @@ function defaultUnlocks() {
     dailyTrailRuns: BASE_DAILY_TRAIL_RUNS,
     trailSurvivorPayout: TRAIL_SURVIVOR_PAYOUT,
     trailFallenPayout: TRAIL_FALLEN_PAYOUT,
+    trailForFun: false,
+    runsCapsMigratedV2: true,
   };
+}
+
+function migrateLegacyDailyRuns(unlocks) {
+  const rawBet = Number(unlocks.dailyBetRuns);
+  // Old free default was 5; old purchased tiers were 7 then 10.
+  let dailyBetRuns = BASE_DAILY_BET_RUNS;
+  if (rawBet >= LEGACY_DAILY_RUNS_TIER2 || rawBet === 7) {
+    dailyBetRuns = DAILY_BET_RUNS_TIER2;
+  } else if (rawBet === LEGACY_DAILY_BET_RUNS_BASE) {
+    dailyBetRuns = BASE_DAILY_BET_RUNS;
+  }
+
+  const rawTrail = Number(unlocks.dailyTrailRuns);
+  let dailyTrailRuns = BASE_DAILY_TRAIL_RUNS;
+  if (rawTrail >= LEGACY_DAILY_RUNS_TIER2) {
+    dailyTrailRuns = DAILY_TRAIL_RUNS_TIER2;
+  } else if (rawTrail === DAILY_TRAIL_RUNS_TIER1) {
+    dailyTrailRuns = DAILY_TRAIL_RUNS_TIER1;
+  }
+
+  return { dailyBetRuns, dailyTrailRuns };
 }
 
 function normalizeUnlocks(unlocks) {
@@ -426,10 +462,25 @@ function normalizeUnlocks(unlocks) {
     unlocks.boostSlots === BOOST_BETS_TIER2 || unlocks.boostSlots === BOOST_BETS_TIER1
       ? unlocks.boostSlots
       : BASE_BOOST_BETS;
-  const dailyBetRuns =
-    unlocks.dailyBetRuns === DAILY_BET_RUNS_TIER2 || unlocks.dailyBetRuns === DAILY_BET_RUNS_TIER1
-      ? unlocks.dailyBetRuns
-      : BASE_DAILY_BET_RUNS;
+
+  let dailyBetRuns;
+  let dailyTrailRuns;
+  let runsCapsMigratedV2 = !!unlocks.runsCapsMigratedV2;
+  if (!runsCapsMigratedV2) {
+    ({ dailyBetRuns, dailyTrailRuns } = migrateLegacyDailyRuns(unlocks));
+    runsCapsMigratedV2 = true;
+  } else {
+    dailyBetRuns =
+      unlocks.dailyBetRuns === DAILY_BET_RUNS_TIER2 || unlocks.dailyBetRuns === DAILY_BET_RUNS_TIER1
+        ? unlocks.dailyBetRuns
+        : BASE_DAILY_BET_RUNS;
+    dailyTrailRuns =
+      unlocks.dailyTrailRuns === DAILY_TRAIL_RUNS_TIER2 ||
+      unlocks.dailyTrailRuns === DAILY_TRAIL_RUNS_TIER1
+        ? unlocks.dailyTrailRuns
+        : BASE_DAILY_TRAIL_RUNS;
+  }
+
   return {
     simulateAll: !!unlocks.simulateAll,
     top8Reward:
@@ -467,12 +518,7 @@ function normalizeUnlocks(unlocks) {
       unlocks.trailFightResist === 0.2 || unlocks.trailFightResist === 0.1
         ? unlocks.trailFightResist
         : 0,
-    dailyTrailRuns:
-      unlocks.dailyTrailRuns === DAILY_TRAIL_RUNS_TIER2
-        ? DAILY_TRAIL_RUNS_TIER2
-        : unlocks.dailyTrailRuns === DAILY_TRAIL_RUNS_TIER1
-          ? DAILY_TRAIL_RUNS_TIER1
-          : BASE_DAILY_TRAIL_RUNS,
+    dailyTrailRuns,
     trailSurvivorPayout:
       unlocks.trailSurvivorPayout === TRAIL_SURVIVOR_PAYOUT_TIER1
         ? TRAIL_SURVIVOR_PAYOUT_TIER1
@@ -481,6 +527,8 @@ function normalizeUnlocks(unlocks) {
       unlocks.trailFallenPayout === TRAIL_FALLEN_PAYOUT_TIER1
         ? TRAIL_FALLEN_PAYOUT_TIER1
         : TRAIL_FALLEN_PAYOUT,
+    trailForFun: !!unlocks.trailForFun,
+    runsCapsMigratedV2,
   };
 }
 
@@ -1303,7 +1351,12 @@ function isTrailMetaUnlockOwned(entry, unlocks) {
   if (entry.kind === 'survivorPayout') return unlocks.trailSurvivorPayout >= entry.value;
   if (entry.kind === 'fallenPayout') return unlocks.trailFallenPayout >= entry.value;
   if (entry.kind === 'trailEvent') return unlocks.trailEvents.includes(entry.eventId);
+  if (entry.kind === 'forFun') return !!unlocks.trailForFun;
   return false;
+}
+
+export function hasTrailForFun(economy = loadEconomy()) {
+  return !!normalizeUnlocks(economy.unlocks).trailForFun;
 }
 
 export function isTrailShopUnlockOwned(unlockId, economy = loadEconomy()) {
@@ -1354,6 +1407,8 @@ export function buyTrailShopUnlock(unlockId, economy = loadEconomy()) {
     const owned = new Set(state.unlocks.trailEvents);
     owned.add(entry.eventId);
     state.unlocks.trailEvents = [...owned];
+  } else if (entry.kind === 'forFun') {
+    state.unlocks.trailForFun = true;
   } else {
     const items = trailUnlockItems(entry);
     if (!items.length) return { ok: false, reason: 'Unknown Trail shop item.', economy: state };

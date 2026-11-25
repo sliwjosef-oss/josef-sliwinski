@@ -7,6 +7,8 @@ import {
   BET_WIN_POINTS,
   BOOST_BET_BONUS_DICE,
   CATALOG_COMPLETE_BONUS,
+  DAILY_BET_RUNS_TIER1,
+  DAILY_BET_RUNS_TIER2,
   DAILY_GUESS_BASE,
   DAILY_LOGIN_BONUS,
   DAILY_TRAIL_RUNS_TIER1,
@@ -178,7 +180,8 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           roll floors (level 1: no 1–5, level 3: no 1–10, level 5: no 1–20), even for non-bets.
           Base payout is {BET_WIN_POINTS} weebucks per bet win. Winning the tournament pays{' '}
           {TOURNAMENT_WIN_POINTS} weebucks. Bets lock until Monday at midnight Central Time. Betting
-          runs start at {BASE_DAILY_BET_RUNS} and can be raised in the Shop.
+          runs start at {BASE_DAILY_BET_RUNS} and can be raised in the Shop to {DAILY_BET_RUNS_TIER1},
+          then {DAILY_BET_RUNS_TIER2}.
         </p>
         <ul>
           <li>
@@ -229,8 +232,9 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             <strong>Trail runs</strong> — {BASE_DAILY_TRAIL_RUNS} per day by default (shop can raise
             to {DAILY_TRAIL_RUNS_TIER1}, then {DAILY_TRAIL_RUNS_TIER2}). These are separate from
             Betting runs. Ranked Drop in locks those skins until Monday at midnight Central Time.{" "}
-            <strong>For Fun</strong> opens a separate squad select with no locks or Trail-run
-            limit, and awards no weebucks or skin XP.
+            <strong>For Fun</strong> is locked until you buy it in the Shop (5000 weebucks). It
+            opens a separate squad select with no locks or Trail-run limit, and awards no weebucks
+            or skin XP.
           </li>
           <li>
             <strong>Event images</strong> — encounters show skin icons from Anime Legends, Anime
@@ -252,11 +256,11 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             HP; level 4 skins take 5% less fight damage; level 5 skins start with +20 HP.
           </li>
           <li>
-            <strong>Shop</strong> — Trail upgrades (storm/fight resist, Trail runs, payouts) plus
-            boss loot packs (Bending, Lightsabers, Infinity Blade, Kamehameha, Mythic Goldfish),
-            Chug Jugs, and unlockable events (Legendary Supply Drop, Vending Machine, Floating
-            Island, Fishing Spot, Slurp Barrel, Pirate Shop Access Token — ranked only) for 1000
-            weebucks each.
+            <strong>Shop</strong> — Trail upgrades (storm/fight resist, Trail runs, For Fun mode,
+            payouts) plus boss loot packs (Bending, Lightsabers, Infinity Blade, Kamehameha, Mythic
+            Goldfish), Chug Jugs, and unlockable events (Legendary Supply Drop, Vending Machine,
+            Floating Island, Fishing Spot, Slurp Barrel, Pirate Shop Access Token — ranked only)
+            for 1000 weebucks each.
           </li>
           <li>
             <strong>Rest</strong> — use a healing item, or search for heals. Both can still draw the
