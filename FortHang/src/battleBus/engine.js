@@ -91,6 +91,7 @@ function weighted(entries) {
  * @param {{
  *   partyNames: string[],
  *   sidekickName?: string | null,
+ *   sidekickOutfit?: object | null,
  *   outfits?: object[],
  *   partyOutfits?: object[],
  *   startingHpByName?: Record<string, number>,
@@ -123,6 +124,7 @@ function weighted(entries) {
 export async function playTrailMatch({
   partyNames,
   sidekickName,
+  sidekickOutfit = null,
   outfits = [],
   partyOutfits = [],
   startingHpByName = {},
@@ -160,6 +162,7 @@ export async function playTrailMatch({
   const partyByName = new Map(
     [...partyOutfits, ...outfits.filter((o) => names.includes(o.name))].map((o) => [o.name, o]),
   );
+  if (sidekickOutfit?.name) partyByName.set(sidekickOutfit.name, sidekickOutfit);
   const startHpFor = (name) => {
     const value = Number(startingHpByName[name]);
     return Number.isFinite(value) && value > 0 ? Math.floor(value) : 100;
@@ -540,17 +543,14 @@ export async function playTrailMatch({
       if (killerOutfit) S.killers[name] = killerOutfit;
       log(`*** ${blurb} ***`);
       log(`(${name} was eliminated by ${cause}. They can't be revived.)`);
-      const victimOutfit = partyByName.get(name) || null;
+      const victimOutfit =
+        partyByName.get(name) || (name === sidekick && sidekickOutfit ? sidekickOutfit : null);
       showMemberEvent(name, blurb, {
         kind: 'death',
         crossedOut: true,
-        outfits: killerOutfit
-          ? [killerOutfit, victimOutfit].filter(Boolean)
-          : victimOutfit
-            ? [victimOutfit]
-            : [],
-        killerOutfit,
-        victimOutfit,
+        outfits: [killerOutfit, victimOutfit].filter(Boolean),
+        killerOutfit: killerOutfit || null,
+        victimOutfit: victimOutfit || null,
       });
       emitSquad();
       await choose(['Continue']);

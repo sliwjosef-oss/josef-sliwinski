@@ -249,6 +249,20 @@ function EventVisualPanel({ visual, discoveredIds }) {
   const isItem = visual.kind === 'item';
   const isEnemy = visual.kind === 'enemy';
   const isDeath = visual.kind === 'death' || visual.crossedOut;
+  const deathCards = isDeath
+    ? [
+        ...(visual.killerOutfit
+          ? [{ key: `killer-${visual.killerOutfit.id || visual.killerOutfit.name}`, outfit: visual.killerOutfit, dead: false, killer: true }]
+          : []),
+        {
+          key: `victim-${visual.victimOutfit?.id || visual.memberName || 'squad'}`,
+          outfit: visual.victimOutfit || null,
+          name: visual.memberName,
+          dead: true,
+          killer: false,
+        },
+      ]
+    : null;
   const showIcons = outfits.length > 0 || (isItem && visual.iconUrls?.length);
   const hpHidden = Boolean(visual.hpHidden);
   const chunks = Math.max(1, visual.chunks || memberStates.length || outfits.length || 1);
@@ -294,10 +308,34 @@ function EventVisualPanel({ visual, discoveredIds }) {
       <div
         className={`trail-event-grid count-${Math.min(
           4,
-          Math.max(1, outfits.length || (isItem ? 1 : 0)),
+          Math.max(1, deathCards?.length || outfits.length || (isItem ? 1 : 0)),
         )}`}
       >
-        {outfits.map((outfit, index) => {
+        {deathCards
+          ? deathCards.map((card) => {
+              const label = card.outfit ? outfitLabel(card.outfit) : card.name || '???';
+              return (
+                <div
+                  key={card.key}
+                  className={`trail-event-card ${card.dead ? 'is-crossed' : ''} ${
+                    card.killer ? 'is-killer' : ''
+                  }`}
+                >
+                  <div className="trail-event-art">
+                    <EventIconImg
+                      outfit={card.outfit}
+                      alt={label}
+                      fallback={<div className="icon-placeholder">{card.dead ? 'X' : '?'}</div>}
+                    />
+                    {card.dead ? <span className="trail-squad-x" aria-hidden="true" /> : null}
+                  </div>
+                  <p className="trail-event-name">{card.killer ? `Killer · ${label}` : label}</p>
+                </div>
+              );
+            })
+          : null}
+        {!deathCards
+          ? outfits.map((outfit, index) => {
           const label = outfitLabel(outfit);
           const member = memberStates[index];
           const deadMember = isDeath
@@ -320,7 +358,8 @@ function EventVisualPanel({ visual, discoveredIds }) {
             <p className="trail-event-name">{isKillerCard ? `Killer · ${label}` : label}</p>
           </div>
           );
-        })}
+        })
+          : null}
         {isItem ? (
           <div className="trail-event-card is-item">
             <div className="trail-event-art">
@@ -339,7 +378,7 @@ function EventVisualPanel({ visual, discoveredIds }) {
             <p className="trail-event-name">{visual.itemName}</p>
           </div>
         ) : null}
-        {!showIcons && !isItem ? (
+        {!deathCards && !showIcons && !isItem ? (
           <div className={`trail-event-card ${isDeath ? 'is-crossed' : ''}`}>
             <div className="trail-event-art">
               <div className="icon-placeholder">{isDeath ? 'X' : '?'}</div>
@@ -797,6 +836,7 @@ export default function BattleBusTrail({
       const match = await playTrailMatch({
         partyNames: party.map((outfit) => outfit.name),
         sidekickName: sidekick?.name || null,
+        sidekickOutfit: sidekick || null,
         // Full catalogue for encounter art — not limited to discovered/owned skins.
         outfits,
         discoveredSkinIds: guessedSkinIds,
