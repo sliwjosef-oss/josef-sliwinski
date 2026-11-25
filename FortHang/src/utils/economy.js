@@ -324,7 +324,7 @@ export const TRAIL_SHOP_UNLOCKS = {
     eventId: 'vendingMachine',
     label: 'Vending Machine',
     blurb:
-      'Can appear when you Rest. Trade one inventory item for Epic / Legendary / Mythic loot (80% Epic, 20% Legendary or Mythic).',
+      '5% chance when you Rest. Trade one inventory item for Epic / Legendary / Mythic loot (80% Epic, 20% Legendary or Mythic).',
   },
   trailFloatingIsland: {
     id: 'trailFloatingIsland',

@@ -266,7 +266,7 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             Splash heals every living squad member, sidekick included, for +20 total — HP first,
             then any leftover fills shield (for example 94 HP gets +6 HP and +14 shield). Chug
             Jugs restore the whole squad and only drop after you unlock them (about 1% per chest). With Vending Machine
-            unlocked, Rest can instead offer a one-item trade for Epic / Legendary / Mythic loot
+            unlocked, Rest has a 5% chance to offer a one-item trade for Epic / Legendary / Mythic loot
             (80% Epic, 20% Legendary or Mythic). Slurp
             Barrel (shop unlock) can rarely appear when searching for heals and restores the whole
             squad to full HP.

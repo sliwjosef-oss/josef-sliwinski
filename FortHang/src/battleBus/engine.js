@@ -280,7 +280,6 @@ export async function playTrailMatch({
           alive: Boolean(member),
           afkTurns: S.afk[name] || 0,
           dancingRounds: member && S.dancers.has(name) && S.boogieRounds > 0 ? S.boogieRounds : 0,
-          killerOutfit: S.killers[name] || null,
         };
       }),
       playersLeft: S.playersLeft,
@@ -2179,7 +2178,7 @@ export async function playTrailMatch({
   };
 
   const actionRest = async () => {
-    if (eventUnlocks.has('vendingMachine') && rand() < 0.28) {
+    if (eventUnlocks.has('vendingMachine') && rand() < 0.05) {
       const traded = await eventVendingMachine();
       if (traded) {
         restStormRisk();

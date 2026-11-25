@@ -600,7 +600,6 @@ export default function BattleBusTrail({
         shield: member.shield,
         alive: member.alive,
         dancingRounds: member.dancingRounds || 0,
-        killerOutfit: member.killerOutfit || null,
       };
     });
     if (!members.some((member) => member.sidekick)) {
