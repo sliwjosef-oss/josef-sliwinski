@@ -2001,7 +2001,7 @@ export async function playTrailMatch({
       return false;
     }
     log(
-      'A vending machine appears! Trade one item for Epic / Legendary / Mythic loot (80% Epic, 20% Legendary or Mythic).',
+      'A vending machine appears! Trade one item for Epic, Legendary, or Mythic loot.',
     );
     const labels = owned.map((item) =>
       S.inventory[item] > 1 ? `Trade ${item} x${S.inventory[item]}` : `Trade ${item}`,

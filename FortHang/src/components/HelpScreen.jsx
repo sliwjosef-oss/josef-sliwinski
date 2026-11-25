@@ -108,7 +108,7 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
 
       <section id="help-shop" className="help-section">
         <h2>Shop</h2>
-        <p>The Shop has three kinds of purchases:</p>
+        <p>The Shop has four kinds of purchases:</p>
         <ul>
           <li>
             <strong>Skin attempt packs</strong> — add hangman attempts for today (they stack until the
@@ -121,6 +121,10 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             <strong>Betting upgrades</strong> — permanently unlock better Betting tools and
             payouts (more slots, stronger dice, higher Top 8 / Top 64 / tournament rewards, Simulate
             all, Select random, seeding, extra lives, and more Betting runs).
+          </li>
+          <li>
+            <strong>Battle Bus Trail upgrades</strong> — daily runs, payouts, damage resists, For Fun
+            mode, boss loot, and Trail events. Each item shows its own price.
           </li>
         </ul>
         <p>Many upgrades unlock in tiers — buy the earlier one before the next appears as Available.</p>
@@ -220,10 +224,10 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
         <ul>
           <li>
             <strong>Squad</strong> — pick 4 discovered skins before you drop in. An owned sidekick
-            is optional. After a ranked run, that sidekick needs rest until the next 6:00 AM Central
-            reset (same day boundary as hangman attempts) — skins still lock until Monday. The top
-            row shows health (♥) and shield (🛡). The shield bar hides at 0. Fallen members are
-            crossed out.
+            is optional. After a ranked run, that sidekick rests until the next 6:00 AM Central
+            reset, the same day boundary as hangman attempts. Squad skins still lock until Monday
+            at midnight Central Time. The top row shows health (♥) and shield (🛡). The shield bar
+            hides at 0. Fallen members are crossed out.
           </li>
           <li>
             <strong>Enemy type</strong> — you can see who showed up, but not whether they are bots,
@@ -254,15 +258,15 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           </li>
           <li>
             <strong>XP</strong> — skins earn {TRAIL_SURVIVOR_XP} XP if they survive, {TRAIL_FALLEN_XP}{' '}
-            XP if they fall. Level 1+ skins take 5% less Storm damage; level 2+ skins start with +10
-            HP; level 4 skins take 5% less fight damage; level 5 skins start with +20 HP.
+            XP if they fall. Level 1+ skins take 5% less Storm damage. Level 2+ skins start with +10
+            HP, and level 5 skins start with +20 HP instead. Level 4+ skins take 5% less fight damage.
           </li>
           <li>
-            <strong>Shop</strong> — Trail upgrades (storm/fight resist, Trail runs, For Fun mode,
-            payouts) plus boss loot packs (Bending, Lightsabers, Infinity Blade, Kamehameha, Mythic
-            Goldfish), Chug Jugs, and unlockable events (Legendary Supply Drop, Vending Machine,
-            Floating Island, Fishing Spot, Slurp Barrel, Pirate Shop Access Token — ranked only)
-            for 1000 weebucks each.
+            <strong>Shop</strong> — Trail upgrades cover storm and fight resist, daily runs, payouts,
+            For Fun mode, boss loot packs (Bending, Lightsabers, Infinity Blade, Kamehameha, Mythic
+            Goldfish), Chug Jugs, and events (Legendary Supply Drop, Vending Machine, Floating
+            Island, Fishing Spot, Slurp Barrel, and Pirate Shop Access Token, which is ranked only).
+            Each item shows its own price.
           </li>
           <li>
             <strong>Rest</strong> — use a healing item, or search for heals. Both can still draw the
@@ -272,8 +276,7 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             Splash heals every living squad member, sidekick included, for +20 total — HP first,
             then any leftover fills shield (for example 94 HP gets +6 HP and +14 shield). Chug
             Jugs restore the whole squad and only drop after you unlock them (about 1% per chest). With Vending Machine
-            unlocked, Rest has a 5% chance to offer a one-item trade for Epic / Legendary / Mythic loot
-            (80% Epic, 20% Legendary or Mythic). Slurp
+            unlocked, Rest can offer a one-item trade for Epic, Legendary, or Mythic loot. Slurp
             Barrel (shop unlock) can rarely appear when searching for heals and restores the whole
             squad to full HP.
           </li>
