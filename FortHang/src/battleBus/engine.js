@@ -5,7 +5,6 @@ import {
   BOOK_IT_AMBUSH,
   BOSS_FIGHT_AMBUSH,
   BOSS_ITEMS,
-  BOSS_LOOT,
   CHASE,
   DAMAGE_ITEMS,
   ENEMY_DAMAGE_MULT,
@@ -21,26 +20,23 @@ import {
   FIND_TEXT,
   GROUP_WORDS,
   LOOT_AMBUSH,
-  LOOT_TABLE,
   MAX_ITEMS,
   PIRATE_SHOP_TOKEN_BONUS,
   PIRATE_SHOP_TOKEN_CHANCE,
   MULTI_USE,
   PHASES,
   PLACES,
-  RARE_ITEMS,
-  RARE_REWARD,
+  LEEKCAPPER_CHANCE,
+  READ_HINT,
   READ_TEXT,
   READS,
   REST_STORM,
-  SAFE_ROUTE_AMBUSH,
   SOLO_ACTIVITIES,
   SOLO_WORDS,
   SQUAD_EVENT_CHANCE,
   STATUS,
   STORM_DAMAGE_MULT,
   STORM_SCHEDULE,
-  TRAIL_SHOP_UNLOCK_ITEMS,
   TURRET_DAMAGE,
   WEAPONS,
 } from './constants';
@@ -51,8 +47,17 @@ import {
   groupOutfitsBySeriesKey,
   pickOutfitsFromSeries,
 } from './visuals';
+import { itemRarity, LOOT_ITEMS, lootTableForEnemy, rollLootDrop } from './loot';
+import {
+  applySniperShot,
+  BOOGIE_ROUNDS,
+  CHUG_SPLASH_HP,
+  enemySkipsPanic,
+  rollBoogieDancers,
+} from './combatRules';
 import {
   aliveCount,
+  aliveMembers,
   buildLobby,
   countLobbyAlive,
   groupEnemyType,
@@ -129,11 +134,13 @@ export async function playTrailMatch({
   unlockedEvents = [],
   discoveredSkinIds = [],
   forFun = false,
+  startingInventory = null,
   log,
   clearLog,
   choose,
   onSquadUpdate,
   onEventVisual,
+  onCodexUpdate,
 }) {
   const unlocked = new Set(unlockedBossItems);
   const eventUnlocks = new Set(unlockedEvents);
@@ -184,17 +191,29 @@ export async function playTrailMatch({
       ...extra,
     });
   };
-  const emitEnemyStatus = (enemy, hp, maxHp, { hidden = false, hpHidden = false } = {}) => {
-    const label = hidden ? '???' : enemy === 'Boss' ? 'Boss' : enemy;
+  const facingName = (enemy) => {
+    const outfits = lastEncounterOutfits.slice(0, String(enemy).startsWith('Solo') ? 1 : 4);
+    const skinNames = outfits.map((outfit) => outfit?.name).filter(Boolean);
+    if (enemy === 'Boss') return skinNames[0] ? `Boss (${skinNames[0]})` : 'Boss';
+    if (!skinNames.length) return 'Enemy';
+    if (skinNames.length === 1) return skinNames[0];
+    return `${skinNames[0]}'s squad`;
+  };
+  const emitEnemyStatus = (enemy, hp, maxHp, { hpHidden = false } = {}) => {
+    const typeHidden = enemy !== 'Boss' && Boolean(READS[enemy]);
+    const who = typeHidden || enemy === 'Boss' ? facingName(enemy) : enemy;
     emitVisual({
       kind: 'enemy',
-      caption: hpHidden ? `Spotted: ${label}` : `Fight vs ${label}`,
-      enemyLabel: label,
+      caption: hpHidden ? `Spotted: ${who}` : `Fight vs ${who}`,
+      enemyLabel: who,
       enemyType: enemy,
+      typeHidden,
+      readHint: typeHidden ? S.lastRead || '' : '',
       hp: Math.max(0, hp),
       maxHp,
       hpHidden: Boolean(hpHidden),
-      outfits: lastEncounterOutfits.slice(0, enemy.startsWith('Solo') ? 1 : 4),
+      dancingRounds: S.boogieRounds || 0,
+      outfits: lastEncounterOutfits.slice(0, String(enemy).startsWith('Solo') ? 1 : 4),
     });
   };
 
@@ -205,8 +224,10 @@ export async function playTrailMatch({
         return [n, { hp: maxHp, maxHp, shield: 0 }];
       }),
     ),
-    inventory: { Medkit: 1 },
+    inventory: startingInventory ? { ...startingInventory } : { Medkit: 1 },
     itemUses: {},
+    boogieRounds: 0,
+    dancers: new Set(),
     fortRounds: 0,
     enemyStunned: false,
     turretRounds: 0,
@@ -227,6 +248,7 @@ export async function playTrailMatch({
     afk: {},
     lastHit: {},
     fallen: [],
+    lastRead: '',
   };
 
   const emitSquad = () => {
@@ -242,6 +264,7 @@ export async function playTrailMatch({
           shield: member ? member.shield : 0,
           alive: Boolean(member),
           afkTurns: S.afk[name] || 0,
+          dancingRounds: member && S.dancers.has(name) && S.boogieRounds > 0 ? S.boogieRounds : 0,
         };
       }),
       playersLeft: S.playersLeft,
@@ -260,8 +283,9 @@ export async function playTrailMatch({
   const useItem = (item) => {
     S.inventory[item] -= 1;
     if (S.inventory[item] <= 0) delete S.inventory[item];
+    publishCodex();
   };
-  const rarityOf = (item) => BOSS_ITEMS[item]?.rarity || LOOT_TABLE.find((row) => row[0] === item)?.[1] || 'Common';
+  const rarityOf = (item) => itemRarity(item);
 
   const showSquad = () => {
     emitSquad();
@@ -285,20 +309,63 @@ export async function playTrailMatch({
       return label;
     });
     log(parts.length ? `Items: ${parts.join(', ')}` : 'Items: (none)');
+    publishCodex();
+  };
+
+  const publishCodex = () => {
+    onCodexUpdate?.({
+      items: Object.entries(S.inventory).map(([name, count]) => ({
+        name,
+        count,
+        usesLeft: usesLeftFor(name),
+        iconUrls: getFortniteGgIconUrls(name),
+      })),
+      squads: lobby
+        .filter((squad) => squad.members.some((member) => member.seen || !member.alive))
+        .map((squad) => ({
+          id: squad.id,
+          theme: squad.theme || '',
+          members: squad.members
+            .filter((member) => member.seen || !member.alive)
+            .map((member) => ({
+              id: member.outfit?.id,
+              name: member.outfit?.name || '???',
+              alive: Boolean(member.alive),
+              outfit: member.outfit,
+              placement: member.placement || null,
+              death: member.death
+                ? {
+                    kind: member.death.kind,
+                    killerId: member.death.killerId || '',
+                    killerName: member.death.killerName || '',
+                  }
+                : null,
+            })),
+        })),
+    });
+  };
+  publishCodex();
+
+  const showFoundItem = (item, caption) => {
+    const rarity = rarityOf(item);
+    if (rarity === 'Common' || rarity === 'Uncommon') return;
+    emitVisual({
+      kind: 'item',
+      caption,
+      itemName: item,
+      rarity,
+      iconUrls: getFortniteGgIconUrls(item),
+      weaponPage: getFortniteGgWeaponPage(item),
+    });
   };
 
   const give = (item) => {
+    if (item === 'Kneecapper' && rand() < LEEKCAPPER_CHANCE) item = 'Leekcapper';
     if (MULTI_USE[item] && has(item)) {
       S.itemUses[item] = MULTI_USE[item];
       log(`* Found another ${item} — uses refilled!`);
-      emitVisual({
-        kind: 'item',
-        caption: `Refilled ${item}`,
-        itemName: item,
-        rarity: rarityOf(item),
-        iconUrls: getFortniteGgIconUrls(item),
-        weaponPage: getFortniteGgWeaponPage(item),
-      });
+      showFoundItem(item, `Refilled ${item}`);
+      publishCodex();
       return;
     }
     const count = Object.values(S.inventory).reduce((a, b) => a + b, 0);
@@ -309,14 +376,8 @@ export async function playTrailMatch({
     S.inventory[item] = (S.inventory[item] || 0) + 1;
     if (MULTI_USE[item]) S.itemUses[item] = MULTI_USE[item];
     log(`* Found: ${item} (${rarityOf(item)})!`);
-    emitVisual({
-      kind: 'item',
-      caption: `Found ${item}`,
-      itemName: item,
-      rarity: rarityOf(item),
-      iconUrls: getFortniteGgIconUrls(item),
-      weaponPage: getFortniteGgWeaponPage(item),
-    });
+    showFoundItem(item, `Found ${item}`);
+    publishCodex();
   };
 
   const useMulti = (item) => {
@@ -336,49 +397,25 @@ export async function playTrailMatch({
     return left;
   };
 
-  const rollLoot = () => {
-    const oddsOf = (name) => LOOT_TABLE.find((row) => row[0] === name)?.[2] ?? 0;
-    if (unlocked.has('Chug Jug') && rand() < oddsOf('Chug Jug')) {
-      give('Chug Jug');
-      return;
+  const grantLoot = (tableName, { isChest = false } = {}) => {
+    const item = rollLootDrop(tableName, { unlocked, isChest, rand });
+    if (!item) {
+      log('Nothing special in this one.');
+      return null;
     }
-    if (rand() < oddsOf('Slurp Juice')) {
-      give('Slurp Juice');
-      return;
-    }
-    for (const [item, , odds] of LOOT_TABLE) {
-      if (item === 'Chug Jug' || item === 'Slurp Juice') continue;
-      if (rand() < odds) {
-        give(item);
-        return;
-      }
-    }
-    log('Nothing special in this one.');
+    give(item);
+    return item;
   };
-
-  const bossLootPool = () =>
-    Object.fromEntries(
-      Object.entries(BOSS_LOOT).filter(
-        ([item]) => !(item in TRAIL_SHOP_UNLOCK_ITEMS) || unlocked.has(item),
-      ),
-    );
-
-  const giveRare = (fromBoss = false) => {
-    if (fromBoss) {
-      const pool = bossLootPool();
-      const entries = Object.entries(pool);
-      if (!entries.length) return;
-      give(weighted(entries));
-      return;
-    }
-    give(pick(RARE_ITEMS.filter((item) => item !== 'Chug Jug' || unlocked.has('Chug Jug'))));
-  };
-
-  const isMythicBossItem = (item) =>
-    item === 'Infinity Blade' || BOSS_ITEMS[item]?.rarity === 'Mythic';
 
   const mythicBossEntries = () =>
-    Object.entries(bossLootPool()).filter(([item]) => isMythicBossItem(item));
+    Object.entries(LOOT_ITEMS)
+      .filter(
+        ([name, item]) =>
+          item.rarity === 'Mythic' &&
+          item.pools.includes('boss') &&
+          (!item.shop || unlocked.has(name)),
+      )
+      .map(([name]) => [name, 1]);
 
   const giveMythicBoss = () => {
     const entries = mythicBossEntries();
@@ -445,13 +482,17 @@ export async function playTrailMatch({
   };
 
   const sniperHit = (name) => {
-    S.lastHit[name] = 'a sniper';
     const s = S.squad[name];
-    if (s.shield > 0) {
-      s.shield = 0;
+    const outcome = applySniperShot(s, S.inventory);
+    if (outcome === 'blocked') {
+      log('A sniper round whizzes past. Your Bush kept you hidden! (Bush used)');
+      showInventory();
+      return;
+    }
+    S.lastHit[name] = 'a sniper';
+    if (outcome === 'shield') {
       log(`A sniper shot ${name}! Their shield shattered, but they're alive.`);
     } else {
-      s.hp = 0;
       log(`A sniper eliminated ${name} instantly — no shield to stop it!`);
     }
     emitSquad();
@@ -493,6 +534,26 @@ export async function playTrailMatch({
     S.playersLeft = Object.keys(S.squad).length + countLobbyAlive(lobby);
     noteEndgame();
     emitSquad();
+    publishCodex();
+  };
+  const partyKillerOutfit = () => {
+    const living = Object.keys(S.squad)
+      .map((name) => partyByName.get(name))
+      .filter((outfit) => outfit?.id);
+    const fallback = [...partyByName.values()].filter((outfit) => outfit?.id);
+    return pick(living.length ? living : fallback) || null;
+  };
+  const killedByOutfit = (outfit) => ({
+    kind: 'killed',
+    killerId: outfit?.id || '',
+    killerName: outfit?.name || '',
+  });
+  const recordDeath = (member, death) => {
+    if (!member?.alive) return false;
+    member.placement = Object.keys(S.squad).length + countLobbyAlive(lobby);
+    member.alive = false;
+    member.death = death || { kind: 'fall' };
+    return true;
   };
   const eliminateOthers = (n, { fromFight = false, preferSquadId = null } = {}) => {
     if (!fromFight && S.playersLeft <= ENDGAME_LOCK) return;
@@ -506,7 +567,12 @@ export async function playTrailMatch({
       syncPlayersLeft();
       return;
     }
-    killLobbyMembers(lobby, n, { preferSquadId });
+    killLobbyMembers(lobby, n, {
+      preferSquadId,
+      playersLeft: S.playersLeft,
+      killerOutfit: fromFight ? partyKillerOutfit() : null,
+      offscreen: !fromFight,
+    });
     syncPlayersLeft();
   };
 
@@ -515,6 +581,8 @@ export async function playTrailMatch({
   const setEncounter = (squad, members) => {
     lastEncounterRef = { squadId: squad.id, members };
     lastEncounterOutfits = members.map((member) => member.outfit);
+    for (const member of members) member.seen = true;
+    publishCodex();
   };
 
   const groupWordFor = (count) => {
@@ -541,9 +609,14 @@ export async function playTrailMatch({
         : pick(Object.keys(ACTIVITIES));
     const enemy =
       members.length === 1 ? soloEnemyType(squad.type) : groupEnemyType(squad.type);
-    const text = `${groupWordFor(members.length)} ${
-      members.length === 1 ? 'player' : 'players'
-    } ${activity} ${pick(PLACES)}`;
+    const themeBit = squad.theme
+      ? members.length === 1
+        ? squad.theme.replace(/ skins$/, ' skin')
+        : squad.theme
+      : members.length === 1
+        ? 'player'
+        : 'players';
+    const text = `${groupWordFor(members.length)} ${themeBit} ${activity} ${pick(PLACES)}`;
     emitVisual({
       kind: 'skins',
       caption: text,
@@ -572,25 +645,26 @@ export async function playTrailMatch({
     const shuffled = [...opts].sort(() => rand() - 0.5);
     const squadA = shuffled[0];
     const squadB = shuffled[1];
-    const membersA = takeAliveMembers(squadA, 2);
-    const membersB = takeAliveMembers(squadB, 2);
+    const membersA = aliveMembers(squadA);
+    const membersB = aliveMembers(squadB);
     lastEncounterRef = { squadId: squadA.id, members: membersA };
     lastEncounterOutfits = membersA.map((member) => member.outfit);
-    const skins = [...membersA, ...membersB].map((member) => member.outfit);
-    const text = `You hear gunfire ${pick(PLACES)}. Two squads are fighting nearby.`;
-    emitVisual({
-      kind: 'skins',
-      caption: text,
-      outfits: skins,
-    });
+    const named = (squad, fallback) => (squad.theme ? `a squad of ${squad.theme}` : fallback);
+    const leftName = named(squadA, 'One squad').replace(/^a/, 'A');
+    const rightName = named(squadB, 'another squad');
+    const text = `You hear gunfire ${pick(PLACES)}. ${leftName} is fighting ${rightName}.`;
     return [text, groupEnemyType(squadA.type), groupEnemyType(squadB.type), squadA, squadB, membersA, membersB];
   };
 
   const readEnemy = (enemy) => {
     const feel = READS[enemy];
-    if (!feel) return;
+    if (!feel) {
+      S.lastRead = '';
+      return;
+    }
     const guess = weighted(Object.entries(feel));
-    log(`[READ] ${READ_TEXT[guess]}`);
+    S.lastRead = READ_HINT[guess] || '';
+    log(`Read: ${READ_TEXT[guess]}`);
   };
 
   const aOrAn = (word) => (/^[aeiou]/i.test(word) ? 'an' : 'a');
@@ -604,6 +678,10 @@ export async function playTrailMatch({
     }
     let total = 0;
     for (const m of shooters) {
+      if (S.dancers.has(m) && S.boogieRounds > 0) {
+        log(`${m} is dancing and can't shoot!`);
+        continue;
+      }
       if (rand() < WEAPONS[weapon].miss) {
         log(`${m} used ${aOrAn(weapon)} ${weapon} and missed!`);
         continue;
@@ -616,6 +694,17 @@ export async function playTrailMatch({
   };
 
   const enemyAttacks = async (enemy, bonus = 0) => {
+    if (S.boogieRounds > 0) {
+      S.boogieRounds -= 1;
+      if (S.boogieRounds > 0) {
+        log(`They're dancing and can't attack! (${S.boogieRounds} round(s) left)`);
+      } else {
+        S.dancers = new Set();
+        log('The music stops. The enemy is back in the fight.');
+      }
+      emitSquad();
+      return;
+    }
     if (S.enemyStunned) {
       S.enemyStunned = false;
       log("They're stunned and can't attack this round!");
@@ -649,7 +738,7 @@ export async function playTrailMatch({
       log('You beat the boss and claimed its vault!');
       for (const s of Object.values(S.squad)) s.shield = Math.min(100, s.shield + 50);
       log('+50 shield to everyone');
-      giveRare(true);
+      grantLoot('boss');
     } else {
       if (String(enemy).startsWith('Solo')) S.kills.solo += 1;
       else S.kills.squad += 1;
@@ -657,8 +746,9 @@ export async function playTrailMatch({
       if (lastEncounterRef?.members?.length) {
         for (const member of lastEncounterRef.members) {
           if (member.alive) {
-            member.alive = false;
+            recordDeath(member, killedByOutfit(partyKillerOutfit()));
             killed += 1;
+            log(`You killed a ${killNoun(enemy)}.`);
           }
         }
         syncPlayersLeft();
@@ -673,11 +763,17 @@ export async function playTrailMatch({
       log(`You eliminated the ${enemy}! That ${who} is out: -${killed} player(s).`);
     }
     lastEncounterRef = null;
-    for (let i = 0; i < team.loot; i += 1) rollLoot();
-    if (enemy !== 'Boss' && rand() < (RARE_REWARD[enemy] || 0)) giveRare(false);
+    const lootTable = enemy === 'Boss' ? 'bots' : lootTableForEnemy(enemy);
+    for (let i = 0; i < team.loot; i += 1) grantLoot(lootTable);
   };
 
   const isSweat = (enemy) => enemy === 'Sweats' || enemy === 'Solo sweat';
+
+  const killNoun = (enemy) => {
+    if (enemy === 'Bots' || enemy === 'Solo bot') return 'bot';
+    if (isSweat(enemy)) return 'sweat';
+    return 'player';
+  };
 
   const useBossItem = async (pickItem, enemy, user) => {
     const d = BOSS_ITEMS[pickItem];
@@ -762,11 +858,11 @@ export async function playTrailMatch({
       log(`${target} uses a Shield Potion! +${member.shield - before} shield`);
     } else if (item === 'Medkit') {
       const before = member.hp;
-      member.hp = member.maxHp;
+      member.hp = Math.min(member.maxHp, member.hp + 100);
       log(
         before >= member.maxHp
           ? `${target} uses a Medkit, but was already at full HP.`
-          : `${target} uses a Medkit! Back to full HP (${member.maxHp}).`,
+          : `${target} uses a Medkit! +${member.hp - before} HP`,
       );
     }
     emitSquad();
@@ -781,12 +877,35 @@ export async function playTrailMatch({
     return pickName;
   };
 
-  const HEAL_ITEMS = ['Medkit', 'Shield Potion', 'Slurp Juice', 'Chug Jug'];
+  const HEAL_ITEMS = ['Medkit', 'Shield Potion', 'Slurp Juice', 'Chug Jug', 'Chug Splash'];
+
+  const splashSquad = () => {
+    for (const name of Object.keys(S.squad)) {
+      const member = S.squad[name];
+      const before = member.hp;
+      member.hp = Math.min(member.maxHp, member.hp + CHUG_SPLASH_HP);
+      const gained = member.hp - before;
+      log(gained > 0 ? `${name} +${gained} HP from the Chug Splash.` : `${name} is already at full HP.`);
+    }
+    emitSquad();
+  };
+
+  const throwBoogie = (enemy) => {
+    const dancers = rollBoogieDancers(Object.keys(S.squad), rand);
+    S.boogieRounds = BOOGIE_ROUNDS;
+    S.dancers = new Set(dancers);
+    log(`You throw a Boogie Bomb! The enemy can't stop dancing. (${BOOGIE_ROUNDS} rounds)`);
+    for (const name of dancers) log(`Uh oh, ${name} caught the groove too!`);
+    emitSquad();
+  };
 
   const useItemInFight = async (enemy) => {
     const order = [
       ...Object.keys(BOSS_ITEMS),
       'Grenade',
+      'Clinger',
+      'Boogie Bomb',
+      'Chug Splash',
       'Rocket Launcher',
       'Shield Potion',
       'Medkit',
@@ -842,6 +961,17 @@ export async function playTrailMatch({
       useItem(pickItem);
       restoreSquad();
       log('Chug Jug! Everyone is fully restored!');
+      return ['used', 0];
+    }
+    if (pickItem === 'Chug Splash') {
+      useItem(pickItem);
+      log('Chug Splash! Everyone gets a splash of health.');
+      splashSquad();
+      return ['used', 0];
+    }
+    if (pickItem === 'Boogie Bomb') {
+      useItem(pickItem);
+      throwBoogie(enemy);
       return ['used', 0];
     }
     if (pickItem === 'Medkit' || pickItem === 'Shield Potion' || pickItem === 'Slurp Juice') {
@@ -961,6 +1091,8 @@ export async function playTrailMatch({
   combat = async (enemy, enemyHp, showRead = false, fleeBonus = 0) => {
     const maxHp = enemyMaxHp(enemy);
     S.fortRounds = 0;
+    S.boogieRounds = 0;
+    S.dancers = new Set();
     S.enemyStunned = false;
     S.turretRounds = 0;
     S.burnDamage = 0;
@@ -968,7 +1100,7 @@ export async function playTrailMatch({
     emitEnemyStatus(enemy, enemyHp, maxHp, { hidden: Boolean(showRead && READS[enemy]) });
     let bossAmbushed = false;
     while (Object.keys(S.squad).length && enemyHp > 0) {
-      const name = READS[enemy] ? '???' : enemy;
+      const name = READS[enemy] ? `${facingName(enemy)} · Type: ???` : enemy;
       log(`--- FIGHT vs ${name} ---`);
       log(`ENEMY HP ${enemyHp}/${maxHp}`);
       emitEnemyStatus(enemy, enemyHp, maxHp, { hidden: name === '???' });
@@ -1004,8 +1136,12 @@ export async function playTrailMatch({
       emitEnemyStatus(enemy, Math.max(0, enemyHp), maxHp);
       if (enemyHp <= 0) break;
       log(`ENEMY HP ${Math.max(0, enemyHp)}/${maxHp}`);
-      if ((enemy === 'Solo bot' || enemy === 'Solo player') && rand() < 0.25) {
-        log(`The ${enemy.toLowerCase()} panics and escapes! No loot this time.`);
+      if (
+        !enemySkipsPanic(S.boogieRounds) &&
+        (enemy === 'Solo bot' || enemy === 'Solo player') &&
+        rand() < 0.25
+      ) {
+        log('They panic and escape! No loot this time.');
         return 'escaped';
       }
       await enemyAttacks(enemy);
@@ -1031,6 +1167,7 @@ export async function playTrailMatch({
   };
 
   const engage = async (text, enemy, ambushOdds) => {
+    S.lastRead = '';
     let fleeBonus = 0;
     let odds = ambushOdds;
     const maxHp = enemyMaxHp(enemy);
@@ -1074,10 +1211,241 @@ export async function playTrailMatch({
     await combat(enemy, hpLeft, true, fleeBonus);
   };
 
+  const aliveFromHp = (hp, maxHp, count) => {
+    if (hp <= 0 || count <= 0 || maxHp <= 0) return 0;
+    const chunk = maxHp / count;
+    return Math.min(count, Math.ceil((hp - 1e-6) / chunk));
+  };
+
+  const sideLabel = (side) => {
+    if (side.squad?.theme) return side.squad.theme;
+    const face = side.members.find((member) => member.alive) || side.members[0];
+    const name = encounterLabel(face?.outfit, 'Squad');
+    return name === '???' || name === 'Squad' ? 'Squad' : `${name}'s squad`;
+  };
+
+  const emitThirdParty = (left, right) => {
+    const pack = (side) => ({
+      key: side.key,
+      label: sideLabel(side),
+      enemyType: side.enemy,
+      typeHidden: Boolean(READS[side.enemy]),
+      readHint: READS[side.enemy] ? side.read || '' : '',
+      hp: Math.max(0, Math.round(side.hp)),
+      maxHp: side.maxHp,
+      chunks: side.members.length,
+      dancingRounds: side.dance || 0,
+      members: side.members.map((member) => ({
+        id: member.outfit?.id,
+        name: member.outfit?.name || '???',
+        alive: Boolean(member.alive),
+        outfit: member.outfit,
+      })),
+    });
+    emitVisual({
+      kind: 'third-party',
+      caption: 'Two squads are fighting',
+      sides: [pack(left), pack(right)],
+    });
+  };
+
+  const dropChunks = (side, { byYou = false, attacker = null } = {}) => {
+    const should = aliveFromHp(side.hp, side.maxHp, side.members.length);
+    const living = side.members.filter((member) => member.alive);
+    let died = 0;
+    while (living.length > should) {
+      const victim = living.pop();
+      let death;
+      if (byYou) {
+        death = killedByOutfit(partyKillerOutfit());
+      } else {
+        const pool = (attacker?.members || []).filter((member) => member.alive && member !== victim);
+        const choice = pool.length
+          ? pick(pool)
+          : (attacker?.members || []).find((member) => member !== victim);
+        death = choice ? killedByOutfit(choice.outfit) : { kind: 'fall' };
+      }
+      victim.seen = true;
+      recordDeath(victim, death);
+      died += 1;
+      log(
+        byYou
+          ? `You killed a ${killNoun(side.enemy)}.`
+          : `The other squad killed a ${killNoun(side.enemy)}.`,
+      );
+    }
+    if (died) {
+      syncPlayersLeft();
+      publishCodex();
+    }
+    return died;
+  };
+
+  const wipeLoot = (side) => {
+    if (side.looted || side.hp > 0) return;
+    side.looted = true;
+    const team = ENEMY_TEAMS[side.enemy];
+    if (String(side.enemy).startsWith('Solo')) S.kills.solo += 1;
+    else S.kills.squad += 1;
+    log(`You eliminated the ${side.enemy}! That squad is out.`);
+    const lootTable = lootTableForEnemy(side.enemy);
+    for (let i = 0; i < team.loot; i += 1) grantLoot(lootTable);
+  };
+
+  const makeFightSide = (key, squad, members, enemy) => {
+    for (const member of members) member.seen = true;
+    readEnemy(enemy);
+    const maxHp = enemyMaxHp(enemy);
+    return {
+      key,
+      squad,
+      members,
+      enemy,
+      maxHp,
+      hp: maxHp,
+      dance: 0,
+      looted: false,
+      read: S.lastRead,
+    };
+  };
+
+  const strikeOtherSquad = (attacker, defender) => {
+    const team = ENEMY_TEAMS[attacker.enemy];
+    const [, hitChance] = ENEMY_SKILL[attacker.enemy];
+    const shots = Math.max(1, team.hits || 1);
+    for (let i = 0; i < shots; i += 1) {
+      if (defender.hp <= 0) return;
+      if (rand() < hitChance) {
+        const dmg = Math.floor(randInt(...team.dmg) * ENEMY_DAMAGE_MULT);
+        defender.hp = Math.max(0, defender.hp - dmg);
+        log(`${sideLabel(attacker)} hits the other squad for ${dmg}.`);
+        dropChunks(defender, { attacker });
+        if (defender.hp <= 0) log(`${sideLabel(attacker)} wiped that squad out.`);
+      } else {
+        log(`${sideLabel(attacker)} shot at the other squad and missed!`);
+      }
+    }
+  };
+
+  const combatBoth = async (left, right) => {
+    S.fortRounds = 0;
+    S.boogieRounds = 0;
+    S.dancers = new Set();
+    S.enemyStunned = false;
+    S.turretRounds = 0;
+    S.burnDamage = 0;
+    log('You crash the fight! Pick a side each round.');
+    emitThirdParty(left, right);
+    let focus = left.hp > 0 ? left : right;
+    while (Object.keys(S.squad).length && (left.hp > 0 || right.hp > 0)) {
+      const options = [];
+      if (left.hp > 0) options.push('Attack left squad');
+      if (right.hp > 0) options.push('Attack right squad');
+      options.push('Use item', 'Flee');
+      const pickOpt = await choose(options);
+      if (pickOpt === 'Flee') {
+        const foe = left.hp > 0 ? left : right;
+        await fleeChase(foe.enemy, foe.hp, 0.1, 0);
+        return;
+      }
+      if (pickOpt === 'Use item') {
+        const living = [left, right].filter((side) => side.hp > 0);
+        if (living.length > 1) {
+          const which = await choose(['Use it on the left squad', 'Use it on the right squad', 'Back']);
+          if (which === 'Back') continue;
+          focus = which.includes('left') ? left : right;
+        } else {
+          focus = living[0];
+        }
+        const [result, itemDmg] = await useItemInFight(focus.enemy);
+        if (result === 'cancel') continue;
+        if (result === 'escaped') return;
+        if (result === 'win') {
+          focus.hp = 0;
+          dropChunks(focus, { byYou: true });
+          wipeLoot(focus);
+        } else {
+          if (S.boogieRounds > 0) focus.dance = S.boogieRounds;
+          const dealt = itemDmg + squadAttack(focus.enemy, 'AR', 1);
+          if (dealt > 0) log(`Total: ${dealt} damage.`);
+          focus.hp = Math.max(0, focus.hp - dealt);
+          dropChunks(focus, { byYou: true });
+          if (focus.hp <= 0) wipeLoot(focus);
+        }
+      } else {
+        focus = pickOpt.startsWith('Attack left') ? left : right;
+        const weaponPick = await choose([
+          'Shoot (AR - steady)',
+          'Shoot (SMG - in between)',
+          'Shoot (Shotgun - big hits, can miss)',
+          'Back',
+        ]);
+        if (weaponPick === 'Back') continue;
+        const weapon = weaponPick.includes('AR') ? 'AR' : weaponPick.includes('SMG') ? 'SMG' : 'Shotgun';
+        const dealt = squadAttack(focus.enemy, weapon);
+        log(`Total: ${dealt} damage.`);
+        focus.hp = Math.max(0, focus.hp - dealt);
+        dropChunks(focus, { byYou: true });
+        if (focus.hp <= 0) wipeLoot(focus);
+      }
+      const extra = ongoingDamage(focus.enemy);
+      if (extra > 0 && focus.hp > 0) {
+        focus.hp = Math.max(0, focus.hp - extra);
+        dropChunks(focus, { byYou: true });
+        if (focus.hp <= 0) wipeLoot(focus);
+      }
+      emitThirdParty(left, right);
+      if (!Object.keys(S.squad).length) return;
+      if (left.hp <= 0 && right.hp <= 0) break;
+
+      const savedBoogie = S.boogieRounds;
+      S.boogieRounds = 0;
+      for (const side of [left, right]) {
+        if (side.hp <= 0 || !Object.keys(S.squad).length) continue;
+        const other = side === left ? right : left;
+        if (side.dance > 0) {
+          side.dance -= 1;
+          log(
+            side.dance > 0
+              ? `${sideLabel(side)} is dancing and can't attack! (${side.dance} round(s) left)`
+              : `${sideLabel(side)} stops dancing.`,
+          );
+          continue;
+        }
+        if (other.hp > 0 && rand() < 0.5) {
+          log(`${sideLabel(side)} turns their guns on the other squad!`);
+          strikeOtherSquad(side, other);
+        } else {
+          log(`${sideLabel(side)} shoots at you!`);
+          await enemyAttacks(side.enemy);
+        }
+      }
+      S.boogieRounds = savedBoogie;
+      if (S.boogieRounds > 0) {
+        S.boogieRounds -= 1;
+        if (S.boogieRounds <= 0) S.dancers = new Set();
+      }
+      emitThirdParty(left, right);
+    }
+  };
+
   const thirdParty = async (text, enemyA, enemyB, squadA, squadB, membersA, membersB) => {
     log(text);
+    const both = squadA && squadB && membersA?.length && membersB?.length;
+    let left = null;
+    let right = null;
+    if (both) {
+      left = makeFightSide('left', squadA, membersA, enemyA);
+      right = makeFightSide('right', squadB, membersB, enemyB);
+      publishCodex();
+      emitThirdParty(left, right);
+    }
     const pickOpt = await choose(['Third-party them', 'Wait it out', 'Avoid']);
     if (pickOpt === 'Third-party them') {
+      if (left && right) {
+        await combatBoth(left, right);
+        return;
+      }
       const hpA = Math.floor(enemyMaxHp(enemyA) * (0.5 + rand() * 0.2));
       const hpB = Math.floor(enemyMaxHp(enemyB) * (0.5 + rand() * 0.2));
       log('You crash the fight! Both squads are already hurt.');
@@ -1103,12 +1471,18 @@ export async function playTrailMatch({
         const loserSquad = aWins ? squadB : squadA;
         const winnerSquad = aWins ? squadA : squadB;
         const winnerMembers = aWins ? membersA : membersB;
-        if (loserSquad) {
-          for (const member of loserSquad.members) {
-            if (member.alive) member.alive = false;
+        const loserMembers = aWins ? membersB : membersA;
+        const doomed = loserMembers?.length ? loserMembers : loserSquad?.members || [];
+        for (const member of doomed) {
+          if (member.alive) {
+            const pool = (winnerMembers || []).filter((entry) => entry.alive);
+            const killer = pool.length ? pick(pool) : winnerMembers?.[0];
+            member.seen = true;
+            recordDeath(member, killer ? killedByOutfit(killer.outfit) : { kind: 'fall' });
           }
-          syncPlayersLeft();
         }
+        syncPlayersLeft();
+        publishCodex();
         const hp = Math.floor(enemyMaxHp(winner) * (0.3 + rand() * 0.2));
         log('You wait... the shooting stops. One squad is left standing, badly hurt.');
         if ((await choose(['Ambush the winner', 'Leave'])) === 'Ambush the winner') {
@@ -1201,7 +1575,7 @@ export async function playTrailMatch({
     }
     if (rand() < 0.5) {
       log('Something useful was stashed in the bush.');
-      rollLoot();
+      grantLoot('bots');
     } else {
       const [text, enemy] = describeSolo();
       const label = encounterLabel(lastEncounterOutfits[0], 'a solo');
@@ -1235,7 +1609,7 @@ export async function playTrailMatch({
     } else {
       lastEncounterRef = null;
       log('They toss you something and peel off. True teammates... for now.');
-      rollLoot();
+      grantLoot('players');
     }
   };
 
@@ -1339,14 +1713,17 @@ export async function playTrailMatch({
     giveMythicBoss();
   };
 
-  const fishingCommonPool = () =>
-    LOOT_TABLE.filter(([, rarity]) => rarity === 'Common' || rarity === 'Uncommon').map(
-      ([item]) => item,
-    );
-  const fishingEpicPool = () =>
-    LOOT_TABLE.filter(([, rarity]) => rarity === 'Epic')
-      .map(([item]) => item)
-      .filter((item) => item !== 'Chug Jug' || unlocked.has('Chug Jug'));
+  const fishingPool = (rarities) =>
+    Object.entries(LOOT_ITEMS)
+      .filter(
+        ([name, item]) =>
+          item.pools.includes('loot') &&
+          rarities.includes(item.rarity) &&
+          (!item.shop || unlocked.has(name)),
+      )
+      .map(([name]) => name);
+  const fishingCommonPool = () => fishingPool(['Common', 'Uncommon']);
+  const fishingEpicPool = () => fishingPool(['Epic']);
 
   const eventFishingSpot = async () => {
     log('You find a quiet fishing spot. Stay as long as you want — the Storm will keep moving.');
@@ -1441,8 +1818,8 @@ export async function playTrailMatch({
       log(`A supply drop lands nearby! ${target} grabs +50 shield.`);
     } else {
       log('You found a Llama! You smash it open.');
-      rollLoot();
-      rollLoot();
+      grantLoot('players');
+      grantLoot('players');
     }
   };
 
@@ -1470,7 +1847,7 @@ export async function playTrailMatch({
     } else if (rand() < 0.5) {
       give('Shield Potion');
     }
-    rollLoot();
+    grantLoot('bots', { isChest: true });
     if (
       isRanked &&
       eventUnlocks.has('pirateShopToken') &&
@@ -1512,6 +1889,12 @@ export async function playTrailMatch({
       useItem(pickItem);
       restoreSquad();
       log('Chug Jug! Everyone is fully restored!');
+      return true;
+    }
+    if (pickItem === 'Chug Splash') {
+      useItem(pickItem);
+      log('Chug Splash! +20 HP to everyone still standing.');
+      splashSquad();
       return true;
     }
     const target = await chooseMember(`Who should use the ${pickItem}?`);
@@ -1591,25 +1974,32 @@ export async function playTrailMatch({
       S.stormDistance = Math.max(0, S.stormDistance - 2);
       S.stormMult = 0.5;
       log(`Your squad sprints for the zone! Now: ${STATUS[S.stormDistance]}`);
-      const bookAmbush = inFinalCircle() ? Math.max(chance(BOOK_IT_AMBUSH), 0.9) : chance(BOOK_IT_AMBUSH);
+      const bookAmbush = inFinalCircle() ? 1 : Math.min(1, chance(BOOK_IT_AMBUSH));
       if (rand() < bookAmbush) {
         if (has('Launch Pad')) {
           useItem('Launch Pad');
           log('Someone spots you — but you hit a Launch Pad and fly right over them!');
         } else {
-          log('You were spotted running in the open!');
-          await playerEncounter(0.6);
+          log(
+            inFinalCircle()
+              ? 'The final circle is wide open. Someone was waiting for you!'
+              : 'You were spotted running in the open!',
+          );
+          await playerEncounter(inFinalCircle() ? 0.9 : 0.6);
         }
       }
     } else {
       S.stormDistance = Math.max(0, S.stormDistance - 1);
       S.stormMult = 1;
       log(`You move carefully along the trees. Now: ${STATUS[S.stormDistance]}`);
-      const safeAmbush = inFinalCircle() ? Math.max(chance(SAFE_ROUTE_AMBUSH), 0.65) : chance(SAFE_ROUTE_AMBUSH);
-      if (rand() < safeAmbush) {
-        if (rand() < (inFinalCircle() ? 0.05 : 0.25)) await bossEncounter();
-        else if (inFinalCircle()) await playerEncounter(0.9);
-        else await engage('a pack of bots wandering through the trees', 'Bots', 0.2);
+      log('The cover keeps other squads from spotting you.');
+      const dmg = Math.floor(S.stormDamage[0] * STORM_DAMAGE_MULT);
+      if (dmg > 0) {
+        log(`The Storm still rolls over the long way. -${dmg} HP to everyone (shields don't help)`);
+        for (const m of Object.keys(S.squad)) stormHit(m, dmg);
+        await removeEliminated();
+      } else {
+        log('The Storm is not close enough to hurt you yet.');
       }
     }
   };
@@ -1698,7 +2088,7 @@ export async function playTrailMatch({
         log(`Still cracking the vault... (${S.vaultTurns} turn(s) left). The Storm keeps moving.`);
       } else if (Object.keys(S.squad).length) {
         log('The vault finally opens! Guaranteed rare loot.');
-        giveRare(false);
+        grantLoot('sweats');
       }
     } else {
       const pickOpt = await choose(['Fight', 'Loot', 'Rest', 'Rotate']);

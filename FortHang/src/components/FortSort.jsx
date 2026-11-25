@@ -815,7 +815,7 @@ function SelectScreen({
               className={`mode-tab is-star ${betTier === 'star' ? 'is-active' : ''}`}
               onClick={() => setBetTier('star')}
             >
-              Pick super bets ({starBetIds.length}/{maxStarBets})
+              Pick super bet{maxStarBets === 1 ? '' : 's'} ({starBetIds.length}/{maxStarBets})
             </button>
             <button
               type="button"

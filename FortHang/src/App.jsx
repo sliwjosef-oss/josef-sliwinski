@@ -18,6 +18,8 @@ import { getGameOutfits } from './utils/outfits';
 import {
   addGuessedSkinId,
   clearGuessedSkinIds,
+  countDiscoveredSkins,
+  featureUnlocks,
   isCollectionComplete,
   loadGuessedSkinIds,
   normalizeGuessedSkinIds,
@@ -134,6 +136,16 @@ function App() {
     setSkinLevels(next);
   }, []);
 
+  const discoveredCount = countDiscoveredSkins(outfits, guessedSkinIds);
+  const unlocks = featureUnlocks(discoveredCount);
+
+  useEffect(() => {
+    if (!outfits.length) return;
+    if (view === VIEWS.TRAIL && !unlocks.trail) setView(VIEWS.HANGMAN);
+    if (view === VIEWS.FORTSORT && !unlocks.betting) setView(VIEWS.HANGMAN);
+    if (view === VIEWS.SHOP && !unlocks.shop) setView(VIEWS.HANGMAN);
+  }, [outfits.length, view, unlocks.trail, unlocks.betting, unlocks.shop]);
+
   if (loading) {
     return (
       <main className="app">
@@ -166,9 +178,15 @@ function App() {
             onSkinWon={handleSkinWon}
             onOpenCatalogue={() => setView(VIEWS.CATALOGUE)}
             onOpenSidekicks={() => setView(VIEWS.SIDEKICKS)}
-            onOpenShop={() => setView(VIEWS.SHOP)}
-            onOpenFortSort={() => setView(VIEWS.FORTSORT)}
-            onOpenTrail={() => setView(VIEWS.TRAIL)}
+            onOpenShop={() => {
+              if (unlocks.shop) setView(VIEWS.SHOP);
+            }}
+            onOpenFortSort={() => {
+              if (unlocks.betting) setView(VIEWS.FORTSORT);
+            }}
+            onOpenTrail={() => {
+              if (unlocks.trail) setView(VIEWS.TRAIL);
+            }}
             onOpenHelp={() => setView(VIEWS.HELP)}
             inputEnabled={view === VIEWS.HANGMAN}
           />

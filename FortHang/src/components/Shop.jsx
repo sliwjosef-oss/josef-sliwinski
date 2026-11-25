@@ -116,7 +116,7 @@ export default function Shop({ economy, sidekicks, onEconomyChange, onBack }) {
           <article key={pack.id} className="shop-card">
             <h2>+{pack.amount} guesses</h2>
             <p>Add {pack.amount} skin attempts for today.</p>
-            <p className="shop-meta">One attempt per skin (win or lose) · stacks until the 6:00 AM CST reset.</p>
+            <p className="shop-meta">One attempt per skin (win or lose) · stacks until the 6:00 AM Central Time reset.</p>
             <button
               type="button"
               className="primary-button"

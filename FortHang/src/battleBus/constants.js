@@ -17,8 +17,7 @@ export const PIRATE_SHOP_TOKEN_CHANCE = 0.01;
 export const PIRATE_SHOP_TOKEN_BONUS = 500;
 export const REST_STORM = [0.05, 0.1, 0.25, 0.35];
 export const FIGHT_SNIPER = [0.04, 0.06, 0.08, 0.1];
-export const BOOK_IT_AMBUSH = [0.25, 0.25, 0.35, 0.4];
-export const SAFE_ROUTE_AMBUSH = [0.05, 0.05, 0.05, 0.08];
+export const BOOK_IT_AMBUSH = [0.65, 0.7, 0.8, 0.85];
 
 /** @type {Record<string, { hp: number, dmg: [number, number], hits: number, elims: number, loot: number }>} */
 export const ENEMY_TEAMS = {
@@ -31,7 +30,6 @@ export const ENEMY_TEAMS = {
   Boss: { hp: 150, dmg: [5, 15], hits: 1, elims: 0, loot: 1 },
 };
 
-export const RARE_REWARD = { Sweats: 0.5, 'Solo sweat': 0.3, Boss: 1 };
 export const BOSS_FIGHT_AMBUSH = 0.08;
 
 export const ENEMY_SKILL = {
@@ -52,6 +50,7 @@ export const WEAPONS = {
 
 export const DAMAGE_ITEMS = {
   Grenade: [30, 45],
+  Clinger: [40, 55],
   'Rocket Launcher': [60, 100],
 };
 
@@ -87,6 +86,18 @@ export const READ_TEXT = {
   'Solo player': "They're playing it safe behind cover. Seems like a normal player.",
   'Solo sweat': "They're cranking 90s and hitting every shot. A solo-squad sweat.",
 };
+
+/** Short guess shown on the fight panel. The read can be wrong. */
+export const READ_HINT = {
+  Bots: 'feels like bots?',
+  'Normal players': 'feels like players?',
+  Sweats: 'feels like sweats?',
+  'Solo bot': 'feels like a bot?',
+  'Solo player': 'feels like a player?',
+  'Solo sweat': 'feels like a sweat?',
+};
+
+export const LEEKCAPPER_CHANCE = 0.1;
 
 export const SKINS = {
   'default skins': ['default skin', [30, -10, -20]],
@@ -133,45 +144,6 @@ export const PLACES = [
 export const GROUP_WORDS = ['a squad of', 'a group of', 'a pack of', 'a trio of', 'a duo of'];
 export const SOLO_WORDS = ['a lone', 'a solo', 'a single'];
 
-export const LOOT_TABLE = [
-  ['Slurp Juice', 'Epic', 0.05],
-  ['Rift-To-Go', 'Legendary', 0.05],
-  ['Chug Jug', 'Legendary', 0.01],
-  ['Launch Pad', 'Epic', 0.08],
-  ['Rocket Launcher', 'Epic', 0.05],
-  ['Port-a-Bunker', 'Rare', 0.06],
-  ['Bush', 'Rare', 0.1],
-  ['Grenade', 'Uncommon', 0.15],
-  ['Shield Potion', 'Uncommon', 0.3],
-  ['Medkit', 'Common', 0.3],
-];
-
-export const RARE_ITEMS = ['Rift-To-Go', 'Chug Jug', 'Launch Pad'];
-
-export const BOSS_LOOT = {
-  'Infinity Blade': 1,
-  'Mythic Goldfish': 3,
-  Kamehameha: 4,
-  'Sith Apprentice Lightsaber': 5,
-  'Jedi Apprentice Lightsaber': 5,
-  Firebending: 5,
-  Waterbending: 5,
-  Earthbending: 5,
-  Airbending: 5,
-  "Midas' Drum Gun": 6,
-  "TNTina's Boom Bow": 6,
-  'Kinetic Blade': 6,
-  'Typhoon Blade': 6,
-  'Nitro Fists': 6,
-  'Shockwave Hammer': 6,
-  Kneecapper: 6,
-  'Business Turret': 5,
-  Jetpack: 5,
-  'Port-a-Fort': 5,
-  'Chug Jug': 2,
-  'Rift-To-Go': 3,
-};
-
 export const BOSS_ITEMS = {
   'Mythic Goldfish': { damage: [150, 200], uses: 1, rarity: 'Mythic', text: 'threw the' },
   Kamehameha: { damage: [120, 180], uses: 1, rarity: 'Mythic', text: 'fired a' },
@@ -204,29 +176,30 @@ export const BOSS_ITEMS = {
     damage: [40, 60],
     uses: 4,
     escape: 'Dash away',
-    rarity: 'Mythic',
+    rarity: 'Legendary',
     text: 'slashed with the',
   },
   'Typhoon Blade': {
     damage: [45, 65],
     uses: 4,
     deflect: 0.3,
-    rarity: 'Mythic',
+    rarity: 'Legendary',
     text: 'slashed with the',
   },
-  'Nitro Fists': { damage: [35, 55], uses: 4, stun: 0.3, rarity: 'Mythic', text: 'punched with' },
+  'Nitro Fists': { damage: [35, 55], uses: 4, stun: 0.3, rarity: 'Legendary', text: 'punched with' },
   'Shockwave Hammer': {
     damage: [50, 70],
     uses: 3,
     escape: 'Launch away',
-    rarity: 'Mythic',
+    rarity: 'Legendary',
     text: 'smashed with the',
   },
-  Kneecapper: { damage: [40, 70], uses: 4, stun: 0.3, rarity: 'Mythic', text: 'swung the' },
-  'Business Turret': { uses: 1, turret: 3, rarity: 'Legendary', text: 'deployed a' },
-  Jetpack: { uses: 3, escape: 'Fly away', rarity: 'Legendary', text: 'used the' },
+  Kneecapper: { damage: [40, 70], uses: 4, stun: 0.3, rarity: 'Epic', text: 'swung the' },
+  Leekcapper: { damage: [40, 70], uses: 4, stun: 0.3, rarity: 'Epic', text: 'swung the' },
+  'Business Turret': { uses: 1, turret: 3, rarity: 'Epic', text: 'deployed a' },
+  Jetpack: { uses: 3, escape: 'Fly away', rarity: 'Epic', text: 'used the' },
   'Port-a-Fort': { uses: 1, cover: 3, rarity: 'Epic', text: 'threw a' },
-  'Port-a-Bunker': { uses: 1, cover: 2, rarity: 'Rare', text: 'threw a' },
+  'Port-a-Bunker': { uses: 1, cover: 2, rarity: 'Uncommon', text: 'threw a' },
 };
 
 export const TURRET_DAMAGE = [20, 35];

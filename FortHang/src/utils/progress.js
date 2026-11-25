@@ -49,8 +49,20 @@ export function isSkinGuessed(guessedIds, outfit) {
   return guessedIds.includes(outfit.id);
 }
 
+export const TRAIL_SKIN_UNLOCK = 4;
+export const BETTING_SKIN_UNLOCK = 16;
+export const SHOP_SKIN_UNLOCK = 32;
+
 export function countDiscoveredSkins(outfits, guessedIds) {
   return outfits.filter((outfit) => isSkinGuessed(guessedIds, outfit)).length;
+}
+
+export function featureUnlocks(discoveredCount) {
+  return {
+    trail: discoveredCount >= TRAIL_SKIN_UNLOCK,
+    betting: discoveredCount >= BETTING_SKIN_UNLOCK,
+    shop: discoveredCount >= SHOP_SKIN_UNLOCK,
+  };
 }
 
 export function isSeasonComplete(outfits, guessedIds) {

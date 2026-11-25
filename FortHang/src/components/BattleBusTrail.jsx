@@ -30,6 +30,8 @@ import {
 } from '../utils/skinLevels';
 import '../fortSort/FortSort.css';
 
+const TRAIL_MUSIC_URL = `${import.meta.env.BASE_URL}audio/Steel_Saddle_Pursuit.mp3`;
+
 const SELECT_SORT = {
   NUMBER: 'number',
   SEASON: 'season',
@@ -77,8 +79,79 @@ function EventIconImg({ outfit, iconUrls = [], alt = '', fallback = null }) {
 
 const LOG_LINE_MS = 2000;
 
+function ChunkBar({ hp, maxHp, chunks }) {
+  const count = Math.max(1, chunks || 1);
+  const size = maxHp > 0 ? maxHp / count : 1;
+  return (
+    <div className="trail-chunk-bar" aria-hidden="true">
+      {Array.from({ length: count }, (_, index) => {
+        const start = index * size;
+        const fill = Math.max(0, Math.min(100, ((hp - start) / size) * 100));
+        return (
+          <span key={index} className="trail-chunk">
+            <span style={{ width: `${fill}%` }} />
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+function ThirdPartyPanel({ visual, discoveredIds }) {
+  const ownedIds = discoveredIds instanceof Set ? discoveredIds : new Set(discoveredIds || []);
+  const labelFor = (member) => {
+    if (member?.id && ownedIds.has(member.id)) return member.name || '???';
+    return '???';
+  };
+  return (
+    <div className="trail-event-panel kind-third-party" aria-label="Third party fight">
+      <p className="trail-event-caption">{visual.caption}</p>
+      <div className="trail-tp">
+        {(visual.sides || []).map((side) => (
+          <section key={side.key} className={`trail-tp-side is-${side.key}`}>
+            <p className="trail-tp-label">{side.label}</p>
+            <p className="trail-tp-meta">
+              {side.typeHidden ? 'Type: ???' : side.enemyType}
+              {side.dancingRounds > 0 ? ` · Dancing (${side.dancingRounds})` : ''}
+            </p>
+            {side.typeHidden && side.readHint ? (
+              <p className="trail-read-hint">Read: {side.readHint}</p>
+            ) : null}
+            <div className="trail-tp-grid">
+              {Array.from({ length: 4 }, (_, index) => {
+                const member = side.members?.[index];
+                if (!member) {
+                  return <div key={`empty-${index}`} className="trail-tp-slot is-empty" />;
+                }
+                const name = labelFor(member);
+                return (
+                  <div
+                    key={member.id || `${side.key}-${index}`}
+                    className={`trail-tp-slot ${member.alive ? '' : 'is-dead'}`}
+                  >
+                    <EventIconImg outfit={member.outfit} alt={name} />
+                    {!member.alive ? <span className="trail-squad-x" aria-hidden="true" /> : null}
+                    <span className="trail-tp-name">{name}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <ChunkBar hp={side.hp} maxHp={side.maxHp} chunks={side.chunks || side.members?.length || 1} />
+            <p className="trail-tp-hp">
+              {side.hp}/{side.maxHp} · {side.members?.filter((member) => member.alive).length || 0} alive
+            </p>
+          </section>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function EventVisualPanel({ visual, discoveredIds }) {
   if (!visual) return null;
+  if (visual.kind === 'third-party') {
+    return <ThirdPartyPanel visual={visual} discoveredIds={discoveredIds} />;
+  }
 
   const ownedIds = discoveredIds instanceof Set ? discoveredIds : new Set(discoveredIds || []);
   const outfitLabel = (outfit) => {
@@ -109,9 +182,18 @@ function EventVisualPanel({ visual, discoveredIds }) {
       {isEnemy ? (
         <div className={`trail-enemy-hud ${hpHidden ? 'is-hp-hidden' : ''}`}>
           <div className="trail-enemy-meta">
-            <strong>{visual.enemyLabel || 'Enemy'}</strong>
+            <strong>
+              {visual.enemyLabel || 'Enemy'}
+              {visual.typeHidden ? ' · Type: ???' : ''}
+            </strong>
+            {visual.dancingRounds > 0 ? (
+              <span className="trail-dance-tag">Dancing ({visual.dancingRounds})</span>
+            ) : null}
             <span>{hpHidden ? 'HP ???' : `${Math.max(0, visual.hp ?? 0)}/${visual.maxHp ?? 0}`}</span>
           </div>
+          {visual.typeHidden && visual.readHint ? (
+            <p className="trail-read-hint">Read: {visual.readHint}</p>
+          ) : null}
           {!hpHidden ? (
             <div className="trail-enemy-bar" aria-hidden="true">
               <span style={{ width: `${enemyPct}%` }} />
@@ -202,16 +284,24 @@ function SquadStatusBar({ members }) {
             <p className="trail-squad-name" title={member.name || ''}>
               {empty ? (member.sidekick ? 'Sidekick' : 'Skin') : member.name}
             </p>
+            {!empty && !dead && member.dancingRounds > 0 ? (
+              <p className="trail-squad-dance">Dancing ({member.dancingRounds})</p>
+            ) : null}
             <div className="trail-bars" aria-hidden={empty}>
-              <div className="trail-bar trail-bar-shield">
-                <span style={{ width: `${empty ? 0 : shield}%` }} />
-              </div>
+              {!empty && !dead && shield > 0 ? (
+                <div className="trail-bar trail-bar-shield">
+                  <span style={{ width: `${shield}%` }} />
+                </div>
+              ) : null}
               <div className="trail-bar trail-bar-hp">
                 <span style={{ width: `${empty ? 0 : hpPct}%` }} />
               </div>
             </div>
-            <p className="trail-squad-nums">
-              {empty ? '—' : dead ? 'OUT' : `${hp}/${shield}`}
+            <p
+              className="trail-squad-nums"
+              aria-label={empty || dead ? undefined : `${hp} health, ${shield} shield`}
+            >
+              {empty ? '—' : dead ? 'OUT' : shield > 0 ? `${hp} ♥ · ${shield} 🛡` : `${hp} ♥`}
             </p>
           </div>
         );
@@ -287,6 +377,8 @@ export default function BattleBusTrail({
   const [liveSquad, setLiveSquad] = useState(null);
   const [playersLeft, setPlayersLeft] = useState(null);
   const [eventVisual, setEventVisual] = useState(null);
+  const [codex, setCodex] = useState({ items: [], squads: [] });
+  const [fieldMenu, setFieldMenu] = useState(null);
   const chooseRef = useRef(null);
   const logEndRef = useRef(null);
   const outfitByNameRef = useRef(new Map());
@@ -295,6 +387,39 @@ export default function BattleBusTrail({
   const logWaitersRef = useRef([]);
   const forfeitedRef = useRef(false);
   const runActiveRef = useRef(false);
+  const musicRef = useRef(null);
+
+  const playTrailMusic = () => {
+    let audio = musicRef.current;
+    if (!audio) {
+      audio = new Audio(TRAIL_MUSIC_URL);
+      audio.loop = true;
+      audio.volume = 0.55;
+      musicRef.current = audio;
+    }
+    const pending = audio.play();
+    if (pending?.catch) pending.catch(() => {});
+  };
+
+  const stopTrailMusic = () => {
+    const audio = musicRef.current;
+    if (!audio) return;
+    audio.pause();
+    audio.currentTime = 0;
+  };
+
+  useEffect(() => {
+    if (screen === 'play') playTrailMusic();
+    else stopTrailMusic();
+  }, [screen]);
+
+  useEffect(
+    () => () => {
+      musicRef.current?.pause();
+      musicRef.current = null;
+    },
+    [],
+  );
 
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ block: 'end' });
@@ -416,6 +541,7 @@ export default function BattleBusTrail({
         maxHp: member.maxHp ?? 100,
         shield: member.shield,
         alive: member.alive,
+        dancingRounds: member.dancingRounds || 0,
       };
     });
     if (!members.some((member) => member.sidekick)) {
@@ -491,6 +617,7 @@ export default function BattleBusTrail({
     runActiveRef.current = true;
     setBusy(true);
     setScreen('play');
+    playTrailMusic();
     setResult(null);
     clearPlayLog();
     setChoices(null);
@@ -575,6 +702,10 @@ export default function BattleBusTrail({
         onEventVisual: (visual) => {
           if (forfeitedRef.current) return;
           setEventVisual(visual);
+        },
+        onCodexUpdate: (update) => {
+          if (forfeitedRef.current) return;
+          setCodex(update || { items: [], squads: [] });
         },
       });
 
@@ -720,10 +851,8 @@ export default function BattleBusTrail({
     const level = getSkinLevel(skinLevels, outfit.id);
     const hpBonus = getTrailStartHpBonus(level);
     const fightResist = getTrailFightDamageResist(level);
-    const stormResist = getTrailStormDamageResist(level);
     const levelBits = [`Lv ${level}`];
     if (hpBonus > 0) levelBits.push(`+${hpBonus} HP`);
-    if (stormResist > 0) levelBits.push(`${Math.round(stormResist * 100)}% storm`);
     if (fightResist > 0) levelBits.push(`${Math.round(fightResist * 100)}% fight`);
     return (
       <button
@@ -767,7 +896,7 @@ export default function BattleBusTrail({
 
   if (screen === 'play' || screen === 'result') {
     return (
-      <div className="fort-sort fort-sort-screen trail-screen">
+      <div className={`fort-sort fort-sort-screen trail-screen ${screen === 'play' ? 'is-playing' : 'is-result'}`}>
         <header className="catalogue-header trail-header">
           <div className="trail-header-top">
             <div className="trail-header-titles">
@@ -779,14 +908,122 @@ export default function BattleBusTrail({
               ) : null}
             </div>
             {screen === 'play' ? (
-              <button type="button" className="trail-forfeit-button" onClick={forfeitRun}>
-                Forfeit run
-              </button>
+              <div className="trail-header-actions">
+                <button
+                  type="button"
+                  className="trail-menu-button"
+                  onClick={() => setFieldMenu((current) => (current ? null : 'inventory'))}
+                >
+                  Pack
+                </button>
+                <button type="button" className="trail-forfeit-button" onClick={forfeitRun}>
+                  Forfeit run
+                </button>
+              </div>
             ) : null}
           </div>
           <SquadStatusBar members={headerMembers} />
         </header>
         <EventVisualPanel visual={eventVisual} discoveredIds={guessedSkinIds} />
+        {fieldMenu ? (
+          <div className="trail-field-menu" role="dialog" aria-label="Pack">
+            <div className="trail-field-tabs">
+              <button
+                type="button"
+                className={fieldMenu === 'inventory' ? 'is-active' : ''}
+                onClick={() => setFieldMenu('inventory')}
+              >
+                Inventory
+              </button>
+              <button
+                type="button"
+                className={fieldMenu === 'players' ? 'is-active' : ''}
+                onClick={() => setFieldMenu('players')}
+              >
+                Players
+              </button>
+              <button type="button" className="trail-field-close" onClick={() => setFieldMenu(null)}>
+                Close
+              </button>
+            </div>
+            {fieldMenu === 'inventory' ? (
+              <div className="trail-field-body">
+                {codex.items?.length ? (
+                  <div className="trail-pack-grid">
+                    {codex.items.map((item) => (
+                      <div key={item.name} className="trail-pack-card">
+                        <EventIconImg
+                          iconUrls={item.iconUrls || []}
+                          alt={item.name}
+                          fallback={
+                            <div className="trail-item-fallback">
+                              <strong>{item.name}</strong>
+                            </div>
+                          }
+                        />
+                        <p>
+                          {item.name} ×{item.count}
+                          {item.usesLeft != null ? ` · ${item.usesLeft} uses` : ''}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="hint">Your pack is empty.</p>
+                )}
+              </div>
+            ) : (
+              <div className="trail-field-body">
+                {codex.squads?.length ? (
+                  codex.squads.map((squad) => {
+                    const members = [...squad.members].sort((a, b) => Number(a.alive) - Number(b.alive));
+                    const deadCount = members.filter((member) => !member.alive).length;
+                    return (
+                    <section key={squad.id} className="trail-seen-squad">
+                      <h3>
+                        {squad.theme || 'Squad'}
+                        {deadCount ? ` · ${deadCount} dead` : ''}
+                      </h3>
+                      <ul>
+                        {members.map((member) => {
+                          const known = guessedSkinIds.includes(member.id);
+                          const killerKnown =
+                            member.death?.killerId && guessedSkinIds.includes(member.death.killerId);
+                          let fate = '';
+                          if (!member.alive) {
+                            if (member.death?.kind === 'fall') fate = 'died of fall damage';
+                            else if (member.death?.kind === 'killed') {
+                              fate = `killed by ${killerKnown ? member.death.killerName : '???'}`;
+                            } else fate = 'eliminated';
+                          }
+                          return (
+                            <li key={member.id || member.name} className={member.alive ? '' : 'is-dead'}>
+                              <EventIconImg outfit={member.outfit} alt="" />
+                              <span className="trail-seen-name">{known ? member.name : '???'}</span>
+                              {member.alive ? (
+                                <span className="trail-seen-fate is-alive">Alive</span>
+                              ) : (
+                                <>
+                                  {member.placement ? (
+                                    <span className="trail-seen-place">#{member.placement}</span>
+                                  ) : null}
+                                  <span className="trail-seen-fate">{fate}</span>
+                                </>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </section>
+                    );
+                  })
+                ) : (
+                  <p className="hint">No living players spotted yet, and nobody else has been eliminated.</p>
+                )}
+              </div>
+            )}
+          </div>
+        ) : null}
         <div className="catalogue-scroll trail-log" tabIndex={0} aria-label="Trail log">
           {logLines.map((line, index) => (
             <p key={`${index}-${line.slice(0, 24)}`} className="trail-log-line">

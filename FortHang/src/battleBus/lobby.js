@@ -1,4 +1,6 @@
-import { SQUAD_BASE_ODDS, SQUAD_TYPES } from './constants';
+import { SQUAD_BASE_ODDS, SQUAD_TYPES, START_PLAYERS } from './constants';
+import { SQUAD_VISUAL_POOLS } from './visuals';
+import { getCatalogueSeriesKey } from '../utils/seriesSort';
 
 function rand() {
   return Math.random();
@@ -52,25 +54,66 @@ export function buildLobby({ outfits = [], excludeNames = [], excludeIds = [], c
     ),
   );
   const need = Math.max(0, Math.floor(Number(count) || 0));
-  const picked = pool.slice(0, Math.min(need, pool.length));
+  const used = new Set();
+  const bySeries = new Map();
+  for (const outfit of pool) {
+    const key = getCatalogueSeriesKey(outfit);
+    if (!bySeries.has(key)) bySeries.set(key, []);
+    bySeries.get(key).push(outfit);
+  }
+
+  const availableFor = (theme) => {
+    const list = [];
+    for (const key of theme.series || []) {
+      for (const outfit of bySeries.get(key) || []) {
+        if (!used.has(outfit.id)) list.push(outfit);
+      }
+    }
+    return list;
+  };
+
+  const takeMembers = (size) => {
+    const themed = shuffle(SQUAD_VISUAL_POOLS)
+      .map((theme) => ({ theme, outfits: shuffle(availableFor(theme)) }))
+      .filter((entry) => entry.outfits.length >= size);
+    if (themed.length) {
+      const choice = themed[0];
+      const members = choice.outfits.slice(0, size);
+      members.forEach((outfit) => used.add(outfit.id));
+      return { theme: choice.theme.groupLabel, members };
+    }
+    const loose = shuffle(pool.filter((outfit) => !used.has(outfit.id)));
+    if (loose.length < size) return null;
+    const members = loose.slice(0, size);
+    members.forEach((outfit) => used.add(outfit.id));
+    return { theme: null, members };
+  };
+
   const squads = [];
   let id = 0;
-  let i = 0;
-  while (i + 4 <= picked.length) {
+  let placed = 0;
+  while (placed + 4 <= need) {
+    const picked = takeMembers(4);
+    if (!picked) break;
     squads.push({
       id: id++,
       type: rollSquadType(),
-      members: picked.slice(i, i + 4).map((outfit) => ({ outfit, alive: true })),
+      theme: picked.theme,
+      members: picked.members.map((outfit) => ({ outfit, alive: true, seen: false })),
     });
-    i += 4;
+    placed += picked.members.length;
   }
-  if (i < picked.length) {
-    // Remainder squad (e.g. 95 → one squad of 3).
-    squads.push({
-      id: id++,
-      type: rollSquadType(),
-      members: picked.slice(i).map((outfit) => ({ outfit, alive: true })),
-    });
+  const rest = Math.min(need - placed, pool.filter((outfit) => !used.has(outfit.id)).length);
+  if (rest > 0) {
+    const picked = takeMembers(rest);
+    if (picked) {
+      squads.push({
+        id: id++,
+        type: rollSquadType(),
+        theme: picked.theme,
+        members: picked.members.map((outfit) => ({ outfit, alive: true, seen: false })),
+      });
+    }
   }
   return squads;
 }
@@ -101,27 +144,88 @@ export function groupEnemyType(squadType) {
   return squadType;
 }
 
-/** Higher weight once a squad has already lost someone. */
-export function deathWeight(squad, member) {
+const ENDGAME_PLAYERS = 10;
+
+/** Bots die off-screen early. Sweats almost never do until the lobby is thin. */
+export function elimTypeWeight(type, playersLeft) {
+  const left = Number(playersLeft);
+  const span = Math.max(1, START_PLAYERS - ENDGAME_PLAYERS);
+  const early = Number.isFinite(left) ? Math.min(1, Math.max(0, (left - ENDGAME_PLAYERS) / span)) : 1;
+  if (type === 'Bots') return 1 + early * 8;
+  if (type === 'Sweats') return 0.08 + (1 - early) * 0.92;
+  return 0.85 + early * 0.35;
+}
+
+/** Higher weight once a squad has already lost someone, and for bots while the lobby is full. */
+export function deathWeight(squad, member, playersLeft) {
   if (!member?.alive) return 0;
   const fallen = (squad.members || []).filter((entry) => !entry.alive).length;
-  return 1 + fallen * 3;
+  return (1 + fallen * 3) * elimTypeWeight(squad?.type, playersLeft);
+}
+
+const OFFSCREEN_FALL_CHANCE = 0.2;
+
+function killerFromMember(member) {
+  return {
+    kind: 'killed',
+    killerId: member?.outfit?.id || '',
+    killerName: member?.outfit?.name || '',
+  };
+}
+
+/** Off-screen: bots fall to players or sweats. Players and sweats fall to sweats. Some just fall. */
+export function offscreenCause(lobby, squad, victim) {
+  if (rand() < OFFSCREEN_FALL_CHANCE) return { kind: 'fall' };
+  const types = squad?.type === 'Bots' ? ['Normal players', 'Sweats'] : ['Sweats'];
+  const pool = [];
+  for (const other of lobby) {
+    if (!types.includes(other.type)) continue;
+    for (const candidate of aliveMembers(other)) {
+      if (candidate !== victim) pool.push(candidate);
+    }
+  }
+  if (!pool.length) return { kind: 'fall' };
+  return killerFromMember(pick(pool));
+}
+
+function applyDeath(member, placement, death) {
+  member.alive = false;
+  member.placement = placement;
+  member.death = death;
 }
 
 /**
  * Kill up to `n` living lobby members. Prefer wounded squads.
- * Optionally prefer a specific squad first (fight rewards).
+ * Off-screen deaths name a killer skin. A passed killerOutfit means the player squad did it.
  */
-export function killLobbyMembers(lobby, n, { preferSquadId = null } = {}) {
+export function killLobbyMembers(
+  lobby,
+  n,
+  { preferSquadId = null, playersLeft = null, killerOutfit = null, offscreen = true } = {},
+) {
   const killed = [];
   let remaining = Math.max(0, Math.floor(Number(n) || 0));
+  let place = Number.isFinite(Number(playersLeft)) ? Number(playersLeft) : null;
+
+  const causeFor = (squad, target) => {
+    if (!offscreen) {
+      return {
+        kind: 'killed',
+        killerId: killerOutfit?.id || '',
+        killerName: killerOutfit?.name || '',
+      };
+    }
+    return offscreenCause(lobby, squad, target);
+  };
 
   const killOneFrom = (squad) => {
     const living = aliveMembers(squad);
     if (!living.length) return null;
-    const weights = living.map((member) => [member, deathWeight(squad, member)]);
+    const weights = living.map((member) => [member, deathWeight(squad, member, place ?? playersLeft)]);
     const target = weighted(weights);
-    target.alive = false;
+    const placement = place != null ? place : countLobbyAlive(lobby);
+    if (place != null) place -= 1;
+    applyDeath(target, placement, causeFor(squad, target));
     killed.push({ squad, member: target });
     return target;
   };
@@ -138,7 +242,7 @@ export function killLobbyMembers(lobby, n, { preferSquadId = null } = {}) {
     const candidates = [];
     for (const squad of lobby) {
       for (const member of aliveMembers(squad)) {
-        candidates.push([member, deathWeight(squad, member), squad]);
+        candidates.push([member, deathWeight(squad, member, place ?? playersLeft), squad]);
       }
     }
     if (!candidates.length) break;
@@ -153,9 +257,7 @@ export function killLobbyMembers(lobby, n, { preferSquadId = null } = {}) {
       }
     }
     const [, , squad] = chosen;
-    const [member] = chosen;
-    member.alive = false;
-    killed.push({ squad, member });
+    killOneFrom(squad);
     remaining -= 1;
   }
 

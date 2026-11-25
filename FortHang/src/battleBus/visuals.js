@@ -149,6 +149,62 @@ export const SQUAD_VISUAL_POOLS = [
     series: ['animals'],
     odds: [5, 10, -5],
   },
+  {
+    key: 'fishies',
+    groupLabel: 'Fishies skins',
+    soloLabel: 'Fishies skin',
+    series: ['fishies'],
+    odds: [10, 5, -10],
+  },
+  {
+    key: 'joneseys',
+    groupLabel: 'Joneseys skins',
+    soloLabel: 'Joneseys skin',
+    series: ['joneseys'],
+    odds: [0, 5, 5],
+  },
+  {
+    key: 'ravens',
+    groupLabel: 'Ravens skins',
+    soloLabel: 'Ravens skin',
+    series: ['ravens'],
+    odds: [-10, 0, 15],
+  },
+  {
+    key: 'kitties',
+    groupLabel: 'Kitties skins',
+    soloLabel: 'Kitties skin',
+    series: ['kitties'],
+    odds: [10, 5, -10],
+  },
+  {
+    key: 'team-leaders',
+    groupLabel: 'Team Leaders skins',
+    soloLabel: 'Team Leaders skin',
+    series: ['team-leaders'],
+    odds: [0, 5, 5],
+  },
+  {
+    key: 'knights',
+    groupLabel: 'Knights skins',
+    soloLabel: 'Knights skin',
+    series: ['knights'],
+    odds: [-5, 5, 10],
+  },
+  {
+    key: 'billiard-warriors',
+    groupLabel: 'Billiard Warriors skins',
+    soloLabel: 'Billiard Warriors skin',
+    series: ['billiard-warriors'],
+    odds: [0, 10, 0],
+  },
+  {
+    key: 'forestry',
+    groupLabel: 'Forestry skins',
+    soloLabel: 'Forestry skin',
+    series: ['forestry'],
+    odds: [10, 5, -5],
+  },
 ];
 
 /** Boss portrait pools — collabs only, never general collaborations. */
@@ -167,43 +223,43 @@ export const BOSS_SERIES_KEYS = [
 ];
 
 /**
- * Fortnite.gg item image IDs → https://fortnite.gg/img/items/{id}/icon.png
- * Fill in as IDs are confirmed on fortnite.gg; missing IDs use the labeled item card.
+ * Fortnite.gg item art: https://fortnite.gg/img/weapons/{file}
+ * Filenames come from each weapon page's hero image. Items with no page
+ * (Kamehameha, the bending styles) keep the labeled card.
  */
-export const FORTNITE_GG_ITEM_IDS = {
-  Medkit: null,
-  'Shield Potion': null,
-  Bandage: null,
-  'Chug Jug': null,
-  'Slurp Juice': null,
-  Grenade: null,
-  'Rocket Launcher': null,
-  'Launch Pad': null,
-  'Rift-To-Go': null,
-  Bush: null,
-  'Port-a-Bunker': null,
-  'Port-a-Fort': null,
-  'Infinity Blade': null,
-  Kamehameha: null,
-  'Mythic Goldfish': null,
-  'Sith Apprentice Lightsaber': null,
-  'Jedi Apprentice Lightsaber': null,
-  Firebending: null,
-  Waterbending: null,
-  Earthbending: null,
-  Airbending: null,
-  "Midas' Drum Gun": null,
-  "TNTina's Boom Bow": null,
-  'Kinetic Blade': null,
-  'Typhoon Blade': null,
-  'Nitro Fists': null,
-  'Shockwave Hammer': null,
-  Kneecapper: null,
-  'Business Turret': null,
-  Jetpack: null,
-  AR: null,
-  SMG: null,
-  Shotgun: null,
+export const FORTNITE_GG_ITEM_ICONS = {
+  Medkit: 't-icon-medkit-l.2x.webp',
+  'Shield Potion': 't-icon-br-shieldpotionmk2-l.2x.webp',
+  Bandage: 't-icon-br-bandagesmk2-l.2x.webp',
+  'Chug Jug': 't-icon-br-sm-athena-chugjug-l.2x.webp',
+  'Slurp Juice': 't-icon-items-purplestuff-01-l.2x.webp',
+  Grenade: 'tticonbrgrenadel.2x.webp',
+  Clinger: 't-t-icon-br-sm-sticky-grenade-l.2x.webp',
+  'Chug Splash': 't-t-icon-br-brchugbomb-l.2x.webp',
+  'Boogie Bomb': 't-t-icon-br-sm-athena-dancegrenade-l.2x.webp',
+  'Rocket Launcher': 't-icon-weapons-rocketlaunchermark2base-l.2x.webp',
+  'Launch Pad': 't-icon_trap_athena_launchpad-l.2x.webp',
+  'Rift-To-Go': 't-icon-br-rift-globe-l.2x.webp',
+  Bush: 't-t-icon-br-sm-athena-bush-01-l.2x.webp',
+  'Port-a-Bunker': 't-t-icon-br-portashack-l.2x.webp',
+  'Port-a-Fort': 't-icon-br-sm-tower-grenade-l.2x.webp',
+  'Infinity Blade': 't-icon-weapons-blade-athena-l.2x.webp',
+  'Mythic Goldfish': 't-t-icon-br-bucketnicegadget-l.2x.webp',
+  'Sith Apprentice Lightsaber': 't-t-icon-br-sharp-plottwist-red-l.2x.webp',
+  'Jedi Apprentice Lightsaber': 't-t-icon-br-sharp-plottwist-blue-l.webp',
+  "Midas' Drum Gun": 't-icon-weapons-midasdrumgun-l.webp',
+  "TNTina's Boom Bow": 't-icon-weapons-tntinabow-l.webp',
+  'Kinetic Blade': 't_icon_weapons_limehandachi_l.2x.webp',
+  'Typhoon Blade': 't_icon_br_typhoonblade_l.2x.webp',
+  'Nitro Fists': 't-icon-br-gauntlet-nitro-l.2x.webp',
+  'Shockwave Hammer': 't-icon-weapons-shockwavemacemeleeweapon-l.2x.webp',
+  Kneecapper: 't_icon_br_electrobat_l.webp',
+  Leekcapper: 't_icon_br_electrobat_l.webp',
+  'Business Turret': 't-t-icon-br-gadget-deployableturret-briefcase-l.2x.webp',
+  Jetpack: 't-t-icon-br-sk-jetpack-junkpak-l.2x.webp',
+  AR: 't-icon-weapons-assaultriflemark2base-l.2x.webp',
+  SMG: 't-icon-weapons-submachinegunmark2base-l.webp',
+  Shotgun: 't-icon-weapons-pumpshotgunmark2base-l.webp',
 };
 
 /** Slug used on https://fortnite.gg/weapons/weapon/{slug} */
@@ -215,6 +271,9 @@ export const FORTNITE_GG_WEAPON_SLUGS = {
   'Chug Jug': 'chug-jug',
   'Slurp Juice': 'slurp-juice',
   Grenade: 'grenade',
+  Clinger: 'clinger',
+  'Chug Splash': 'chug-splash',
+  'Boogie Bomb': 'boogie-bomb',
   'Rocket Launcher': 'rocket-launcher',
   'Launch Pad': 'launch-pad',
   'Rift-To-Go': 'rift-to-go',
@@ -227,14 +286,13 @@ export const FORTNITE_GG_WEAPON_SLUGS = {
   Shotgun: 'pump-shotgun',
 };
 
-/** Prefer png, fall back to jpg in the UI onError. */
+/** Prefer the 2x art, then the 1x file if the first fails. */
 export function getFortniteGgIconUrls(itemName) {
-  const id = FORTNITE_GG_ITEM_IDS[itemName];
-  if (!id) return [];
-  return [
-    `https://fortnite.gg/img/items/${id}/icon.png`,
-    `https://fortnite.gg/img/items/${id}/icon.jpg`,
-  ];
+  const file = FORTNITE_GG_ITEM_ICONS[itemName];
+  if (!file) return [];
+  const full = `https://fortnite.gg/img/weapons/${file}`;
+  const smaller = full.replace('.2x.webp', '.webp');
+  return full === smaller ? [full] : [full, smaller];
 }
 
 export function getFortniteGgWeaponPage(itemName) {

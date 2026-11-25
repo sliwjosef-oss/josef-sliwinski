@@ -59,13 +59,14 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
         <h2>Collecting skins</h2>
         <p>
           FortHang is hangman with Fortnite outfit names. Each round spends one skin attempt. You get{' '}
-          {DAILY_GUESS_BASE} free attempts per day (resets at 6:00 AM America/Chicago). Wins and losses
+          {DAILY_GUESS_BASE} free attempts per day (resets at 6:00 AM Central Time). Wins and losses
           both use an attempt.
         </p>
         <p>
           Guess letters before Peely is fully bananated. Season and flavor hints appear while you play.
           A correct name adds that outfit to your Skin Catalogue. Only undiscovered skins are offered
-          for hangman rounds.
+          for hangman rounds. Battle Bus Trail unlocks at 4 discovered skins, Betting at 16, and the
+          Shop at 32.
         </p>
         <p>
           Discovering every skin awards a one-time catalogue-complete bonus of{' '}
@@ -106,7 +107,7 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
         <ul>
           <li>
             <strong>Skin attempt packs</strong> — add hangman attempts for today (they stack until the
-            6:00 AM CST reset).
+            6:00 AM Central Time reset).
           </li>
           <li>
             <strong>Sidekick rolls</strong> — random sidekick pulls, including rares and ultra-rares.
@@ -114,7 +115,7 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           <li>
             <strong>Betting upgrades</strong> — permanently unlock better Betting tools and
             payouts (more slots, stronger dice, higher Top 8 / Top 64 / tournament rewards, Simulate
-            all, Select random, seeding, extra lives, and more daily betting runs).
+            all, Select random, seeding, extra lives, and more Betting runs).
           </li>
         </ul>
         <p>Many upgrades unlock in tiers — buy the earlier one before the next appears as Available.</p>
@@ -165,14 +166,15 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
         </ul>
         <p>Finished tournaments can be saved and reopened from the Saved list.</p>
         <p>
-          All discovered skins enter. Pick up to {BASE_STAR_BETS} super bet skins (+{STAR_BET_BONUS_DICE}{' '}
-          dice, +{SUPER_BET_ROUND_BONUS} weebuck on every round payout, 2× XP) and up to {BASE_BOOST_BETS}{' '}
-          bet skins (+{BOOST_BET_BONUS_DICE} dice). Shop upgrades can raise those caps and dice bonuses.
-          Placement XP is 1st 200, 2nd–4th 100, 5th–7th 50, and 25 otherwise. Levels raise roll floors
-          (level 1: no 1–5, level 3: no 1–10, level 5: no 1–20). Base payout is {BET_WIN_POINTS} weebucks
-          per bet win. Winning the tournament pays {TOURNAMENT_WIN_POINTS} weebucks. Bets lock until
-          Monday at midnight America/Chicago. Daily runs start at {BASE_DAILY_BET_RUNS} and can be raised
-          in the Shop.
+          All discovered skins enter. Pick up to {BASE_STAR_BETS} super bet{' '}
+          {BASE_STAR_BETS === 1 ? 'skin' : 'skins'} (+{STAR_BET_BONUS_DICE} dice, +{SUPER_BET_ROUND_BONUS}{' '}
+          weebuck on every round payout, 2× XP) and up to {BASE_BOOST_BETS} bet{' '}
+          {BASE_BOOST_BETS === 1 ? 'skin' : 'skins'} (+{BOOST_BET_BONUS_DICE} dice). Shop upgrades can
+          raise those caps and dice bonuses. Placement XP is 1st 200, 2nd–4th 100, 5th–7th 50, and 25
+          otherwise. Levels raise roll floors (level 1: no 1–5, level 3: no 1–10, level 5: no 1–20).
+          Base payout is {BET_WIN_POINTS} weebucks per bet win. Winning the tournament pays{' '}
+          {TOURNAMENT_WIN_POINTS} weebucks. Bets lock until Monday at midnight Central Time. Betting
+          runs start at {BASE_DAILY_BET_RUNS} and can be raised in the Shop.
         </p>
         <ul>
           <li>
@@ -189,7 +191,7 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             {TOURNAMENT_WIN_POINTS}).
           </li>
           <li>
-            <strong>Locks</strong> — skins you bet stay locked until Monday 00:00 America/Chicago.
+            <strong>Locks</strong> — skins you bet stay locked until Monday 00:00 Central Time.
           </li>
           <li>
             <strong>Seeding</strong> — with the shop unlock, super bets take the top seeds, then bet
@@ -211,14 +213,19 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
         <ul>
           <li>
             <strong>Squad</strong> — pick 4 discovered skins before you drop in. An owned sidekick
-            is optional. The top row shows live HP (green) and shield (blue) bars; fallen members
-            are crossed out.
+            is optional. The top row shows health (♥) and shield (🛡). The shield bar hides at 0.
+            Fallen members are crossed out.
           </li>
           <li>
-            <strong>Daily runs</strong> — {BASE_DAILY_TRAIL_RUNS} per day by default (shop can raise
-            to {DAILY_TRAIL_RUNS_TIER1}, then {DAILY_TRAIL_RUNS_TIER2}). Ranked Drop in locks those
-            skins until Monday.{" "}
-            <strong>For Fun</strong> opens a separate squad select with no locks or daily-run
+            <strong>Enemy type</strong> — you can see who showed up, but not whether they are bots,
+            players, or sweats. The fight panel says Type: ???. A Read is only a guess and can be
+            wrong.
+          </li>
+          <li>
+            <strong>Trail runs</strong> — {BASE_DAILY_TRAIL_RUNS} per day by default (shop can raise
+            to {DAILY_TRAIL_RUNS_TIER1}, then {DAILY_TRAIL_RUNS_TIER2}). These are separate from
+            Betting runs. Ranked Drop in locks those skins until Monday at midnight Central Time.{" "}
+            <strong>For Fun</strong> opens a separate squad select with no locks or Trail-run
             limit, and awards no weebucks or skin XP.
           </li>
           <li>
@@ -241,7 +248,7 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             HP; level 4 skins take 5% less fight damage; level 5 skins start with +20 HP.
           </li>
           <li>
-            <strong>Shop</strong> — Trail upgrades (storm/fight resist, daily runs, payouts) plus
+            <strong>Shop</strong> — Trail upgrades (storm/fight resist, Trail runs, payouts) plus
             boss loot packs (Bending, Lightsabers, Infinity Blade, Kamehameha, Mythic Goldfish),
             Chug Jugs, and unlockable events (Legendary Supply Drop, Vending Machine, Floating
             Island, Fishing Spot, Slurp Barrel, Pirate Shop Access Token — ranked only) for 1000
@@ -249,28 +256,43 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           </li>
           <li>
             <strong>Rest</strong> — use a healing item, or search for heals. Both can still draw the
-            Storm. Medkits restore one squad member you pick to full HP (not shield). Shield Potions
+            Storm. Medkits add +100 HP to one squad member you pick, and they do not add shield. Shield Potions
             add +50 shield to one member.
-            Slurp Juice, found in chests (about 5%), fills one member's health and shield. Chug
-            Jugs restore the whole squad and only drop after you unlock them. With Vending Machine
+            Slurp Juice, found in chests (about 4%), fills one member's health and shield. Chug
+            Splash heals every living squad member, sidekick included, for +20 HP (no shield). Chug
+            Jugs restore the whole squad and only drop after you unlock them (about 1% per chest). With Vending Machine
             unlocked, Rest can instead offer a one-item trade for a random unlocked Mythic. Slurp
             Barrel (shop unlock) can rarely appear when searching for heals and restores the whole
             squad to full HP.
           </li>
           <li>
-            <strong>Rotate</strong> — Book it covers more ground but risks open-field ambushes;
-            Safer route moves slower. On the safer path you can still run into bots — or rarely a
-            boss guarding a vault (same odds as a loot ambush turning into a boss).
+            <strong>Rotate</strong> — Book it covers more ground but has a high chance of an
+            open-field ambush, and in the final 10 that ambush always happens. Safer route moves
+            slower, never gets ambushed, and takes one tick of Storm damage.
           </li>
           <li>
             <strong>Inventory</strong> — up to 10 item slots (stacks of the same item each use a
-            slot).
+            slot). Grenades deal 30–45. Clingers deal 40–55. A Boogie Bomb makes the enemy dance
+            for 2 rounds (they deal no damage); each squad member has a 10% chance to dance too.
+            A Bush still makes you harder to spot, and it also blocks one sniper shot, then it's
+            used up. A Kneecapper is a Leekcapper 10% of the time. Same swing. Pack on the trail
+            screen opens your inventory (with item art) and the players list. Living players show
+            up once you have seen them. Every player who dies is listed, even if you never met them,
+            with their placement and how they died.
           </li>
           <li>
             <strong>Lobby</strong> — before you drop, 95 other players spawn with unique skins in
-            squads of 4 (plus one squad of 3). Each squad is Sweats, Players, or Bots. You can still
+            squads of 4 (plus one squad of 3). Squads are themed when a series has enough skins
+            (Marvel, Star Wars, Fishies, Joneseys, Ravens, Kitties, Team Leaders, Knights, Billiard
+            Warriors, Forestry, and the rest). Each squad is Sweats, Players, or Bots. You can still
             run into solos, duos, and trios that split off those squads. Random deaths hit the lobby
-            every turn, and squads that already lost someone die faster.
+            every turn. Early on those are usually bots, and sweats almost never drop until the
+            lobby is thin. Off-screen, bots are killed by players or sweats. Players and sweats are
+            killed by sweats. Some of those deaths are fall damage instead. Squads that already lost
+            someone die faster. Third-partying puts both
+            full squads on screen. Each round you pick a side to shoot. Their health bar is one
+            chunk per living player, and emptying a chunk kills that player even if you flee.
+            Those squads also shoot each other.
           </li>
           <li>
             <strong>Choice events</strong> — between turns you may get a decision: check a noisy
@@ -283,8 +305,9 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           <li>
             <strong>Final 10</strong> — once 10 players are left, the others stop dying on their own
             and teaming offers stop. They only go down if you attack them, or if they ambush you and
-            you win the fight. Ambushes jump sharply: looting, resting, and rotating all get jumped
-            much more often, and anyone you run into usually shoots first.
+            you win the fight. Ambushes jump sharply for looting and resting. Booking it is a
+            guaranteed ambush, and anyone you run into usually shoots first. Safer route still only
+            takes the Storm tick.
           </li>
         </ul>
       </section>

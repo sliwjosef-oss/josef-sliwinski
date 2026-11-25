@@ -33,12 +33,12 @@ export default function GuessStatus({ economy, onEconomyChange, className = '', 
       </p>
       {showResetHint && remaining <= 0 ? (
         <p className="guess-reset-countdown" role="status">
-          Out of attempts · resets in <strong>{formatCountdown(msLeft)}</strong> (6:00 AM CST)
+          Out of attempts · resets in <strong>{formatCountdown(msLeft)}</strong> (6:00 AM Central Time)
         </p>
       ) : null}
       {showResetHint && remaining > 0 ? (
         <p className="guess-reset-hint">
-          One attempt per skin (win or lose) · resets at 6:00 AM CST
+          One attempt per skin (win or lose) · resets at 6:00 AM Central Time
         </p>
       ) : null}
     </div>

@@ -21,14 +21,23 @@ import {
   getDailyGuessesRemaining,
   spendGuess,
 } from '../utils/economy';
-import { countDiscoveredSkins, isCollectionComplete } from '../utils/progress';
+import {
+  BETTING_SKIN_UNLOCK,
+  countDiscoveredSkins,
+  featureUnlocks,
+  isCollectionComplete,
+  SHOP_SKIN_UNLOCK,
+  TRAIL_SKIN_UNLOCK,
+} from '../utils/progress';
 import CollectionCompleteScreen, {
   COMPLETE_ALT,
   COMPLETE_IMAGE,
 } from './CollectionCompleteScreen';
 import GuessStatus from './GuessStatus';
 
-const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const GRIND_MUSIC_URL = `${import.meta.env.BASE_URL}audio/Grinding_Metal_Seconds.mp3`;
+
+const KEY_ROWS = ['ABCDEFG', 'HIJKLMN', 'OPQRSTU', 'VWXYZ'];
 const GAME_STATES = {
   IDLE: 'idle',
   PLAYING: 'playing',
@@ -97,7 +106,23 @@ function OutfitGuessImage({ outfit, reveal = false }) {
   );
 }
 
+function FeatureButton({ label, needed, owned, onClick, tone }) {
+  const unlocked = owned >= needed;
+  return (
+    <button
+      type="button"
+      className={`secondary-button menu-tile menu-tile-${tone}`}
+      disabled={!unlocked}
+      title={unlocked ? label : `Discover ${needed} skins to unlock ${label}`}
+      onClick={unlocked ? onClick : undefined}
+    >
+      {unlocked ? label : `${label} (${owned}/${needed})`}
+    </button>
+  );
+}
+
 function MenuLinks({
+  discoveredCount,
   onOpenCatalogue,
   onOpenSidekicks,
   onOpenShop,
@@ -107,25 +132,37 @@ function MenuLinks({
 }) {
   return (
     <div className="menu-actions">
-      <button type="button" className="secondary-button" onClick={onOpenCatalogue}>
+      <button type="button" className="secondary-button menu-tile menu-tile-catalogue" onClick={onOpenCatalogue}>
         Skin Catalogue
       </button>
-      <button type="button" className="secondary-button" onClick={onOpenSidekicks}>
+      <button type="button" className="secondary-button menu-tile menu-tile-sidekicks" onClick={onOpenSidekicks}>
         Sidekick Catalogue
       </button>
       {onOpenTrail ? (
-        <button type="button" className="secondary-button" onClick={onOpenTrail}>
-          Battle Bus Trail
-        </button>
+        <FeatureButton
+          label="Battle Bus Trail"
+          needed={TRAIL_SKIN_UNLOCK}
+          owned={discoveredCount}
+          onClick={onOpenTrail}
+          tone="trail"
+        />
       ) : null}
-      <button type="button" className="secondary-button" onClick={onOpenFortSort}>
-        Betting
-      </button>
-      <button type="button" className="secondary-button" onClick={onOpenShop}>
-        Shop
-      </button>
+      <FeatureButton
+        label="Betting"
+        needed={BETTING_SKIN_UNLOCK}
+        owned={discoveredCount}
+        onClick={onOpenFortSort}
+        tone="betting"
+      />
+      <FeatureButton
+        label="Shop"
+        needed={SHOP_SKIN_UNLOCK}
+        owned={discoveredCount}
+        onClick={onOpenShop}
+        tone="shop"
+      />
       {onOpenHelp ? (
-        <button type="button" className="secondary-button" onClick={onOpenHelp}>
+        <button type="button" className="secondary-button menu-tile menu-tile-help" onClick={onOpenHelp}>
           Help
         </button>
       ) : null}
@@ -168,6 +205,7 @@ export default function HangmanGame({
   const [guessedLetters, setGuessedLetters] = useState(new Set());
   const [wrongGuesses, setWrongGuesses] = useState(0);
   const outfitQueueRef = useRef(null);
+  const musicRef = useRef(null);
   const guessesRemaining = getDailyGuessesRemaining(economy);
   const guessesLimit = getDailyGuessLimit(economy);
 
@@ -182,9 +220,47 @@ export default function HangmanGame({
   );
 
   const discoveredCount = countDiscoveredSkins(outfits, guessedSkinIds);
+  const unlocks = featureUnlocks(discoveredCount);
   const collectionComplete = isCollectionComplete(outfits, guessedSkinIds);
 
   const peelyStage = gameState === GAME_STATES.WON ? 0 : wrongGuesses;
+
+  const playGrindMusic = useCallback(() => {
+    let audio = musicRef.current;
+    if (!audio) {
+      audio = new Audio(GRIND_MUSIC_URL);
+      audio.loop = true;
+      audio.volume = 0.55;
+      musicRef.current = audio;
+    }
+    const pending = audio.play();
+    if (pending?.catch) pending.catch(() => {});
+  }, []);
+
+  const stopGrindMusic = useCallback(() => {
+    const audio = musicRef.current;
+    if (!audio) return;
+    audio.pause();
+    audio.currentTime = 0;
+  }, []);
+
+  useEffect(() => {
+    const shouldPlay =
+      inputEnabled &&
+      (gameState === GAME_STATES.PLAYING ||
+        gameState === GAME_STATES.WON ||
+        gameState === GAME_STATES.LOST);
+    if (shouldPlay) playGrindMusic();
+    else stopGrindMusic();
+  }, [gameState, inputEnabled, playGrindMusic, stopGrindMusic]);
+
+  useEffect(
+    () => () => {
+      musicRef.current?.pause();
+      musicRef.current = null;
+    },
+    []
+  );
 
   const returnToMenu = useCallback(() => {
     setGameState(GAME_STATES.IDLE);
@@ -210,7 +286,8 @@ export default function HangmanGame({
     setGuessedLetters(new Set());
     setWrongGuesses(0);
     setGameState(GAME_STATES.PLAYING);
-  }, [outfits, guessedSkinIds, economy, onEconomyChange]);
+    playGrindMusic();
+  }, [outfits, guessedSkinIds, economy, onEconomyChange, playGrindMusic]);
 
   const handleGuess = useCallback(
     (letter) => {
@@ -287,43 +364,48 @@ export default function HangmanGame({
         </section>
 
         <section className="hangman-stage hangman-stage--play">
-          <div className="outfit-guess-board playing">
-            <OutfitGuessImage outfit={currentOutfit} />
+          <div className="play-board">
+            <img
+              src={HANGMAN_IMAGES[peelyStage]}
+              alt={`Peely damage stage ${peelyStage} of ${MAX_WRONG_GUESSES}`}
+              className="peely-image play-peely"
+            />
+            <div className="play-board-main">
+              <div className="outfit-guess-board playing">
+                <OutfitGuessImage outfit={currentOutfit} />
+              </div>
+              <p className="wrong-count">
+                Wrong guesses: {wrongGuesses} / {MAX_WRONG_GUESSES}
+              </p>
+            </div>
           </div>
-          <p className="wrong-count">
-            Wrong guesses: {wrongGuesses} / {MAX_WRONG_GUESSES}
-          </p>
         </section>
 
         <WordDisplay word={currentOutfit.name} guessedLetters={guessedLetters} />
 
         <div className="keyboard" role="group" aria-label="Letter keyboard">
-          {ALPHABET.map((letter) => {
-            const guessed = guessedLetters.has(letter);
-            const inWord = getLettersInWord(currentOutfit.name).has(letter);
-            const isWrong = guessed && !inWord;
+          {KEY_ROWS.map((row) => (
+            <div key={row} className="keyboard-row">
+              {row.split('').map((letter) => {
+                const guessed = guessedLetters.has(letter);
+                const inWord = getLettersInWord(currentOutfit.name).has(letter);
+                const isWrong = guessed && !inWord;
 
-            return (
-              <button
-                key={letter}
-                type="button"
-                className={`key-button ${guessed ? (isWrong ? 'wrong' : 'correct') : ''}`}
-                onClick={() => handleGuess(letter)}
-                disabled={guessed}
-                aria-label={`Letter ${letter}${guessed ? ', already guessed' : ''}`}
-              >
-                {letter}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="peely-footer">
-          <img
-            src={HANGMAN_IMAGES[peelyStage]}
-            alt={`Peely damage stage ${peelyStage} of ${MAX_WRONG_GUESSES}`}
-            className="peely-image"
-          />
+                return (
+                  <button
+                    key={letter}
+                    type="button"
+                    className={`key-button ${guessed ? (isWrong ? 'wrong' : 'correct') : ''}`}
+                    onClick={() => handleGuess(letter)}
+                    disabled={guessed}
+                    aria-label={`Letter ${letter}${guessed ? ', already guessed' : ''}`}
+                  >
+                    {letter}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -392,8 +474,9 @@ export default function HangmanGame({
               <p className="play-again-prompt">Would you like to play again?</p>
             ) : (
               <p className="play-again-prompt">
-                Out of daily attempts (wins and losses both count) — visit the Shop or wait for 6:00
-                AM CST.
+                {unlocks.shop
+                  ? 'Out of daily attempts (wins and losses both count) — visit the Shop or wait for 6:00 AM Central Time.'
+                  : `Out of daily attempts. The Shop unlocks at ${SHOP_SKIN_UNLOCK} skins (${discoveredCount}/${SHOP_SKIN_UNLOCK}). Wait for 6:00 AM Central Time.`}
               </p>
             )
           ) : (
@@ -404,7 +487,7 @@ export default function HangmanGame({
               <button type="button" className="primary-button" onClick={startGame}>
                 Play Again
               </button>
-            ) : remainingOutfits.length > 0 ? (
+            ) : remainingOutfits.length > 0 && unlocks.shop ? (
               <button type="button" className="primary-button" onClick={onOpenShop}>
                 Open Shop
               </button>
@@ -456,18 +539,22 @@ export default function HangmanGame({
                 <>
                   <GuessStatus economy={economy} onEconomyChange={onEconomyChange} />
                   <p className="prompt">
-                    Buy more attempts in the Shop with weebucks, or wait for the daily reset. Wins
-                    and losses both use an attempt.
+                    {unlocks.shop
+                      ? 'Buy more attempts in the Shop with weebucks, or wait for the daily reset. Wins and losses both use an attempt.'
+                      : `The Shop unlocks after ${SHOP_SKIN_UNLOCK} discovered skins (${discoveredCount}/${SHOP_SKIN_UNLOCK}). Wait for the daily reset for more attempts.`}
                   </p>
-                  <button type="button" className="primary-button" onClick={onOpenShop}>
-                    Open Shop
-                  </button>
+                  {unlocks.shop ? (
+                    <button type="button" className="primary-button" onClick={onOpenShop}>
+                      Open Shop
+                    </button>
+                  ) : null}
                 </>
               )}
               <p className="discovery-count">
                 Catalogue: {discoveredCount} / {outfits.length} skins discovered
               </p>
               <MenuLinks
+                discoveredCount={discoveredCount}
                 onOpenCatalogue={onOpenCatalogue}
                 onOpenSidekicks={onOpenSidekicks}
                 onOpenShop={onOpenShop}
@@ -483,6 +570,7 @@ export default function HangmanGame({
                 Catalogue: {discoveredCount} / {outfits.length} skins discovered
               </p>
               <MenuLinks
+                discoveredCount={discoveredCount}
                 onOpenCatalogue={onOpenCatalogue}
                 onOpenSidekicks={onOpenSidekicks}
                 onOpenShop={onOpenShop}
