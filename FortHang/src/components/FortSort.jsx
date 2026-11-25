@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+
+const BET_MUSIC_URL = `${import.meta.env.BASE_URL}audio/The_Final_Bracket.mp3`;
 import {
   BYE,
   buildPlayerRun,
@@ -1030,6 +1032,34 @@ export default function FortSort({
   const [roundRolls, setRoundRolls] = useState([]);
   const [openRollId, setOpenRollId] = useState(null);
   const hubModeRef = useRef('betting');
+  const musicRef = useRef(null);
+
+  const playBetMusic = () => {
+    let audio = musicRef.current;
+    if (!audio) {
+      audio = new Audio(BET_MUSIC_URL);
+      audio.loop = true;
+      audio.volume = 0.55;
+      musicRef.current = audio;
+    }
+    const pending = audio.play();
+    if (pending?.catch) pending.catch(() => {});
+  };
+
+  const stopBetMusic = () => {
+    const audio = musicRef.current;
+    if (!audio) return;
+    audio.pause();
+    audio.currentTime = 0;
+  };
+
+  useEffect(
+    () => () => {
+      musicRef.current?.pause();
+      musicRef.current = null;
+    },
+    [],
+  );
 
   const maxStarBets = getMaxStarBets(economy);
   const maxBoostBets = getMaxBoostBets(economy);
@@ -1113,6 +1143,42 @@ export default function FortSort({
   }, [tournament, bracketState]);
 
   const lastRoll = tournament?.rolls?.length ? tournament.rolls[tournament.rolls.length - 1] : null;
+
+  useEffect(() => {
+    const rollOnScreen = matchView === 'roll' && !!lastRoll;
+    const roundOnScreen = matchView === 'round' && roundRolls.length > 0;
+    const tournamentCompleteOnScreen =
+      screen === 'play' &&
+      playTab === 'match' &&
+      !!bracketState?.done &&
+      !rollOnScreen &&
+      !roundOnScreen;
+    const inBettingBracket =
+      screen === 'play' &&
+      mode === 'betting' &&
+      !archiveReadOnly &&
+      !!tournament?.betting &&
+      !!bracketState &&
+      !tournamentCompleteOnScreen;
+    if (!inBettingBracket) {
+      stopBetMusic();
+      return undefined;
+    }
+    playBetMusic();
+    const resumeOnTap = () => playBetMusic();
+    window.addEventListener('pointerdown', resumeOnTap);
+    return () => window.removeEventListener('pointerdown', resumeOnTap);
+  }, [
+    screen,
+    mode,
+    archiveReadOnly,
+    tournament,
+    bracketState,
+    playTab,
+    matchView,
+    lastRoll,
+    roundRolls,
+  ]);
   const isSimMode = mode === 'simulate' || mode === 'betting' || !!tournament?.simulated;
   const bonusById = useMemo(() => {
     if (!tournament?.simulated) return null;
@@ -1229,6 +1295,7 @@ export default function FortSort({
       setPageIndex(0);
       setFollowPage(true);
     }
+    if (mode === 'betting') playBetMusic();
     setScreen('play');
   };
 

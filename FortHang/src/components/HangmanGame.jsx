@@ -433,24 +433,33 @@ export default function HangmanGame({
           </button>
         </header>
 
-        <div className="peely-footer">
-          <img
-            src={HANGMAN_IMAGES[peelyStage]}
-            alt={`Peely damage stage ${peelyStage} of ${MAX_WRONG_GUESSES}`}
-            className="peely-image"
-          />
-        </div>
+        <p
+          className={`result-message result-lead ${gameState === GAME_STATES.WON ? 'win' : 'lose'}`}
+        >
+          {gameState === GAME_STATES.WON
+            ? `You guessed it! The outfit was ${currentOutfit.name}.`
+            : `Game over! The outfit was ${currentOutfit.name}.`}
+        </p>
 
         <section className="hangman-stage hangman-stage--play">
-          <div className="outfit-guess-board">
-            {gameState === GAME_STATES.WON ? (
-              <div className="skin-reveal-panel">
-                <span className="skin-reveal-number">#{currentOutfit.number}</span>
-                <OutfitGuessImage outfit={currentOutfit} reveal />
+          <div className="play-board">
+            <img
+              src={HANGMAN_IMAGES[gameState === GAME_STATES.WON ? 0 : MAX_WRONG_GUESSES]}
+              alt={gameState === GAME_STATES.WON ? 'Happy Peely' : 'Peely eliminated'}
+              className="peely-image play-peely"
+            />
+            <div className="play-board-main">
+              <div className="outfit-guess-board">
+                {gameState === GAME_STATES.WON ? (
+                  <div className="skin-reveal-panel">
+                    <span className="skin-reveal-number">#{currentOutfit.number}</span>
+                    <OutfitGuessImage outfit={currentOutfit} reveal />
+                  </div>
+                ) : (
+                  <OutfitGuessImage outfit={currentOutfit} />
+                )}
               </div>
-            ) : (
-              <OutfitGuessImage outfit={currentOutfit} />
-            )}
+            </div>
           </div>
         </section>
 
@@ -458,17 +467,10 @@ export default function HangmanGame({
 
         <div className="result-panel">
           {gameState === GAME_STATES.WON ? (
-            <>
-              <p className="result-message win">
-                You guessed it! The outfit was {currentOutfit.name}.
-              </p>
-              <p className="catalogue-unlock">
-                Catalogue #{currentOutfit.number} — added to your skin catalogue!
-              </p>
-            </>
-          ) : (
-            <p className="result-message lose">Game over! The outfit was {currentOutfit.name}.</p>
-          )}
+            <p className="catalogue-unlock">
+              Catalogue #{currentOutfit.number} — added to your skin catalogue!
+            </p>
+          ) : null}
           {remainingOutfits.length > 0 ? (
             guessesRemaining > 0 ? null : (
               <p className="play-again-prompt">

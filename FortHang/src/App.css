@@ -1138,19 +1138,34 @@
     flex: 0 0 auto;
   }
 
+  .hangman-game--result .result-lead {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 2.5rem;
+    margin: 0;
+    text-align: center;
+  }
+
   .hangman-game--result .discovery-count {
     display: none;
   }
 
-  .hangman-game--result .peely-footer {
-    display: none;
+  .hangman-game--result .hangman-stage--play {
+    flex: 0 0 auto;
+    min-height: 0;
+    gap: 0.15rem;
+    justify-content: flex-start;
   }
 
-  .hangman-game--result .hangman-stage--play {
-    flex: 1 1 auto;
-    min-height: 0;
-    gap: 0.25rem;
-    justify-content: center;
+  .hangman-game--result .play-board {
+    align-items: center;
+  }
+
+  .hangman-game--result .play-peely {
+    width: min(118px, 30vw);
   }
 
   .hangman-game--result .outfit-guess-board {
@@ -1179,11 +1194,12 @@
   }
 
   .hangman-game--result .word-display {
-    flex: 0 1 auto;
-    gap: 0.3rem 0.85rem;
-    padding: 0.15rem;
-    max-height: 18dvh;
-    overflow: hidden;
+    flex: 0 0 auto;
+    gap: 0.25rem 0.7rem;
+    margin-top: -0.15rem;
+    padding: 0;
+    max-height: none;
+    overflow: visible;
   }
 
   .hangman-game--result .word-char {
