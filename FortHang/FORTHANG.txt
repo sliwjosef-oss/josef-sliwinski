@@ -167,9 +167,9 @@ Tracks owned sidekick kinds and copy counts. Unowned entries show as silhouettes
 | Source | Amount / notes |
 | --- | --- |
 | Daily login (once per CT day) | **+100** |
-| Betting match wins | Base **2** weebucks per bet-skin win (shop raises Top 8 / Top 64) |
-| Tournament win | Base **30** (shop tiers up to 100 / 200) |
-| Super bet round bonus | **+1** weebuck on every round payout for that skin |
+| Betting match wins | Base **4** weebucks per bet-skin win (shop raises Top 8 / Top 64) |
+| Tournament win | Base **60** (shop tiers up to 200 / 400) |
+| Super bet round bonus | **+2** weebucks on every round payout for that skin |
 | Catalogue complete | **10,000** once |
 | Ranked Trail end | Per survivor / fallen squad member (sidekick counts); Pirate tokens add **+500** each |
 
@@ -240,7 +240,7 @@ Finished tournaments can be saved and reopened.
 Each side rolls **N d100** and keeps the **highest**. Base N depends on series / special names (1–5). Then:
 
 - **Bet skin:** +2 dice (shop → +3)  
-- **Super bet:** +4 dice (shop → +5), +1 weebuck per round payout, **2×** placement XP  
+- **Super bet:** +4 dice (shop → +5), +2 weebucks per round payout, **2×** placement XP  
 - **Skin level:** permanent extra dice and roll floors (see Skin levels)
 
 ### Betting run flow

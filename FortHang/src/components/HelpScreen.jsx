@@ -173,7 +173,7 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
         <p>
           All discovered skins enter. Pick up to {BASE_STAR_BETS} super bet{' '}
           {BASE_STAR_BETS === 1 ? 'skin' : 'skins'} (+{STAR_BET_BONUS_DICE} dice, +{SUPER_BET_ROUND_BONUS}{' '}
-          weebuck on every round payout, 2× XP) and up to {BASE_BOOST_BETS} bet{' '}
+          weebucks on every round payout, 2× XP) and up to {BASE_BOOST_BETS} bet{' '}
           {BASE_BOOST_BETS === 1 ? 'skin' : 'skins'} (+{BOOST_BET_BONUS_DICE} dice). Shop upgrades can
           raise those caps and dice bonuses. Placement XP is 1st 200, 2nd–4th 100, 5th–7th 50, and 25
           otherwise. Levels permanently add dice (level 2: +1, level 4: +2, level 5: +3) and raise
@@ -186,7 +186,7 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
         <ul>
           <li>
             <strong>Super bets</strong> — +{STAR_BET_BONUS_DICE} dice by default (shop can raise to
-            +5), +{SUPER_BET_ROUND_BONUS} weebuck on every round payout, and 2× placement XP. Optional
+            +5), +{SUPER_BET_ROUND_BONUS} weebucks on every round payout, and 2× placement XP. Optional
             shop unlock: one extra life per super bet per run (first loss flips to a win).
           </li>
           <li>
