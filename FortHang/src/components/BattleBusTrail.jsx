@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { START_PLAYERS } from '../battleBus/constants';
+import { START_PLAYERS, STATUS } from '../battleBus/constants';
 import { playTrailMatch } from '../battleBus/engine';
 import {
   TRAIL_FALLEN_XP,
@@ -37,6 +37,48 @@ const SELECT_SORT = {
   SERIES: 'series',
   LEVEL: 'level',
 };
+
+const STORM_STATUS_CLASS = {
+  [STATUS[0]]: 'is-in-zone',
+  [STATUS[1]]: 'is-edge-zone',
+  [STATUS[2]]: 'is-in-storm',
+  [STATUS[3]]: 'is-deep-storm',
+};
+
+const STORM_STATUS_PHRASES = Object.values(STATUS).sort((a, b) => b.length - a.length);
+
+/** Colorize In zone / Edge of zone / Storm labels inside Trail log lines. */
+function formatTrailLogLine(line) {
+  const text = String(line ?? '');
+  if (!text) return text;
+  const nodes = [];
+  let remaining = text;
+  let key = 0;
+  while (remaining.length) {
+    let earliest = -1;
+    let match = null;
+    for (const phrase of STORM_STATUS_PHRASES) {
+      const idx = remaining.indexOf(phrase);
+      if (idx >= 0 && (earliest < 0 || idx < earliest)) {
+        earliest = idx;
+        match = phrase;
+      }
+    }
+    if (!match) {
+      nodes.push(remaining);
+      break;
+    }
+    if (earliest > 0) nodes.push(remaining.slice(0, earliest));
+    nodes.push(
+      <span key={`storm-${key}`} className={`trail-storm-status ${STORM_STATUS_CLASS[match]}`}>
+        {match}
+      </span>,
+    );
+    key += 1;
+    remaining = remaining.slice(earliest + match.length);
+  }
+  return nodes;
+}
 
 function SkinThumb({ outfit }) {
   if (!outfit) return <div className="icon-placeholder">?</div>;
@@ -280,20 +322,14 @@ function SquadStatusBar({ members }) {
         const hpPct = Math.round((hp / maxHp) * 100);
         const empty = member.empty;
         const dead = !empty && !member.alive;
-        const killerOutfit = dead ? member.killerOutfit : null;
         return (
           <div
             key={member.key}
             className={`trail-squad-member ${empty ? 'is-empty' : ''} ${dead ? 'is-fallen' : ''} ${
               member.sidekick ? 'is-sidekick' : ''
-            } ${killerOutfit ? 'has-killer' : ''}`}
+            }`}
           >
-            <div className={`trail-squad-icons ${killerOutfit ? 'has-killer' : ''}`}>
-              {killerOutfit ? (
-                <div className="trail-squad-icon is-killer" title="Eliminated by">
-                  <SkinThumb outfit={killerOutfit} />
-                </div>
-              ) : null}
+            <div className="trail-squad-icons">
               <div className="trail-squad-icon">
                 {member.outfit || member.sidekickOutfit ? (
                   <SkinThumb outfit={member.outfit || member.sidekickOutfit} />
@@ -1045,7 +1081,7 @@ export default function BattleBusTrail({
         <div className="catalogue-scroll trail-log" tabIndex={0} aria-label="Trail log">
           {logLines.map((line, index) => (
             <p key={`${index}-${line.slice(0, 24)}`} className="trail-log-line">
-              {line}
+              {formatTrailLogLine(line)}
             </p>
           ))}
           <div ref={logEndRef} />

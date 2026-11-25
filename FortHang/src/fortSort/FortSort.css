@@ -2597,6 +2597,26 @@
   white-space: pre-wrap;
 }
 
+.trail-storm-status {
+  font-weight: 700;
+}
+
+.trail-storm-status.is-in-zone {
+  color: #86efac;
+}
+
+.trail-storm-status.is-edge-zone {
+  color: #fbbf24;
+}
+
+.trail-storm-status.is-in-storm {
+  color: #c4b5fd;
+}
+
+.trail-storm-status.is-deep-storm {
+  color: #fb7185;
+}
+
 .trail-choices {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

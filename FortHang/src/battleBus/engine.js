@@ -667,15 +667,27 @@ export async function playTrailMatch({
     return pick(full.length ? full : ['a squad of']);
   };
 
+  const rivalsLeft = () => countLobbyAlive(lobby);
+
   const describeFromLobby = (wantSize) => {
-    const squad = pickSquadForSize(lobby, wantSize) || pickSquadForSize(lobby, 1);
-    if (!squad) {
+    if (rivalsLeft() <= 0) {
       lastEncounterRef = null;
       lastEncounterOutfits = [];
-      return ['a stray player', 'Solo player'];
+      return null;
+    }
+    const squad = pickSquadForSize(lobby, wantSize) || pickSquadForSize(lobby, 1);
+    if (!squad || aliveCount(squad) <= 0) {
+      lastEncounterRef = null;
+      lastEncounterOutfits = [];
+      return null;
     }
     const size = Math.min(wantSize, aliveCount(squad));
     const members = takeAliveMembers(squad, Math.max(1, size));
+    if (!members.length) {
+      lastEncounterRef = null;
+      lastEncounterOutfits = [];
+      return null;
+    }
     setEncounter(squad, members);
     const activity =
       members.length === 1
@@ -713,7 +725,9 @@ export async function playTrailMatch({
   const describeSquadFight = () => {
     const opts = livingSquads(lobby, 2);
     if (opts.length < 2) {
-      const [text, enemy] = describeSquad();
+      const fallback = describeSquad();
+      if (!fallback) return null;
+      const [text, enemy] = fallback;
       return [text, enemy, enemy, null, null, null, null];
     }
     const shuffled = [...opts].sort(() => rand() - 0.5);
@@ -1172,7 +1186,9 @@ export async function playTrailMatch({
   };
 
   const bossThirdParty = async () => {
-    const [text, squadEnemy] = describeSquad();
+    const described = describeSquad();
+    if (!described) return 'won';
+    const [text, squadEnemy] = described;
     log(`!! THIRD PARTY! The noise drew in ${text} — and they open fire!`);
     await enemyAttacks(squadEnemy);
     if (!Object.keys(S.squad).length) return 'lost';
@@ -1283,13 +1299,35 @@ export async function playTrailMatch({
     return 'lost';
   };
 
+  /** Ambushes always bring the whole living lobby squad, not a random subset. */
+  const expandAmbushToFullSquad = (text, enemy) => {
+    const squad = encounterSquad();
+    if (!squad || enemy === 'Boss') return { text, enemy };
+    const full = aliveMembers(squad);
+    if (full.length <= 1) {
+      if (full.length === 1) setEncounter(squad, full);
+      return {
+        text,
+        enemy: full.length === 1 ? soloEnemyType(squad.type) : enemy,
+      };
+    }
+    setEncounter(squad, full);
+    const themeBit = squad.theme || 'players';
+    return {
+      text: `${groupWordFor(full.length)} ${themeBit}`,
+      enemy: groupEnemyType(squad.type),
+    };
+  };
+
   const engage = async (text, enemy, ambushOdds) => {
     S.lastRead = '';
     let fleeBonus = 0;
     let odds = ambushOdds;
-    const maxHp = enemyMaxHp(enemy);
-    const startHp = startHpForEncounter(enemy);
-    emitEnemyStatus(enemy, startHp, maxHp, { hidden: true, hpHidden: true });
+    let fightEnemy = enemy;
+    let fightText = text;
+    let maxHp = enemyMaxHp(fightEnemy);
+    let startHp = startHpForEncounter(fightEnemy);
+    emitEnemyStatus(fightEnemy, startHp, maxHp, { hidden: true, hpHidden: true });
     if (has('Bush')) {
       useItem('Bush');
       odds = Math.min(odds, inFinalCircle() ? 0.55 : 0.2);
@@ -1297,12 +1335,16 @@ export async function playTrailMatch({
       log("(You're wearing a Bush — harder to spot, easier to slip away.)");
     }
     if (rand() < odds) {
-      log(`!! AMBUSH! Out of nowhere, ${text} — and they open fire!`);
-      await enemyAttacks(enemy);
+      ({ text: fightText, enemy: fightEnemy } = expandAmbushToFullSquad(text, enemy));
+      maxHp = enemyMaxHp(fightEnemy);
+      startHp = startHpForEncounter(fightEnemy);
+      emitEnemyStatus(fightEnemy, startHp, maxHp, { hidden: true, hpHidden: true });
+      log(`!! AMBUSH! Out of nowhere, ${fightText} — and they open fire!`);
+      await enemyAttacks(fightEnemy);
       if (!Object.keys(S.squad).length) return;
       const pickOpt = await choose(['Fight back', 'Flee']);
-      if (pickOpt === 'Flee') await fleeChase(enemy, startHp, 0, fleeBonus);
-      else await combat(enemy, startHp, true, fleeBonus);
+      if (pickOpt === 'Flee') await fleeChase(fightEnemy, startHp, 0, fleeBonus);
+      else await combat(fightEnemy, startHp, true, fleeBonus);
       return;
     }
     log(`You spot ${text}. They haven't seen you.`);
@@ -1314,20 +1356,23 @@ export async function playTrailMatch({
         return;
       }
       log("They noticed you! They're giving chase!");
-      await fleeChase(enemy, startHp, 0, fleeBonus);
+      ({ text: fightText, enemy: fightEnemy } = expandAmbushToFullSquad(text, enemy));
+      maxHp = enemyMaxHp(fightEnemy);
+      startHp = startHpForEncounter(fightEnemy);
+      await fleeChase(fightEnemy, startHp, 0, fleeBonus);
       return;
     }
     log('You open fire first!');
-    const dealt = squadAttack(enemy);
+    const dealt = squadAttack(fightEnemy);
     log(`Total: ${dealt} damage.`);
     const hpLeft = Math.max(0, startHp - dealt);
-    dropEncounterChunks(hpLeft, maxHp, enemy);
+    dropEncounterChunks(hpLeft, maxHp, fightEnemy);
     if (hpLeft <= 0) {
-      emitEnemyStatus(enemy, 0, maxHp);
-      reward(enemy);
+      emitEnemyStatus(fightEnemy, 0, maxHp);
+      reward(fightEnemy);
       return;
     }
-    await combat(enemy, hpLeft, true, fleeBonus);
+    await combat(fightEnemy, hpLeft, true, fleeBonus);
   };
 
   const aliveFromHp = (hp, maxHp, count) => {
@@ -1648,19 +1693,26 @@ export async function playTrailMatch({
   };
 
   const playerEncounter = async (ambushOdds = 0.35) => {
+    if (rivalsLeft() <= 0) return;
     const finalCircle = inFinalCircle();
     const odds = finalCircle ? Math.max(ambushOdds, 0.9) : ambushOdds;
     const roll = rand();
     const soloChance = finalCircle ? 0.45 : 0.2;
     const thirdPartyChance = finalCircle ? 0.05 : 0.15;
     if (roll < thirdPartyChance) {
-      const [text, a, b, squadA, squadB, membersA, membersB] = describeSquadFight();
+      const fight = describeSquadFight();
+      if (!fight) return;
+      const [text, a, b, squadA, squadB, membersA, membersB] = fight;
       await thirdParty(text, a, b, squadA, squadB, membersA, membersB);
     } else if (roll < thirdPartyChance + soloChance) {
-      const [text, enemy] = describeSolo();
+      const described = describeSolo();
+      if (!described) return;
+      const [text, enemy] = described;
       await engage(text, enemy, odds);
     } else {
-      const [text, enemy] = describeSquad();
+      const described = describeSquad();
+      if (!described) return;
+      const [text, enemy] = described;
       await engage(text, enemy, odds);
     }
   };
@@ -1726,7 +1778,12 @@ export async function playTrailMatch({
       log('Something useful was stashed in the bush.');
       grantLoot('bots');
     } else {
-      const [text, enemy] = describeSolo();
+      const described = describeSolo();
+      if (!described) {
+        log('Whatever was in the bush is gone.');
+        return;
+      }
+      const [text, enemy] = described;
       const label = encounterLabel(lastEncounterOutfits[0], 'a solo');
       log(`Someone (${label}) was camping the bush!`);
       await engage(text, enemy, 1);
@@ -1734,11 +1791,14 @@ export async function playTrailMatch({
   };
 
   const eventTeamingOffer = async () => {
+    if (rivalsLeft() <= 0) return;
     if (inFinalCircle()) {
       await playerEncounter();
       return;
     }
-    const [text, enemy] = describeSolo();
+    const described = describeSolo();
+    if (!described) return;
+    const [text, enemy] = described;
     const label = encounterLabel(lastEncounterOutfits[0], 'a solo player');
     log(`A solo player (${label}) waves at you — looks like a teaming offer.`);
     emitVisual({
@@ -1802,7 +1862,12 @@ export async function playTrailMatch({
       return;
     }
     log('Perfect timing — you ram the next squad you see!');
-    const [text, enemy] = describeSquad();
+    const described = describeSquad();
+    if (!described) {
+      log('Nobody else is left to ram.');
+      return;
+    }
+    const [text, enemy] = described;
     const maxHp = enemyMaxHp(enemy);
     const carDmg = randInt(180, 280);
     log(`You plow into ${text} for ${carDmg} damage!`);
@@ -1850,7 +1915,7 @@ export async function playTrailMatch({
       return;
     }
     log('You ride a rift up to the island...');
-    if (rand() < 0.5) {
+    if (rand() < 0.5 && rivalsLeft() > 0) {
       log('Sweats were camping the loot!');
       await engage('a squad of sweats waiting on the floating island', 'Sweats', 1);
       if (!Object.keys(S.squad).length) return;
@@ -1906,17 +1971,29 @@ export async function playTrailMatch({
       afkTick();
       S.turn += 1;
       if (!Object.keys(S.squad).length) return;
-      if (S.playersLeft - Object.keys(S.squad).length <= 0) {
-        log('While you were fishing, everyone else got wiped. Victory Royale!');
+      if (rivalsLeft() <= 0) {
+        log('While you were fishing, everyone else got wiped.');
         return;
       }
     }
   };
 
+  const vendingPool = (rarities) =>
+    Object.entries(LOOT_ITEMS)
+      .filter(
+        ([name, item]) =>
+          rarities.includes(item.rarity) &&
+          (item.pools.includes('loot') || item.pools.includes('boss')) &&
+          (!item.shop || unlocked.has(name)),
+      )
+      .map(([name]) => name);
+
   const eventVendingMachine = async () => {
-    const mythics = mythicBossEntries().map(([item]) => item);
-    if (!mythics.length) {
-      log('A vending machine hums nearby, but it has no Mythics stocked for you yet.');
+    const epicPool = vendingPool(['Epic']);
+    const legendaryMythic = vendingPool(['Legendary', 'Mythic']);
+    const stocked = [...new Set([...epicPool, ...legendaryMythic])];
+    if (!stocked.length) {
+      log('A vending machine hums nearby, but it has nothing stocked for you yet.');
       return false;
     }
     const owned = Object.keys(S.inventory);
@@ -1924,7 +2001,9 @@ export async function playTrailMatch({
       log('A vending machine hums nearby, but you have nothing to trade.');
       return false;
     }
-    log('A vending machine appears! Trade one item for a random unlocked Mythic.');
+    log(
+      'A vending machine appears! Trade one item for Epic / Legendary / Mythic loot (80% Epic, 20% Legendary or Mythic).',
+    );
     const labels = owned.map((item) =>
       S.inventory[item] > 1 ? `Trade ${item} x${S.inventory[item]}` : `Trade ${item}`,
     );
@@ -1936,11 +2015,16 @@ export async function playTrailMatch({
     const item = owned[labels.indexOf(pickLabel)];
     useItem(item);
     log(`You feed the machine your ${item}...`);
-    give(pick(mythics));
+    const preferHigh = rand() < 0.2;
+    const primary = preferHigh ? legendaryMythic : epicPool;
+    const fallback = preferHigh ? epicPool : legendaryMythic;
+    const pool = primary.length ? primary : fallback.length ? fallback : stocked;
+    give(pick(pool));
     return true;
   };
 
   const randomEvent = async () => {
+    if (rivalsLeft() <= 0) return;
     if (eventUnlocks.has('legendarySupplyDrop') && rand() < 0.08) {
       await eventLegendarySupplyDrop();
       return;
@@ -2208,19 +2292,26 @@ export async function playTrailMatch({
   syncPlayersLeft();
 
   let won = false;
+  const declareVictory = () => {
+    won = true;
+    syncPlayersLeft();
+    log('='.repeat(40));
+    log('VICTORY ROYALE!');
+    log('='.repeat(40));
+    log(`Only your squad is left — ${Object.keys(S.squad).length} players remaining, all yours!`);
+    log(`Survivors: ${Object.keys(S.squad).join(', ')}`);
+  };
+  const squadAlive = () => Object.keys(S.squad).length > 0;
+  const shouldWin = () => squadAlive() && rivalsLeft() <= 0;
+
   while (true) {
-    if (!Object.keys(S.squad).length) {
+    if (!squadAlive()) {
       const placement = S.playersLeft + 1;
       log(`Your squad was eliminated. You placed #${placement}.`);
       break;
     }
-    if (S.playersLeft - Object.keys(S.squad).length <= 0) {
-      won = true;
-      log('='.repeat(40));
-      log('VICTORY ROYALE!');
-      log('='.repeat(40));
-      log(`Only your squad is left — ${Object.keys(S.squad).length} players remaining, all yours!`);
-      log(`Survivors: ${Object.keys(S.squad).join(', ')}`);
+    if (shouldWin()) {
+      declareVictory();
       break;
     }
 
@@ -2236,7 +2327,7 @@ export async function playTrailMatch({
       S.vaultTurns -= 1;
       if (S.vaultTurns > 0) {
         log(`Still cracking the vault... (${S.vaultTurns} turn(s) left). The Storm keeps moving.`);
-      } else if (Object.keys(S.squad).length) {
+      } else if (squadAlive()) {
         log('The vault finally opens! Guaranteed rare loot.');
         grantLoot('sweats');
       }
@@ -2252,22 +2343,40 @@ export async function playTrailMatch({
         elims = Math.max(1, elims - 2);
       }
 
+      if (shouldWin()) {
+        declareVictory();
+        break;
+      }
+
       const eventChance = phase.eventChance + S.damage / 1500;
       const endgameEvent = inFinalCircle() ? Math.max(eventChance, 0.85) : eventChance;
-      if (Object.keys(S.squad).length && rand() < endgameEvent) {
+      if (squadAlive() && rivalsLeft() > 0 && rand() < endgameEvent) {
         await randomEvent();
       }
+      if (shouldWin()) {
+        declareVictory();
+        break;
+      }
     }
-    if (Object.keys(S.squad).length && rand() < SQUAD_EVENT_CHANCE) {
+    if (squadAlive() && rivalsLeft() > 0 && rand() < SQUAD_EVENT_CHANCE) {
       squadEvent();
       await removeEliminated();
     }
-    if (Object.keys(S.squad).length) {
+    if (squadAlive() && rivalsLeft() > 0) {
       eliminateOthers(elims);
       stormShrinkCheck();
       stormTick();
       await removeEliminated();
       afkTick();
+    } else if (squadAlive()) {
+      stormShrinkCheck();
+      stormTick();
+      await removeEliminated();
+      afkTick();
+    }
+    if (shouldWin()) {
+      declareVictory();
+      break;
     }
     S.turn += 1;
   }

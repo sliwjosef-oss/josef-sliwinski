@@ -266,7 +266,8 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             Splash heals every living squad member, sidekick included, for +20 total — HP first,
             then any leftover fills shield (for example 94 HP gets +6 HP and +14 shield). Chug
             Jugs restore the whole squad and only drop after you unlock them (about 1% per chest). With Vending Machine
-            unlocked, Rest can instead offer a one-item trade for a random unlocked Mythic. Slurp
+            unlocked, Rest can instead offer a one-item trade for Epic / Legendary / Mythic loot
+            (80% Epic, 20% Legendary or Mythic). Slurp
             Barrel (shop unlock) can rarely appear when searching for heals and restores the whole
             squad to full HP.
           </li>
@@ -290,7 +291,8 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             squads of 4 (plus one squad of 3). Squads are themed when a series has enough skins
             (Marvel, Star Wars, Fishies, Joneseys, Ravens, Kitties, Team Leaders, Knights, Billiard
             Warriors, Forestry, and the rest). Each squad is Sweats, Players, or Bots. You can still
-            run into solos, duos, and trios that split off those squads. Random deaths hit the lobby
+            run into solos, duos, and trios that split off those squads — but if they ambush you, the
+            whole living squad piles in. Random deaths hit the lobby
             every turn. Early on those are usually bots, and sweats almost never drop until the
             lobby is thin. Off-screen, bots are killed by players or sweats. Players and sweats are
             killed by sweats. Some of those deaths are fall damage instead. Squads that already lost
