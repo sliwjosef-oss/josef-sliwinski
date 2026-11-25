@@ -27,6 +27,8 @@ export const TOURNAMENT_WIN_POINTS = 30;
 /** Extra weebucks on every match/tournament payout for super bet skins. */
 export const SUPER_BET_ROUND_BONUS = 1;
 export const CATALOG_COMPLETE_BONUS = 10000;
+/** Weebucks granted once per guess-day (6:00 AM Central) when the player opens the game. */
+export const DAILY_LOGIN_BONUS = 100;
 export const BASE_DAILY_BET_RUNS = 5;
 export const BASE_DAILY_TRAIL_RUNS = 3;
 export const DAILY_TRAIL_RUNS_TIER1 = 5;
@@ -535,6 +537,7 @@ function read() {
       daily: normalizeDaily(parsed.daily),
       dailyBetRuns: normalizeDailyBetRuns(parsed.dailyBetRuns),
       dailyTrailRuns: normalizeDailyTrailRuns(parsed.dailyTrailRuns),
+      dailyLogin: normalizeDailyLogin(parsed.dailyLogin),
       weeklyBets: normalizeWeekly(parsed.weeklyBets),
       weeklyTrail: normalizeWeeklyTrail(parsed.weeklyTrail),
       unlocks: normalizeUnlocks(parsed.unlocks),
@@ -556,6 +559,7 @@ function defaultEconomy() {
     daily: { dayKey: guessDayKey(), used: 0, bonus: 0 },
     dailyBetRuns: { dayKey: guessDayKey(), used: 0 },
     dailyTrailRuns: { dayKey: guessDayKey(), used: 0 },
+    dailyLogin: { dayKey: guessDayKey(), claimed: false },
     weeklyBets: { weekKey: cstWeekKey(), usedIds: [] },
     weeklyTrail: { weekKey: cstWeekKey(), usedIds: [] },
     unlocks: defaultUnlocks(),
@@ -568,6 +572,7 @@ function withFreshMeta(economy) {
     daily: normalizeDaily(economy.daily),
     dailyBetRuns: normalizeDailyBetRuns(economy.dailyBetRuns),
     dailyTrailRuns: normalizeDailyTrailRuns(economy.dailyTrailRuns),
+    dailyLogin: normalizeDailyLogin(economy.dailyLogin),
     weeklyBets: normalizeWeekly(economy.weeklyBets),
     weeklyTrail: normalizeWeeklyTrail(economy.weeklyTrail),
     unlocks: normalizeUnlocks(economy.unlocks),
@@ -744,6 +749,17 @@ function normalizeDailyTrailRuns(dailyTrailRuns) {
   };
 }
 
+function normalizeDailyLogin(dailyLogin) {
+  const dayKey = guessDayKey();
+  if (!dailyLogin || dailyLogin.dayKey !== dayKey) {
+    return { dayKey, claimed: false };
+  }
+  return {
+    dayKey,
+    claimed: !!dailyLogin.claimed,
+  };
+}
+
 function normalizeWeeklyTrail(weekly) {
   const weekKey = cstWeekKey();
   if (!weekly || weekly.weekKey !== weekKey) {
@@ -878,9 +894,27 @@ export function loadEconomy() {
   state.daily = normalizeDaily(state.daily);
   state.dailyBetRuns = normalizeDailyBetRuns(state.dailyBetRuns);
   state.dailyTrailRuns = normalizeDailyTrailRuns(state.dailyTrailRuns);
+  state.dailyLogin = normalizeDailyLogin(state.dailyLogin);
   state.weeklyBets = normalizeWeekly(state.weeklyBets);
   state.weeklyTrail = normalizeWeeklyTrail(state.weeklyTrail);
   return write(state);
+}
+
+/** Award the once-per-day login weebuck bonus if it has not been claimed yet. */
+export function claimDailyLoginBonus(economy = loadEconomy()) {
+  const state = withFreshMeta(economy);
+  state.dailyLogin = normalizeDailyLogin(state.dailyLogin);
+  if (state.dailyLogin.claimed) {
+    return { ok: false, awarded: 0, alreadyClaimed: true, economy: write(state) };
+  }
+  state.points = Math.max(0, (Number(state.points) || 0) + DAILY_LOGIN_BONUS);
+  state.dailyLogin = { dayKey: guessDayKey(), claimed: true };
+  return {
+    ok: true,
+    awarded: DAILY_LOGIN_BONUS,
+    alreadyClaimed: false,
+    economy: write(state),
+  };
 }
 
 /** Wipe weebucks, unlocks, sidekicks, and reset daily attempts / betting runs. */

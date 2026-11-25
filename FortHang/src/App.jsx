@@ -8,7 +8,9 @@ import SidekickCatalogue from './components/SidekickCatalogue';
 import SkinCatalogue from './components/SkinCatalogue';
 import {
   CATALOG_COMPLETE_BONUS,
+  DAILY_LOGIN_BONUS,
   awardCatalogCompleteBonus,
+  claimDailyLoginBonus,
   loadEconomy,
   migrateOwnedSidekickIds,
   resetEconomy,
@@ -58,6 +60,14 @@ function App() {
   const [guessedSkinIds, setGuessedSkinIds] = useState(loadGuessedSkinIds);
   const [economy, setEconomy] = useState(loadEconomy);
   const [skinLevels, setSkinLevels] = useState(loadSkinLevels);
+
+  useEffect(() => {
+    const result = claimDailyLoginBonus(loadEconomy());
+    setEconomy(result.economy);
+    if (result.ok) {
+      window.alert(`Daily login bonus: +${DAILY_LOGIN_BONUS} weebucks!`);
+    }
+  }, []);
 
   useEffect(() => {
     Promise.all([

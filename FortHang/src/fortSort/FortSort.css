@@ -313,6 +313,13 @@
   text-align: center;
 }
 
+/* Author display rules override the UA [hidden] stylesheet — force tabs to stay hidden. */
+.fort-sort .status-tab[hidden],
+.fort-sort .match-tab-panel[hidden],
+.fort-sort .bracket-view[hidden] {
+  display: none !important;
+}
+
 .suspense-matchup {
   display: flex;
   flex-direction: row;

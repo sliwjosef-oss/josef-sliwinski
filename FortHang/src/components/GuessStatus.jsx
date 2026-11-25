@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
+  DAILY_LOGIN_BONUS,
+  claimDailyLoginBonus,
   formatCountdown,
   getDailyGuessLimit,
   getDailyGuessesRemaining,
@@ -17,7 +19,11 @@ export default function GuessStatus({ economy, onEconomyChange, className = '', 
     const tick = () => {
       setMsLeft(getMsUntilGuessReset());
       if (guessDayKey() !== economy?.daily?.dayKey) {
-        onEconomyChange?.(loadEconomy());
+        const result = claimDailyLoginBonus(loadEconomy());
+        onEconomyChange?.(result.economy);
+        if (result.ok) {
+          window.alert(`Daily login bonus: +${DAILY_LOGIN_BONUS} weebucks!`);
+        }
       }
     };
     tick();

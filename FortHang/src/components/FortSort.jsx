@@ -1372,14 +1372,17 @@ export default function FortSort({
     return null;
   };
 
+  const peekWatchKind = (history = tournament?.history) => {
+    if (!tournament?.betting || !history) return null;
+    const state = resolveBracket(tournament.bracket, Object.fromEntries(history));
+    if (!state.current) return null;
+    return classifyBetMatch(state.outcomes.get(state.current.id)?.participants || []);
+  };
+
   const autoUntilBet = () => {
     if (!tournament || archiveReadOnly || !tournament.simulated || !tournament.betting) return;
-    const current = resolveBracket(tournament.bracket, Object.fromEntries(tournament.history));
-    const currentParticipants = current.current
-      ? current.outcomes.get(current.current.id)?.participants || []
-      : [];
     // Auto is only for skipping non-bet matches; bet/super-bet matchups must be watched.
-    if (classifyBetMatch(currentParticipants)) return;
+    if (peekWatchKind(tournament.history)) return;
 
     const lives = withExtraLives();
     const result = simulateUntilBetMatch(
@@ -1392,14 +1395,19 @@ export default function FortSort({
       [...(tournament.boostBetIds ?? []), ...(tournament.starBetIds ?? [])],
       tournament.starBetIds ?? [],
     );
+    const watchKind = result.watchKind || null;
     if (result.rolls?.length) {
-      finishSimulationQuiet(result, lives);
-    } else if (lives && tournament.extraLifeById) {
+      // Same presentation as Simulate round — show everything Auto cleared.
+      showRoundResults(result, lives);
+      setWatchPending(watchKind);
+      return;
+    }
+    if (lives && tournament.extraLifeById) {
       const next = { ...tournament, extraLifeById: lives };
       setTournament(next);
       persistTournament(next);
     }
-    setWatchPending(result.watchKind || null);
+    setWatchPending(watchKind);
     setMatchView('vs');
     setOpenRollId(null);
   };
@@ -2007,6 +2015,9 @@ export default function FortSort({
     const currentOutcome = bracketState.current
       ? bracketState.outcomes.get(bracketState.current.id)
       : null;
+    const currentBetKind = tournament.betting
+      ? watchPending || classifyBetMatch(currentOutcome?.participants || [])
+      : null;
 
     const openBracketTab = () => {
       setFollowPage(true);
@@ -2092,8 +2103,8 @@ export default function FortSort({
             starIds={new Set(tournament.starBetIds ?? [])}
             boostIds={new Set(tournament.boostBetIds ?? [])}
             onNext={() => {
-              setWatchPending(null);
               setMatchView('vs');
+              setWatchPending(peekWatchKind());
             }}
           />
         ) : matchView === 'round' && roundRolls.length ? (
@@ -2106,8 +2117,8 @@ export default function FortSort({
             openRollId={openRollId}
             onToggle={(matchId) => setOpenRollId((current) => (current === matchId ? null : matchId))}
             onNext={() => {
-              setWatchPending(null);
               setMatchView('vs');
+              setWatchPending(peekWatchKind());
             }}
           />
         ) : bracketState.done ? (
@@ -2291,28 +2302,19 @@ export default function FortSort({
 
                 <div className="dice-matchup-actions">
                   <button type="button" className="dice-action dice-action-roll" onClick={simNextMatch}>
-                    Roll match
+                    {currentBetKind === 'super'
+                      ? 'Watch super bet match'
+                      : currentBetKind === 'bet'
+                        ? 'Watch bet match'
+                        : 'Roll match'}
                   </button>
                   {tournament.betting ? (
-                    watchPending ? (
-                      <button
-                        type="button"
-                        className="dice-action dice-action-round"
-                        onClick={simNextMatch}
-                      >
-                        {watchPending === 'super' ? 'Watch super bet round' : 'Watch bet round'}
-                      </button>
-                    ) : (
+                    currentBetKind ? null : (
                       <button
                         type="button"
                         className="dice-action dice-action-round"
                         onClick={autoUntilBet}
-                        disabled={Boolean(classifyBetMatch(currentOutcome?.participants || []))}
-                        title={
-                          classifyBetMatch(currentOutcome?.participants || [])
-                            ? 'Auto skips only non-bet matches — roll this bet/super bet yourself'
-                            : 'Skip ahead through later rounds until the next bet or super bet'
-                        }
+                        title="Simulate rounds like Simulate round, stopping at the next bet or super bet match"
                       >
                         Auto
                       </button>

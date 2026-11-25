@@ -1,5 +1,5 @@
 import { getCatalogueSeriesKey } from '../utils/seriesSort';
-import { resolveBracket, roundLabel } from './bracket';
+import { BYE, resolveBracket, roundLabel } from './bracket';
 
 /** Exact catalogue names that always roll 5d100. */
 export const FIVE_STAR_NAMES = new Set([
@@ -272,9 +272,11 @@ export function simulateEntireBracket(
 }
 
 /**
- * Quietly resolve matches across the whole bracket (including later rounds)
- * until the next ready match involves a bet/super-bet skin, or the bracket ends.
- * Does not resolve that bet match itself.
+ * Quietly resolve matches across the whole bracket (including later rounds),
+ * the same way Simulate round walks play order, until the next ready match
+ * involves a bet/super-bet skin — or the bracket ends.
+ * Does not resolve that bet match itself. Non-bet matches in the same round
+ * as a later bet match are still resolved.
  */
 export function simulateUntilBetMatch(
   bracket,
@@ -293,36 +295,60 @@ export function simulateUntilBetMatch(
   const wins = [];
 
   const classify = (participants = []) => {
-    if (participants.some((id) => superSet.has(id))) return 'super';
-    if (participants.some((id) => betSet.has(id))) return 'bet';
+    const ids = (participants || []).filter((id) => id && id !== BYE);
+    if (ids.some((id) => superSet.has(id))) return 'super';
+    if (ids.some((id) => betSet.has(id))) return 'bet';
     return null;
   };
 
+  // Round-by-round like Simulate round, but stop before any bet/super-bet match.
   while (true) {
     const state = resolveBracket(bracket, Object.fromEntries(nextHistory));
     if (!state.current || state.done) {
       return { history: nextHistory, rolls, wins, done: true, watchKind: null };
     }
-    const outcome = state.outcomes.get(state.current.id);
-    const participants = outcome?.participants || [];
-    const watchKind = classify(participants);
-    if (watchKind) {
-      return { history: nextHistory, rolls, wins, done: false, watchKind, participants };
+
+    const firstParticipants = state.outcomes.get(state.current.id)?.participants || [];
+    const firstKind = classify(firstParticipants);
+    if (firstKind) {
+      return {
+        history: nextHistory,
+        rolls,
+        wins,
+        done: false,
+        watchKind: firstKind,
+        participants: firstParticipants,
+      };
     }
 
-    const step = simulateNextMatch(
-      bracket,
-      nextHistory,
-      outfitsById,
-      bonusById,
-      minRollById,
-      extraLifeById,
-    );
-    if (!step) {
-      return { history: nextHistory, rolls, wins, done: true, watchKind: null };
+    const targetLabel = roundLabel(bracket, state.current);
+    while (true) {
+      const inner = resolveBracket(bracket, Object.fromEntries(nextHistory));
+      if (!inner.current || inner.done) {
+        return { history: nextHistory, rolls, wins, done: !!inner.done, watchKind: null };
+      }
+      if (roundLabel(bracket, inner.current) !== targetLabel) break;
+
+      const participants = inner.outcomes.get(inner.current.id)?.participants || [];
+      const watchKind = classify(participants);
+      if (watchKind) {
+        return { history: nextHistory, rolls, wins, done: false, watchKind, participants };
+      }
+
+      const step = simulateNextMatch(
+        bracket,
+        nextHistory,
+        outfitsById,
+        bonusById,
+        minRollById,
+        extraLifeById,
+      );
+      if (!step) {
+        return { history: nextHistory, rolls, wins, done: true, watchKind: null };
+      }
+      nextHistory = [...nextHistory, [step.matchId, step.winnerSlot]];
+      rolls.push(step.roll);
+      wins.push({ winnerId: step.winnerId, matchId: step.matchId });
     }
-    nextHistory = [...nextHistory, [step.matchId, step.winnerSlot]];
-    rolls.push(step.roll);
-    wins.push({ winnerId: step.winnerId, matchId: step.matchId });
   }
 }

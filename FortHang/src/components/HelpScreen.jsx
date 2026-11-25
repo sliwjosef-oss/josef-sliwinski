@@ -8,6 +8,7 @@ import {
   BOOST_BET_BONUS_DICE,
   CATALOG_COMPLETE_BONUS,
   DAILY_GUESS_BASE,
+  DAILY_LOGIN_BONUS,
   DAILY_TRAIL_RUNS_TIER1,
   DAILY_TRAIL_RUNS_TIER2,
   STAR_BET_BONUS_DICE,
@@ -88,6 +89,8 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
         <p>
           Weebucks are the FortHang currency. Earn them mainly in Betting when your bet skins win
           matches. Extra sources include tournament-win bonuses and the catalogue-complete reward.
+          Opening the game also grants a daily login bonus of {DAILY_LOGIN_BONUS} weebucks once per
+          day (same 6:00 AM Central Time reset as hangman attempts).
         </p>
         <p>
           <strong>Battle Bus Trail</strong> also pays weebucks at the end of a ranked run:{' '}
