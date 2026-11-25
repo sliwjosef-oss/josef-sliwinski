@@ -6,12 +6,14 @@ import {
   TRAIL_SURVIVOR_XP,
   canStartTrailRun,
   getDailyTrailRunsRemaining,
+  getLockedTrailSidekickIds,
   getLockedTrailSkinIds,
   getTrailFightResist,
   getTrailStormResist,
   getTrailUnlockedBossItems,
   getTrailUnlockedEvents,
   hasTrailForFun,
+  lockTrailSidekick,
   lockTrailSkins,
   settleTrailPayout,
   spendTrailRun,
@@ -623,7 +625,10 @@ export default function BattleBusTrail({
   const headerMembers = isSelectScreen ? selectMembers : playMembers;
   const runsLeft = getDailyTrailRunsRemaining(economy);
   const lockedIds = useMemo(() => getLockedTrailSkinIds(economy), [economy]);
+  const lockedSidekickIds = useMemo(() => getLockedTrailSidekickIds(economy), [economy]);
   const partyHasLocked = !isForFunSelect && partyIds.some((id) => lockedIds.has(id));
+  const sidekickIsLocked =
+    !isForFunSelect && sidekickId != null && lockedSidekickIds.has(sidekickId);
 
   const toggleParty = (id) => {
     if (busy) return;
@@ -651,6 +656,12 @@ export default function BattleBusTrail({
         window.alert('One of those skins is locked until Monday. Use For Fun, or pick other skins.');
         return;
       }
+      if (sidekickId && lockedSidekickIds.has(sidekickId)) {
+        window.alert(
+          'That sidekick is resting until the next 6:00 AM Central reset. Pick another, or go without one.',
+        );
+        return;
+      }
     }
     setForFunMode(forFun);
 
@@ -670,6 +681,9 @@ export default function BattleBusTrail({
         return;
       }
       runEconomy = lockTrailSkins(partyIds, spent.economy);
+      if (sidekickId) {
+        runEconomy = lockTrailSidekick(sidekickId, runEconomy);
+      }
       onEconomyChange(runEconomy);
     }
 
@@ -914,6 +928,9 @@ export default function BattleBusTrail({
   const openRankedSelect = () => {
     setForFunMode(false);
     setScreen('select');
+    setSidekickId((current) =>
+      current && getLockedTrailSidekickIds(economy).has(current) ? null : current,
+    );
   };
 
   const renderSkinPick = (outfit) => {
@@ -1163,7 +1180,7 @@ export default function BattleBusTrail({
           disabled={
             partyIds.length !== 4 ||
             busy ||
-            (!isForFunSelect && (runsLeft <= 0 || partyHasLocked))
+            (!isForFunSelect && (runsLeft <= 0 || partyHasLocked || sidekickIsLocked))
           }
           onClick={() => startRun({ forFun: isForFunSelect })}
         >
@@ -1185,23 +1202,33 @@ export default function BattleBusTrail({
           <p className="hint">Optional — buy sidekick rolls in the Shop if you want one.</p>
         ) : (
           <div className="catalogue-grid fort-sort-select-grid">
-            {ownedSidekicks.map((sidekick) => (
-              <button
-                key={sidekick.id}
-                type="button"
-                className={`catalogue-card fort-sort-pick revealed ${
-                  sidekickId === sidekick.id ? 'is-selected' : ''
-                }`}
-                onClick={() =>
-                  setSidekickId((current) => (current === sidekick.id ? null : sidekick.id))
-                }
-              >
-                <p className="catalogue-name">{sidekick.name}</p>
-                <span className="fort-sort-check" aria-hidden="true">
-                  {sidekickId === sidekick.id ? '✓' : ''}
-                </span>
-              </button>
-            ))}
+            {ownedSidekicks.map((sidekick) => {
+              const resting = !isForFunSelect && lockedSidekickIds.has(sidekick.id);
+              return (
+                <button
+                  key={sidekick.id}
+                  type="button"
+                  className={`catalogue-card fort-sort-pick revealed ${
+                    sidekickId === sidekick.id ? 'is-selected' : ''
+                  } ${resting ? 'is-locked' : ''}`}
+                  title={
+                    resting
+                      ? 'Resting until 6:00 AM Central (same reset as hangman attempts)'
+                      : sidekick.name
+                  }
+                  onClick={() => {
+                    if (resting) return;
+                    setSidekickId((current) => (current === sidekick.id ? null : sidekick.id));
+                  }}
+                >
+                  <p className="catalogue-name">{sidekick.name}</p>
+                  {resting ? <p className="catalogue-meta">Resting</p> : null}
+                  <span className="fort-sort-check" aria-hidden="true">
+                    {sidekickId === sidekick.id ? '✓' : ''}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         )}
 

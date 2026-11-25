@@ -220,8 +220,10 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
         <ul>
           <li>
             <strong>Squad</strong> — pick 4 discovered skins before you drop in. An owned sidekick
-            is optional. The top row shows health (♥) and shield (🛡). The shield bar hides at 0.
-            Fallen members are crossed out.
+            is optional. After a ranked run, that sidekick needs rest until the next 6:00 AM Central
+            reset (same day boundary as hangman attempts) — skins still lock until Monday. The top
+            row shows health (♥) and shield (🛡). The shield bar hides at 0. Fallen members are
+            crossed out.
           </li>
           <li>
             <strong>Enemy type</strong> — you can see who showed up, but not whether they are bots,

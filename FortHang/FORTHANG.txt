@@ -313,7 +313,7 @@ Trail is a text + icon BR adventure: pick a squad, survive the Storm and lobby, 
 ### Setup
 
 - Choose **4 discovered skins** (+ optional owned **sidekick**).  
-- **Ranked Drop in** — uses a daily Trail run, locks those skins until Monday CT, pays weebucks + XP.  
+- **Ranked Drop in** — uses a daily Trail run, locks those skins until Monday CT, and puts the chosen sidekick on rest until the next 6:00 AM Central guess-day (same reset as hangman attempts). Pays weebucks + XP.  
 - **For Fun** — locked until purchased in the Shop (**5000** weebucks). Separate select; no locks, no run spend, no payouts / XP.  
 - Default daily ranked runs: **3** (shop → 5 → 7). Same ladder for Betting runs.
 

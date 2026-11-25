@@ -630,6 +630,7 @@ function read() {
       dailyBetRuns: normalizeDailyBetRuns(parsed.dailyBetRuns),
       dailyTrailRuns: normalizeDailyTrailRuns(parsed.dailyTrailRuns),
       dailyLogin: normalizeDailyLogin(parsed.dailyLogin),
+      dailyTrailSidekicks: normalizeDailyTrailSidekicks(parsed.dailyTrailSidekicks),
       weeklyBets: normalizeWeekly(parsed.weeklyBets),
       weeklyTrail: normalizeWeeklyTrail(parsed.weeklyTrail),
       unlocks: normalizeUnlocks(parsed.unlocks),
@@ -652,6 +653,7 @@ function defaultEconomy() {
     dailyBetRuns: { dayKey: guessDayKey(), used: 0 },
     dailyTrailRuns: { dayKey: guessDayKey(), used: 0 },
     dailyLogin: { dayKey: guessDayKey(), claimed: false },
+    dailyTrailSidekicks: { dayKey: guessDayKey(), usedIds: [] },
     weeklyBets: { weekKey: cstWeekKey(), usedIds: [] },
     weeklyTrail: { weekKey: cstWeekKey(), usedIds: [] },
     unlocks: defaultUnlocks(),
@@ -665,6 +667,7 @@ function withFreshMeta(economy) {
     dailyBetRuns: normalizeDailyBetRuns(economy.dailyBetRuns),
     dailyTrailRuns: normalizeDailyTrailRuns(economy.dailyTrailRuns),
     dailyLogin: normalizeDailyLogin(economy.dailyLogin),
+    dailyTrailSidekicks: normalizeDailyTrailSidekicks(economy.dailyTrailSidekicks),
     weeklyBets: normalizeWeekly(economy.weeklyBets),
     weeklyTrail: normalizeWeeklyTrail(economy.weeklyTrail),
     unlocks: normalizeUnlocks(economy.unlocks),
@@ -881,6 +884,20 @@ function normalizeDailyLogin(dailyLogin) {
   };
 }
 
+/** Sidekicks used on a ranked Trail run rest until the next 6:00 AM Central guess-day. */
+function normalizeDailyTrailSidekicks(dailyTrailSidekicks) {
+  const dayKey = guessDayKey();
+  if (!dailyTrailSidekicks || dailyTrailSidekicks.dayKey !== dayKey) {
+    return { dayKey, usedIds: [] };
+  }
+  return {
+    dayKey,
+    usedIds: Array.isArray(dailyTrailSidekicks.usedIds)
+      ? dailyTrailSidekicks.usedIds.filter((id) => typeof id === 'string')
+      : [],
+  };
+}
+
 function normalizeWeeklyTrail(weekly) {
   const weekKey = cstWeekKey();
   if (!weekly || weekly.weekKey !== weekKey) {
@@ -1016,6 +1033,7 @@ export function loadEconomy() {
   state.dailyBetRuns = normalizeDailyBetRuns(state.dailyBetRuns);
   state.dailyTrailRuns = normalizeDailyTrailRuns(state.dailyTrailRuns);
   state.dailyLogin = normalizeDailyLogin(state.dailyLogin);
+  state.dailyTrailSidekicks = normalizeDailyTrailSidekicks(state.dailyTrailSidekicks);
   state.weeklyBets = normalizeWeekly(state.weeklyBets);
   state.weeklyTrail = normalizeWeeklyTrail(state.weeklyTrail);
   return write(state);
@@ -1402,6 +1420,28 @@ export function lockTrailSkins(skinIds, economy = loadEconomy()) {
     if (id) used.add(id);
   }
   state.weeklyTrail = { weekKey: state.weeklyTrail.weekKey, usedIds: [...used] };
+  return write(state);
+}
+
+/** Sidekicks resting after a ranked Trail run (clears at 6:00 AM Central with hangman attempts). */
+export function getLockedTrailSidekickIds(economy = loadEconomy()) {
+  return new Set(normalizeDailyTrailSidekicks(economy.dailyTrailSidekicks).usedIds);
+}
+
+export function isTrailSidekickLocked(sidekickId, economy = loadEconomy()) {
+  if (!sidekickId) return false;
+  return getLockedTrailSidekickIds(economy).has(sidekickId);
+}
+
+export function lockTrailSidekick(sidekickId, economy = loadEconomy()) {
+  const state = withFreshMeta(economy);
+  if (!sidekickId) return write(state);
+  const used = new Set(state.dailyTrailSidekicks.usedIds);
+  used.add(sidekickId);
+  state.dailyTrailSidekicks = {
+    dayKey: state.dailyTrailSidekicks.dayKey,
+    usedIds: [...used],
+  };
   return write(state);
 }
 
