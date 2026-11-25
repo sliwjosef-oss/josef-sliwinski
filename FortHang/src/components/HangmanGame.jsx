@@ -505,13 +505,15 @@ export default function HangmanGame({
           className="game-title-image"
         />
         <p className="subtitle">Guess the outfit name before Peely gets bananated!</p>
-        {!collectionComplete ? (
+        {collectionComplete ? (
+          <p className="discovery-count guess-status-line">{Number(economy.points) || 0} weebucks</p>
+        ) : (
           <GuessStatus
             economy={economy}
             onEconomyChange={onEconomyChange}
             showResetHint
           />
-        ) : null}
+        )}
       </header>
 
       {collectionComplete ? (
