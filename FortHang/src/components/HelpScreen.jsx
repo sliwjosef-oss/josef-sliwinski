@@ -171,7 +171,8 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           weebuck on every round payout, 2× XP) and up to {BASE_BOOST_BETS} bet{' '}
           {BASE_BOOST_BETS === 1 ? 'skin' : 'skins'} (+{BOOST_BET_BONUS_DICE} dice). Shop upgrades can
           raise those caps and dice bonuses. Placement XP is 1st 200, 2nd–4th 100, 5th–7th 50, and 25
-          otherwise. Levels raise roll floors (level 1: no 1–5, level 3: no 1–10, level 5: no 1–20).
+          otherwise. Levels permanently add dice (level 2: +1, level 4: +2, level 5: +3) and raise
+          roll floors (level 1: no 1–5, level 3: no 1–10, level 5: no 1–20), even for non-bets.
           Base payout is {BET_WIN_POINTS} weebucks per bet win. Winning the tournament pays{' '}
           {TOURNAMENT_WIN_POINTS} weebucks. Bets lock until Monday at midnight Central Time. Betting
           runs start at {BASE_DAILY_BET_RUNS} and can be raised in the Shop.
@@ -259,7 +260,8 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             Storm. Medkits add +100 HP to one squad member you pick, and they do not add shield. Shield Potions
             add +50 shield to one member.
             Slurp Juice, found in chests (about 4%), fills one member's health and shield. Chug
-            Splash heals every living squad member, sidekick included, for +20 HP (no shield). Chug
+            Splash heals every living squad member, sidekick included, for +20 total — HP first,
+            then any leftover fills shield (for example 94 HP gets +6 HP and +14 shield). Chug
             Jugs restore the whole squad and only drop after you unlock them (about 1% per chest). With Vending Machine
             unlocked, Rest can instead offer a one-item trade for a random unlocked Mythic. Slurp
             Barrel (shop unlock) can rarely appear when searching for heals and restores the whole
@@ -337,7 +339,22 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           more than the one before it, so level 2 costs 200 (300 total) and level 3 costs 300 (600
           total). Totals to reach each level: {LEVEL_XP_THRESHOLDS.slice(1).join(', ')}.
         </p>
-        <p>Higher levels raise a skin’s minimum d100 roll in Simulate / Betting:</p>
+        <p>
+          Higher levels permanently add dice (★) in Simulate / Betting, even when the skin is not a
+          bet or super bet:
+        </p>
+        <ul>
+          <li>
+            <strong>Level 2+</strong> — +1 die
+          </li>
+          <li>
+            <strong>Level 4+</strong> — +2 dice total
+          </li>
+          <li>
+            <strong>Level 5</strong> — +3 dice total
+          </li>
+        </ul>
+        <p>Higher levels also raise a skin’s minimum d100 roll in Simulate / Betting:</p>
         <ul>
           <li>
             <strong>Level 1+</strong> — rolls below 6 are raised to 6

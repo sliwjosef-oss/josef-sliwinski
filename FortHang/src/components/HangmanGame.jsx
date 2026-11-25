@@ -470,9 +470,7 @@ export default function HangmanGame({
             <p className="result-message lose">Game over! The outfit was {currentOutfit.name}.</p>
           )}
           {remainingOutfits.length > 0 ? (
-            guessesRemaining > 0 ? (
-              <p className="play-again-prompt">Would you like to play again?</p>
-            ) : (
+            guessesRemaining > 0 ? null : (
               <p className="play-again-prompt">
                 {unlocks.shop
                   ? 'Out of daily attempts (wins and losses both count) — visit the Shop or wait for 6:00 AM Central Time.'
@@ -499,7 +497,7 @@ export default function HangmanGame({
   }
 
   return (
-    <div className="hangman-game">
+    <div className="hangman-game hangman-game--menu">
       <header className="game-header">
         <img
           src={collectionComplete ? COMPLETE_IMAGE : TITLE_IMAGE}
@@ -537,11 +535,10 @@ export default function HangmanGame({
                 </button>
               ) : (
                 <>
-                  <GuessStatus economy={economy} onEconomyChange={onEconomyChange} />
                   <p className="prompt">
                     {unlocks.shop
-                      ? 'Buy more attempts in the Shop with weebucks, or wait for the daily reset. Wins and losses both use an attempt.'
-                      : `The Shop unlocks after ${SHOP_SKIN_UNLOCK} discovered skins (${discoveredCount}/${SHOP_SKIN_UNLOCK}). Wait for the daily reset for more attempts.`}
+                      ? 'Buy more attempts in the Shop with weebucks. Wins and losses both use an attempt.'
+                      : `The Shop unlocks after ${SHOP_SKIN_UNLOCK} discovered skins (${discoveredCount}/${SHOP_SKIN_UNLOCK}).`}
                   </p>
                   {unlocks.shop ? (
                     <button type="button" className="primary-button" onClick={onOpenShop}>

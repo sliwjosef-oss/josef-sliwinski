@@ -982,6 +982,20 @@ export function isShopUnlockOwned(unlockId, economy = loadEconomy()) {
   return false;
 }
 
+/** Permanent shop unlocks only (excludes consumable guess packs and sidekick rolls). */
+export function countPermanentShopUpgrades(economy = loadEconomy()) {
+  const bettingIds = Object.keys(SHOP_UNLOCKS);
+  const trailIds = Object.keys(TRAIL_SHOP_UNLOCKS);
+  let owned = 0;
+  for (const id of bettingIds) {
+    if (isShopUnlockOwned(id, economy)) owned += 1;
+  }
+  for (const id of trailIds) {
+    if (isTrailShopUnlockOwned(id, economy)) owned += 1;
+  }
+  return { owned, total: bettingIds.length + trailIds.length };
+}
+
 export function isShopUnlockAvailable(unlockId, economy = loadEconomy()) {
   const unlocks = normalizeUnlocks(economy.unlocks);
   if (isShopUnlockOwned(unlockId, economy)) return false;

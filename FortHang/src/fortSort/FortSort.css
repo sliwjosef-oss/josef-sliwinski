@@ -1912,6 +1912,38 @@
   margin: 20px 0;
 }
 
+.champion-view-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.35rem;
+}
+
+.champion-view-header h2 {
+  margin: 0;
+}
+
+.champion-view-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.champion-view-actions .primary-button,
+.champion-view-actions .ghost-button {
+  min-height: 40px;
+  padding: 0.45rem 0.9rem;
+  white-space: nowrap;
+}
+
+.champion-view-inline .placements-panel {
+  margin-top: 12px;
+}
+
 .fort-sort .catalogue-image-wrap {
   display: flex;
   justify-content: center;
@@ -2407,6 +2439,18 @@
   outline: 1px solid rgba(125, 211, 252, 0.45);
 }
 
+.trail-squad-icons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  width: 100%;
+}
+
+.trail-squad-icons.has-killer {
+  gap: 0.15rem;
+}
+
 .trail-squad-icon {
   position: relative;
   width: 100%;
@@ -2415,6 +2459,20 @@
   border-radius: 6px;
   overflow: hidden;
   background: rgba(30, 41, 59, 0.9);
+}
+
+.trail-squad-icons.has-killer .trail-squad-icon {
+  width: 46%;
+  max-width: 42px;
+}
+
+.trail-squad-icon.is-killer {
+  outline: 1px solid rgba(248, 113, 113, 0.65);
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.55);
+}
+
+.trail-event-card.is-killer .trail-event-name {
+  color: #fca5a5;
 }
 
 .trail-squad-x {
@@ -2860,6 +2918,16 @@
   height: 32px;
   max-width: 32px;
   aspect-ratio: auto;
+}
+
+.trail-screen.is-playing .trail-squad-icons.has-killer .trail-squad-icon {
+  width: 26px;
+  height: 26px;
+  max-width: 26px;
+}
+
+.trail-screen.is-playing .trail-enemy-hud .trail-chunk-bar {
+  margin-top: 0.2rem;
 }
 
 .trail-screen.is-playing .trail-squad-name {

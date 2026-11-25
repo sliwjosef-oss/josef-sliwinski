@@ -35,6 +35,7 @@ import {
   simulateEntireBracket,
   simulateNextMatch,
   simulateRound1Pools,
+  simulateUntilBetMatch,
 } from '../fortSort/simulate';
 import {
   addPoints,
@@ -63,6 +64,7 @@ import { groupOutfitsBySeries } from '../utils/seriesSort';
 import {
   MAX_SKIN_LEVEL,
   awardPlacementXp,
+  getLevelBonusDice,
   getMinRollForLevel,
   getSkinLevel,
   getSkinXp,
@@ -113,13 +115,19 @@ function FortSortBar({ onOpenArchive, onBack, onOpenModes, modesActive = false }
   );
 }
 
-function buildBonusById(starBetIds, boostBetIds, economy) {
-  const starBonus = getStarBetBonusDice(economy);
-  const boostBonus = getBoostBetBonusDice(economy);
+function buildBonusById(starBetIds, boostBetIds, economy, skinLevels, entrantIds = []) {
   const bonus = {};
-  for (const id of starBetIds) bonus[id] = starBonus;
-  for (const id of boostBetIds) bonus[id] = boostBonus;
-  return bonus;
+  for (const id of entrantIds) {
+    const levelDice = getLevelBonusDice(getSkinLevel(skinLevels, id));
+    if (levelDice > 0) bonus[id] = levelDice;
+  }
+  if (economy) {
+    const starBonus = getStarBetBonusDice(economy);
+    const boostBonus = getBoostBetBonusDice(economy);
+    for (const id of starBetIds) bonus[id] = (bonus[id] || 0) + starBonus;
+    for (const id of boostBetIds) bonus[id] = (bonus[id] || 0) + boostBonus;
+  }
+  return Object.keys(bonus).length ? bonus : null;
 }
 
 /** Super bets = top seeds, then bet skins, then everyone else. */
@@ -310,7 +318,7 @@ function DiceBadge({ outfit, bonus = 0 }) {
   const dice = getDiceCount(outfit) + (Number(bonus) || 0);
   return (
     <p className="skin-dice" title={`${dice} × d100 — keep the highest`}>
-      {'★'.repeat(Math.min(dice, 12))}
+      {'★'.repeat(Math.min(dice, 16))}
     </p>
   );
 }
@@ -356,6 +364,25 @@ function revealOrder(roll) {
   return order;
 }
 
+/** True once one side has every die shown and their best is already below the other side. */
+function canFinishEarly(roll, revealed) {
+  for (let sideIndex = 0; sideIndex < 2; sideIndex += 1) {
+    const side = roll.sides[sideIndex];
+    if (!side?.rolls?.length) continue;
+    const allShown = side.rolls.every((_, index) => revealed.has(`${sideIndex}:${index}`));
+    if (!allShown) continue;
+    const best = Math.max(...side.rolls);
+    const otherIndex = 1 - sideIndex;
+    let otherBest = null;
+    roll.sides[otherIndex].rolls.forEach((value, index) => {
+      if (!revealed.has(`${otherIndex}:${index}`)) return;
+      otherBest = otherBest == null ? value : Math.max(otherBest, value);
+    });
+    if (otherBest != null && best < otherBest) return true;
+  }
+  return false;
+}
+
 const ROLL_DIE_MS = 2000;
 
 function RollResult({ roll, outfitsById, starIds, boostIds, onNext }) {
@@ -373,6 +400,7 @@ function RollResult({ roll, outfitsById, starIds, boostIds, onNext }) {
   const winner = outfitsById.get(winnerId);
   const revealed = new Set(steps.slice(0, shown).map((step) => `${step.side}:${step.index}`));
   const latest = steps[shown - 1];
+  const finishReady = !finished && canFinishEarly(roll, revealed);
 
   return (
     <section className="roll-result">
@@ -433,7 +461,17 @@ function RollResult({ roll, outfitsById, starIds, boostIds, onNext }) {
           Next match
         </button>
       ) : (
-        <button type="button" className="ghost-button" onClick={() => setShown(steps.length)}>
+        <button
+          type="button"
+          className="ghost-button"
+          onClick={() => setShown(steps.length)}
+          disabled={!finishReady}
+          title={
+            finishReady
+              ? 'One side is already beaten — skip the rest of the reveal'
+              : 'Finish unlocks once one side has all dice shown and cannot beat the other side'
+          }
+        >
           Finish
         </button>
       )}
@@ -717,9 +755,9 @@ function SelectScreen({
     const locked = lockedBetIds.has(outfit.id);
     const isStar = isBetting && starSet.has(outfit.id);
     const isBoost = isBetting && boostSet.has(outfit.id);
-    const bonus = isStar ? starBonus : isBoost ? boostBonus : 0;
     const level = owned ? getSkinLevel(skinLevels, outfit.id) : 0;
-    const minRoll = getMinRollForLevel(level);
+    const bonus =
+      (isStar ? starBonus : isBoost ? boostBonus : 0) + getLevelBonusDice(level);
     return (
       <button
         key={outfit.id}
@@ -741,7 +779,7 @@ function SelectScreen({
           <SkinIcon outfit={outfit} className="catalogue-image" />
         </div>
         <p className="catalogue-name">{owned ? outfit.name : '???'}</p>
-        {owned ? <p className="skin-level-badge">Lv {level}{minRoll > 1 ? ` · min ${minRoll}` : ''}</p> : null}
+        {owned ? <p className="skin-level-badge">{level}</p> : null}
         {owned && (mode === 'simulate' || mode === 'betting') ? (
           <DiceBadge outfit={outfit} bonus={bonus} />
         ) : null}
@@ -987,6 +1025,8 @@ export default function FortSort({
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [confirmRestart, setConfirmRestart] = useState(false);
   const [matchView, setMatchView] = useState('vs');
+  /** @type {[null | 'bet' | 'super', Function]} */
+  const [watchPending, setWatchPending] = useState(null);
   const [roundRolls, setRoundRolls] = useState([]);
   const [openRollId, setOpenRollId] = useState(null);
   const hubModeRef = useRef('betting');
@@ -1075,16 +1115,23 @@ export default function FortSort({
   const lastRoll = tournament?.rolls?.length ? tournament.rolls[tournament.rolls.length - 1] : null;
   const isSimMode = mode === 'simulate' || mode === 'betting' || !!tournament?.simulated;
   const bonusById = useMemo(() => {
-    if (!tournament?.betting) return null;
-    return buildBonusById(tournament.starBetIds ?? [], tournament.boostBetIds ?? [], economy);
-  }, [tournament, economy]);
+    if (!tournament?.simulated) return null;
+    return buildBonusById(
+      tournament.betting ? tournament.starBetIds ?? [] : [],
+      tournament.betting ? tournament.boostBetIds ?? [] : [],
+      tournament.betting ? economy : null,
+      skinLevels,
+      tournament.entrants ?? [],
+    );
+  }, [tournament, economy, skinLevels]);
   const minRollById = useMemo(() => {
-    if (!tournament?.betting) return null;
+    if (!tournament?.simulated) return null;
     const map = {};
-    for (const id of [...(tournament.starBetIds ?? []), ...(tournament.boostBetIds ?? [])]) {
-      map[id] = getMinRollForLevel(getSkinLevel(skinLevels, id));
+    for (const id of tournament.entrants ?? []) {
+      const min = getMinRollForLevel(getSkinLevel(skinLevels, id));
+      if (min > 1) map[id] = min;
     }
-    return map;
+    return Object.keys(map).length ? map : null;
   }, [tournament, skinLevels]);
   const betIdSet = useMemo(() => {
     if (!tournament?.betting) return new Set();
@@ -1304,6 +1351,7 @@ export default function FortSort({
       lives,
     );
     if (!step) return;
+    setWatchPending(null);
     applySimResult(
       {
         history: [...tournament.history, [step.matchId, step.winnerSlot]],
@@ -1313,6 +1361,46 @@ export default function FortSort({
       lives,
     );
     setMatchView('roll');
+    setOpenRollId(null);
+  };
+
+  const classifyBetMatch = (participants = []) => {
+    const stars = new Set(tournament?.starBetIds ?? []);
+    const bets = new Set(tournament?.boostBetIds ?? []);
+    if (participants.some((id) => stars.has(id))) return 'super';
+    if (participants.some((id) => bets.has(id))) return 'bet';
+    return null;
+  };
+
+  const autoUntilBet = () => {
+    if (!tournament || archiveReadOnly || !tournament.simulated || !tournament.betting) return;
+    const current = resolveBracket(tournament.bracket, Object.fromEntries(tournament.history));
+    const currentParticipants = current.current
+      ? current.outcomes.get(current.current.id)?.participants || []
+      : [];
+    // Auto is only for skipping non-bet matches; bet/super-bet matchups must be watched.
+    if (classifyBetMatch(currentParticipants)) return;
+
+    const lives = withExtraLives();
+    const result = simulateUntilBetMatch(
+      tournament.bracket,
+      tournament.history,
+      outfitsById,
+      bonusById,
+      minRollById,
+      lives,
+      [...(tournament.boostBetIds ?? []), ...(tournament.starBetIds ?? [])],
+      tournament.starBetIds ?? [],
+    );
+    if (result.rolls?.length) {
+      finishSimulationQuiet(result, lives);
+    } else if (lives && tournament.extraLifeById) {
+      const next = { ...tournament, extraLifeById: lives };
+      setTournament(next);
+      persistTournament(next);
+    }
+    setWatchPending(result.watchKind || null);
+    setMatchView('vs');
     setOpenRollId(null);
   };
 
@@ -1485,6 +1573,7 @@ export default function FortSort({
     setPlayerRunId(null);
     setRoundRolls([]);
     setOpenRollId(null);
+    setWatchPending(null);
     setMatchView('vs');
     setPlayTab('match');
     setStatus('');
@@ -1977,26 +2066,24 @@ export default function FortSort({
           tabIndex={0}
           aria-label="Tournament"
         >
-        {playTab === 'status' ? (
-          <div className="status-tab">
-            {tournament.betting ? (
-              <BettingStatusPanel
-                tournament={tournament}
-                bracketState={bracketState}
-                standings={standings}
-                outfitsById={outfitsById}
-              />
-            ) : (
-              <p className="hint">Skin status shows your bet skins. This mode has none.</p>
-            )}
-            {!archiveReadOnly && !bracketState.done ? (
-              <button type="button" className="danger-button" onClick={() => setConfirmRestart(true)}>
-                Start Over
-              </button>
-            ) : null}
-          </div>
-        ) : playTab === 'match' ? (
-        <>
+        <div className="status-tab" hidden={playTab !== 'status'}>
+          {tournament.betting ? (
+            <BettingStatusPanel
+              tournament={tournament}
+              bracketState={bracketState}
+              standings={standings}
+              outfitsById={outfitsById}
+            />
+          ) : (
+            <p className="hint">Skin status shows your bet skins. This mode has none.</p>
+          )}
+          {!archiveReadOnly && !bracketState.done ? (
+            <button type="button" className="danger-button" onClick={() => setConfirmRestart(true)}>
+              Start Over
+            </button>
+          ) : null}
+        </div>
+        <div className="match-tab-panel" hidden={playTab !== 'match'}>
         {matchView === 'roll' && lastRoll ? (
           <RollResult
             key={lastRoll.matchId}
@@ -2004,7 +2091,10 @@ export default function FortSort({
             outfitsById={outfitsById}
             starIds={new Set(tournament.starBetIds ?? [])}
             boostIds={new Set(tournament.boostBetIds ?? [])}
-            onNext={() => setMatchView('vs')}
+            onNext={() => {
+              setWatchPending(null);
+              setMatchView('vs');
+            }}
           />
         ) : matchView === 'round' && roundRolls.length ? (
           <RoundResults
@@ -2015,11 +2105,30 @@ export default function FortSort({
             boostIds={new Set(tournament.boostBetIds ?? [])}
             openRollId={openRollId}
             onToggle={(matchId) => setOpenRollId((current) => (current === matchId ? null : matchId))}
-            onNext={() => setMatchView('vs')}
+            onNext={() => {
+              setWatchPending(null);
+              setMatchView('vs');
+            }}
           />
         ) : bracketState.done ? (
           <section className="champion-view-inline">
-            <h2>{archiveReadOnly ? 'Saved tournament' : 'Tournament complete'}</h2>
+            <div className="champion-view-header">
+              <h2>{archiveReadOnly ? 'Saved tournament' : 'Tournament complete'}</h2>
+              {!archiveReadOnly ? (
+                <div className="champion-view-actions">
+                  <button type="button" className="primary-button" onClick={playAgain}>
+                    Finish
+                  </button>
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    onClick={() => saveFinishedTournament(false)}
+                  >
+                    Save tournament
+                  </button>
+                </div>
+              ) : null}
+            </div>
             {archiveReadOnly ? (
               <p className="resume-note">Viewing a saved tournament. Your active bracket is unchanged.</p>
             ) : null}
@@ -2115,18 +2224,8 @@ export default function FortSort({
                 )}
               </div>
             ) : null}
-            <div className="compare-actions">
-              {!archiveReadOnly ? (
-                <button type="button" className="primary-button" onClick={playAgain}>
-                  Play Again
-                </button>
-              ) : null}
-              {!archiveReadOnly ? (
-                <button type="button" className="ghost-button" onClick={() => saveFinishedTournament(false)}>
-                  Save tournament
-                </button>
-              ) : null}
-              {!archiveReadOnly && !tournament.simulated ? (
+            {!archiveReadOnly && !tournament.simulated ? (
+              <div className="compare-actions">
                 <button
                   type="button"
                   className="ghost-button"
@@ -2135,8 +2234,8 @@ export default function FortSort({
                 >
                   Undo last pick
                 </button>
-              ) : null}
-            </div>
+              </div>
+            ) : null}
             {status ? <p className="hint">{status}</p> : null}
           </section>
         ) : tournament.simulated ? (
@@ -2194,9 +2293,35 @@ export default function FortSort({
                   <button type="button" className="dice-action dice-action-roll" onClick={simNextMatch}>
                     Roll match
                   </button>
-                  <button type="button" className="dice-action dice-action-round" onClick={simNextRound}>
-                    Simulate round
-                  </button>
+                  {tournament.betting ? (
+                    watchPending ? (
+                      <button
+                        type="button"
+                        className="dice-action dice-action-round"
+                        onClick={simNextMatch}
+                      >
+                        {watchPending === 'super' ? 'Watch super bet round' : 'Watch bet round'}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="dice-action dice-action-round"
+                        onClick={autoUntilBet}
+                        disabled={Boolean(classifyBetMatch(currentOutcome?.participants || []))}
+                        title={
+                          classifyBetMatch(currentOutcome?.participants || [])
+                            ? 'Auto skips only non-bet matches — roll this bet/super bet yourself'
+                            : 'Skip ahead through later rounds until the next bet or super bet'
+                        }
+                      >
+                        Auto
+                      </button>
+                    )
+                  ) : (
+                    <button type="button" className="dice-action dice-action-round" onClick={simNextRound}>
+                      Simulate round
+                    </button>
+                  )}
                   {round1Pending ? (
                     <button type="button" className="dice-action dice-action-pools" onClick={simRound1Pools}>
                       Finish Round 1 pools
@@ -2257,9 +2382,8 @@ export default function FortSort({
             ) : null}
           </section>
         )}
-        </>
-        ) : (
-        <section className="bracket-view">
+        </div>
+        <section className="bracket-view" hidden={playTab !== 'bracket'}>
           <div className="bracket-board">
             {page.sections.map((section) => {
               const rounds = section.rounds
@@ -2287,7 +2411,6 @@ export default function FortSort({
             })}
           </div>
         </section>
-        )}
         </div>
         <nav className="catalogue-sort-bar" aria-label="Tournament actions">
           <button

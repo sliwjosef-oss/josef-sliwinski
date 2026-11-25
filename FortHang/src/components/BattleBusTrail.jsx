@@ -24,7 +24,6 @@ import {
   getSkinLevel,
   getTrailFightDamageResist,
   getTrailStartHp,
-  getTrailStartHpBonus,
   getTrailStormDamageResist,
   sortOutfitsByLevel,
 } from '../utils/skinLevels';
@@ -163,15 +162,17 @@ function EventVisualPanel({ visual, discoveredIds }) {
   };
 
   const outfits = visual.outfits || [];
+  const memberStates = visual.members || [];
   const isItem = visual.kind === 'item';
   const isEnemy = visual.kind === 'enemy';
   const isDeath = visual.kind === 'death' || visual.crossedOut;
   const showIcons = outfits.length > 0 || (isItem && visual.iconUrls?.length);
   const hpHidden = Boolean(visual.hpHidden);
-  const enemyPct =
-    isEnemy && !hpHidden && visual.maxHp > 0
-      ? Math.max(0, Math.min(100, Math.round((visual.hp / visual.maxHp) * 100)))
-      : 0;
+  const chunks = Math.max(1, visual.chunks || memberStates.length || outfits.length || 1);
+  const enemyAlive =
+    memberStates.length > 0
+      ? memberStates.filter((member) => member.alive).length
+      : null;
 
   return (
     <div
@@ -189,15 +190,19 @@ function EventVisualPanel({ visual, discoveredIds }) {
             {visual.dancingRounds > 0 ? (
               <span className="trail-dance-tag">Dancing ({visual.dancingRounds})</span>
             ) : null}
-            <span>{hpHidden ? 'HP ???' : `${Math.max(0, visual.hp ?? 0)}/${visual.maxHp ?? 0}`}</span>
+            <span>
+              {hpHidden
+                ? 'HP ???'
+                : `${Math.max(0, visual.hp ?? 0)}/${visual.maxHp ?? 0}${
+                    enemyAlive != null && chunks > 1 ? ` · ${enemyAlive}/${chunks} up` : ''
+                  }`}
+            </span>
           </div>
           {visual.typeHidden && visual.readHint ? (
             <p className="trail-read-hint">Read: {visual.readHint}</p>
           ) : null}
           {!hpHidden ? (
-            <div className="trail-enemy-bar" aria-hidden="true">
-              <span style={{ width: `${enemyPct}%` }} />
-            </div>
+            <ChunkBar hp={visual.hp ?? 0} maxHp={visual.maxHp ?? 0} chunks={chunks} />
           ) : (
             <p className="trail-enemy-unknown">Ambush them (or get ambushed) to reveal HP</p>
           )}
@@ -209,18 +214,27 @@ function EventVisualPanel({ visual, discoveredIds }) {
           Math.max(1, outfits.length || (isItem ? 1 : 0)),
         )}`}
       >
-        {outfits.map((outfit) => {
+        {outfits.map((outfit, index) => {
           const label = outfitLabel(outfit);
+          const member = memberStates[index];
+          const deadMember = isDeath
+            ? index === outfits.length - 1
+            : member
+              ? !member.alive
+              : false;
+          const isKillerCard = isDeath && outfits.length > 1 && index === 0;
           return (
           <div
-            key={outfit.id || outfit.name}
-            className={`trail-event-card ${isDeath ? 'is-crossed' : ''}`}
+            key={outfit.id || outfit.name || index}
+            className={`trail-event-card ${deadMember ? 'is-crossed' : ''} ${
+              isKillerCard ? 'is-killer' : ''
+            }`}
           >
             <div className="trail-event-art">
-              <EventIconImg key={outfit.id || outfit.name} outfit={outfit} alt={label} />
-              {isDeath ? <span className="trail-squad-x" aria-hidden="true" /> : null}
+              <EventIconImg key={outfit.id || outfit.name || index} outfit={outfit} alt={label} />
+              {deadMember ? <span className="trail-squad-x" aria-hidden="true" /> : null}
             </div>
-            <p className="trail-event-name">{label}</p>
+            <p className="trail-event-name">{isKillerCard ? `Killer · ${label}` : label}</p>
           </div>
           );
         })}
@@ -266,20 +280,28 @@ function SquadStatusBar({ members }) {
         const hpPct = Math.round((hp / maxHp) * 100);
         const empty = member.empty;
         const dead = !empty && !member.alive;
+        const killerOutfit = dead ? member.killerOutfit : null;
         return (
           <div
             key={member.key}
             className={`trail-squad-member ${empty ? 'is-empty' : ''} ${dead ? 'is-fallen' : ''} ${
               member.sidekick ? 'is-sidekick' : ''
-            }`}
+            } ${killerOutfit ? 'has-killer' : ''}`}
           >
-            <div className="trail-squad-icon">
-              {member.outfit || member.sidekickOutfit ? (
-                <SkinThumb outfit={member.outfit || member.sidekickOutfit} />
-              ) : (
-                <div className="icon-placeholder">{member.sidekick ? 'S' : '?'}</div>
-              )}
-              {dead ? <span className="trail-squad-x" aria-hidden="true" /> : null}
+            <div className={`trail-squad-icons ${killerOutfit ? 'has-killer' : ''}`}>
+              {killerOutfit ? (
+                <div className="trail-squad-icon is-killer" title="Eliminated by">
+                  <SkinThumb outfit={killerOutfit} />
+                </div>
+              ) : null}
+              <div className="trail-squad-icon">
+                {member.outfit || member.sidekickOutfit ? (
+                  <SkinThumb outfit={member.outfit || member.sidekickOutfit} />
+                ) : (
+                  <div className="icon-placeholder">{member.sidekick ? 'S' : '?'}</div>
+                )}
+                {dead ? <span className="trail-squad-x" aria-hidden="true" /> : null}
+              </div>
             </div>
             <p className="trail-squad-name" title={member.name || ''}>
               {empty ? (member.sidekick ? 'Sidekick' : 'Skin') : member.name}
@@ -542,6 +564,7 @@ export default function BattleBusTrail({
         shield: member.shield,
         alive: member.alive,
         dancingRounds: member.dancingRounds || 0,
+        killerOutfit: member.killerOutfit || null,
       };
     });
     if (!members.some((member) => member.sidekick)) {
@@ -849,11 +872,6 @@ export default function BattleBusTrail({
     const selected = partyIds.includes(outfit.id);
     const locked = !isForFunSelect && lockedIds.has(outfit.id);
     const level = getSkinLevel(skinLevels, outfit.id);
-    const hpBonus = getTrailStartHpBonus(level);
-    const fightResist = getTrailFightDamageResist(level);
-    const levelBits = [`Lv ${level}`];
-    if (hpBonus > 0) levelBits.push(`+${hpBonus} HP`);
-    if (fightResist > 0) levelBits.push(`${Math.round(fightResist * 100)}% fight`);
     return (
       <button
         key={outfit.id}
@@ -869,7 +887,7 @@ export default function BattleBusTrail({
           <SkinThumb outfit={outfit} />
         </div>
         <p className="catalogue-name">{outfit.name}</p>
-        <p className="skin-level-badge">{levelBits.join(' · ')}</p>
+        <p className="skin-level-badge">{level}</p>
         <span className="fort-sort-check" aria-hidden="true">
           {locked ? '🔒' : selected ? '✓' : ''}
         </span>

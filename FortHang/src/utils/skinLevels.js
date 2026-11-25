@@ -26,6 +26,18 @@ export function getMinRollForLevel(level) {
   return 1;
 }
 
+/**
+ * Permanent extra dice (★) from skin level. Stacks with bet / super-bet bonuses
+ * and applies even when the skin is not selected as a bet.
+ * Level 2 → +1, level 4 → +2, level 5 → +3.
+ */
+export function getLevelBonusDice(level) {
+  if (level >= 5) return 3;
+  if (level >= 4) return 2;
+  if (level >= 2) return 1;
+  return 0;
+}
+
 /** Extra starting HP for Battle Bus Trail squad skins. */
 export function getTrailStartHpBonus(level) {
   if (level >= 5) return 20;

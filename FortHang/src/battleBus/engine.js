@@ -199,9 +199,16 @@ export async function playTrailMatch({
     if (skinNames.length === 1) return skinNames[0];
     return `${skinNames[0]}'s squad`;
   };
+  const encounterMembers = () => lastEncounterRef?.members || [];
+  const encounterChunks = (enemy) => {
+    if (enemy === 'Boss') return 1;
+    const count = encounterMembers().length;
+    return Math.max(1, count || (String(enemy).startsWith('Solo') ? 1 : 4));
+  };
   const emitEnemyStatus = (enemy, hp, maxHp, { hpHidden = false } = {}) => {
     const typeHidden = enemy !== 'Boss' && Boolean(READS[enemy]);
     const who = typeHidden || enemy === 'Boss' ? facingName(enemy) : enemy;
+    const members = encounterMembers();
     emitVisual({
       kind: 'enemy',
       caption: hpHidden ? `Spotted: ${who}` : `Fight vs ${who}`,
@@ -211,9 +218,16 @@ export async function playTrailMatch({
       readHint: typeHidden ? S.lastRead || '' : '',
       hp: Math.max(0, hp),
       maxHp,
+      chunks: encounterChunks(enemy),
       hpHidden: Boolean(hpHidden),
       dancingRounds: S.boogieRounds || 0,
       outfits: lastEncounterOutfits.slice(0, String(enemy).startsWith('Solo') ? 1 : 4),
+      members: members.map((member) => ({
+        id: member.outfit?.id,
+        name: member.outfit?.name || '???',
+        alive: Boolean(member.alive),
+        outfit: member.outfit,
+      })),
     });
   };
 
@@ -247,6 +261,7 @@ export async function playTrailMatch({
     turn: 1,
     afk: {},
     lastHit: {},
+    killers: {},
     fallen: [],
     lastRead: '',
   };
@@ -265,6 +280,7 @@ export async function playTrailMatch({
           alive: Boolean(member),
           afkTurns: S.afk[name] || 0,
           dancingRounds: member && S.dancers.has(name) && S.boogieRounds > 0 ? S.boogieRounds : 0,
+          killerOutfit: S.killers[name] || null,
         };
       }),
       playersLeft: S.playersLeft,
@@ -434,6 +450,19 @@ export async function playTrailMatch({
     return 'an enemy squad';
   };
 
+  const isPvpCause = (cause) =>
+    cause === 'sweats' ||
+    cause === 'a solo player' ||
+    cause === 'an enemy squad' ||
+    cause === 'the boss';
+
+  const pickEnemyKillerOutfit = () => {
+    const living = encounterMembers().filter((member) => member.alive && member.outfit);
+    if (living.length) return pick(living).outfit;
+    const any = encounterMembers().find((member) => member.outfit)?.outfit;
+    return any || lastEncounterOutfits.find((outfit) => outfit?.id) || null;
+  };
+
   const deathBlurbKey = (cause) => {
     if (cause === 'the Storm') return 'storm';
     if (cause === 'a sniper') return 'sniper';
@@ -459,6 +488,10 @@ export async function playTrailMatch({
 
   const fightDamage = (name, amount, cause = 'an enemy') => {
     S.lastHit[name] = cause;
+    if (isPvpCause(cause)) {
+      const killer = pickEnemyKillerOutfit();
+      if (killer) S.killers[name] = killer;
+    }
     const s = S.squad[name];
     const personal = Number(fightResistByName[name]) || 0;
     const reduced = applyResist(amount, fightResist + personal);
@@ -504,15 +537,25 @@ export async function playTrailMatch({
     for (const name of dead) {
       const cause = S.lastHit[name] || 'the island';
       const blurb = deathBlurb(name, cause);
+      const killerOutfit = isPvpCause(cause) ? S.killers[name] || pickEnemyKillerOutfit() : null;
+      if (killerOutfit) S.killers[name] = killerOutfit;
       log(`*** ${blurb} ***`);
       log(`(${name} was eliminated by ${cause}. They can't be revived.)`);
+      const victimOutfit = partyByName.get(name) || null;
       showMemberEvent(name, blurb, {
         kind: 'death',
         crossedOut: true,
+        outfits: killerOutfit
+          ? [killerOutfit, victimOutfit].filter(Boolean)
+          : victimOutfit
+            ? [victimOutfit]
+            : [],
+        killerOutfit,
+        victimOutfit,
       });
       emitSquad();
       await choose(['Continue']);
-      S.fallen.push({ name, cause, blurb, playersLeft: S.playersLeft });
+      S.fallen.push({ name, cause, blurb, playersLeft: S.playersLeft, killerOutfit });
       delete S.squad[name];
       delete S.afk[name];
       syncPlayersLeft();
@@ -583,6 +626,37 @@ export async function playTrailMatch({
     lastEncounterOutfits = members.map((member) => member.outfit);
     for (const member of members) member.seen = true;
     publishCodex();
+  };
+
+  const encounterSquad = () =>
+    lastEncounterRef ? lobby.find((squad) => squad.id === lastEncounterRef.squadId) || null : null;
+
+  const clearSquadWound = (squad = encounterSquad()) => {
+    if (!squad) return;
+    delete squad.woundedHp;
+    delete squad.woundedMaxHp;
+  };
+
+  const saveSquadWound = (hp, maxHp) => {
+    const squad = encounterSquad();
+    if (!squad) return;
+    const living = encounterMembers().filter((member) => member.alive).length;
+    if (living <= 0 || hp <= 0) {
+      clearSquadWound(squad);
+      return;
+    }
+    squad.woundedHp = Math.max(0, Math.floor(hp));
+    squad.woundedMaxHp = Math.max(1, Math.floor(maxHp));
+  };
+
+  const startHpForEncounter = (enemy) => {
+    const maxHp = enemyMaxHp(enemy);
+    if (enemy === 'Boss') return maxHp;
+    const squad = encounterSquad();
+    if (squad && Number.isFinite(squad.woundedHp) && squad.woundedHp < maxHp) {
+      return Math.max(1, Math.min(maxHp, Math.floor(squad.woundedHp)));
+    }
+    return maxHp;
   };
 
   const groupWordFor = (count) => {
@@ -731,6 +805,14 @@ export async function playTrailMatch({
     await removeEliminated();
   };
 
+  const isSweat = (enemy) => enemy === 'Sweats' || enemy === 'Solo sweat';
+
+  const killNoun = (enemy) => {
+    if (enemy === 'Bots' || enemy === 'Solo bot') return 'bot';
+    if (isSweat(enemy)) return 'sweat';
+    return 'player';
+  };
+
   const reward = (enemy) => {
     const team = ENEMY_TEAMS[enemy];
     if (enemy === 'Boss') {
@@ -751,6 +833,7 @@ export async function playTrailMatch({
             log(`You killed a ${killNoun(enemy)}.`);
           }
         }
+        clearSquadWound();
         syncPlayersLeft();
       } else {
         eliminateOthers(team.elims, {
@@ -765,14 +848,6 @@ export async function playTrailMatch({
     lastEncounterRef = null;
     const lootTable = enemy === 'Boss' ? 'bots' : lootTableForEnemy(enemy);
     for (let i = 0; i < team.loot; i += 1) grantLoot(lootTable);
-  };
-
-  const isSweat = (enemy) => enemy === 'Sweats' || enemy === 'Solo sweat';
-
-  const killNoun = (enemy) => {
-    if (enemy === 'Bots' || enemy === 'Solo bot') return 'bot';
-    if (isSweat(enemy)) return 'sweat';
-    return 'player';
   };
 
   const useBossItem = async (pickItem, enemy, user) => {
@@ -882,10 +957,27 @@ export async function playTrailMatch({
   const splashSquad = () => {
     for (const name of Object.keys(S.squad)) {
       const member = S.squad[name];
-      const before = member.hp;
-      member.hp = Math.min(member.maxHp, member.hp + CHUG_SPLASH_HP);
-      const gained = member.hp - before;
-      log(gained > 0 ? `${name} +${gained} HP from the Chug Splash.` : `${name} is already at full HP.`);
+      const beforeHp = member.hp;
+      const beforeShield = member.shield ?? 0;
+      let remaining = CHUG_SPLASH_HP;
+      const hpRoom = Math.max(0, member.maxHp - member.hp);
+      const hpGain = Math.min(remaining, hpRoom);
+      member.hp += hpGain;
+      remaining -= hpGain;
+      const shieldRoom = Math.max(0, 100 - (member.shield ?? 0));
+      const shieldGain = Math.min(remaining, shieldRoom);
+      member.shield = (member.shield ?? 0) + shieldGain;
+      const gainedHp = member.hp - beforeHp;
+      const gainedShield = member.shield - beforeShield;
+      if (gainedHp > 0 && gainedShield > 0) {
+        log(`${name} +${gainedHp} HP and +${gainedShield} shield from the Chug Splash.`);
+      } else if (gainedHp > 0) {
+        log(`${name} +${gainedHp} HP from the Chug Splash.`);
+      } else if (gainedShield > 0) {
+        log(`${name} +${gainedShield} shield from the Chug Splash.`);
+      } else {
+        log(`${name} is already at full HP and shield.`);
+      }
     }
     emitSquad();
   };
@@ -1022,6 +1114,7 @@ export async function playTrailMatch({
       const cau = Math.max(0, Math.min(1 - esc, caught + 0.05 * (rounds - 1)));
       const roll = rand();
       if (roll < esc) {
+        saveSquadWound(hp, enemyMaxHp(enemy));
         log(`You got away after ${rounds} round(s) of running!`);
         return 'fled';
       }
@@ -1048,6 +1141,7 @@ export async function playTrailMatch({
       const pickOpt = await choose(options);
       for (const i of escapeItems) {
         if (pickOpt.startsWith(`Use ${i} (`)) {
+          saveSquadWound(hp, enemyMaxHp(enemy));
           log(`You use the ${i} — ${BOSS_ITEMS[i].escape.toLowerCase()}! You got away!`);
           if ((BOSS_ITEMS[i].uses || 1) === 1) useItem(i);
           else useMulti(i);
@@ -1061,11 +1155,13 @@ export async function playTrailMatch({
         return combat(enemy, hp, true, bonus);
       }
       if (pickOpt.startsWith('Use Launch Pad')) {
+        saveSquadWound(hp, enemyMaxHp(enemy));
         useItem('Launch Pad');
         log('You launch into the sky and leave them behind!');
         return 'fled';
       }
       if (pickOpt.startsWith('Use Rift-To-Go')) {
+        saveSquadWound(hp, enemyMaxHp(enemy));
         useItem('Rift-To-Go');
         S.stormDistance = 0;
         log('You rift away to the safe zone!');
@@ -1090,6 +1186,7 @@ export async function playTrailMatch({
 
   combat = async (enemy, enemyHp, showRead = false, fleeBonus = 0) => {
     const maxHp = enemyMaxHp(enemy);
+    let hp = Math.max(0, Math.min(maxHp, Math.floor(enemyHp)));
     S.fortRounds = 0;
     S.boogieRounds = 0;
     S.dancers = new Set();
@@ -1097,13 +1194,20 @@ export async function playTrailMatch({
     S.turretRounds = 0;
     S.burnDamage = 0;
     if (showRead) readEnemy(enemy);
-    emitEnemyStatus(enemy, enemyHp, maxHp, { hidden: Boolean(showRead && READS[enemy]) });
+    dropEncounterChunks(hp, maxHp, enemy);
+    emitEnemyStatus(enemy, hp, maxHp, { hidden: Boolean(showRead && READS[enemy]) });
     let bossAmbushed = false;
-    while (Object.keys(S.squad).length && enemyHp > 0) {
+    while (Object.keys(S.squad).length && hp > 0) {
       const name = READS[enemy] ? `${facingName(enemy)} · Type: ???` : enemy;
+      const alive = encounterMembers().filter((member) => member.alive).length;
+      const chunks = encounterChunks(enemy);
       log(`--- FIGHT vs ${name} ---`);
-      log(`ENEMY HP ${enemyHp}/${maxHp}`);
-      emitEnemyStatus(enemy, enemyHp, maxHp, { hidden: name === '???' });
+      log(
+        chunks > 1
+          ? `ENEMY HP ${hp}/${maxHp} · ${alive}/${chunks} still up`
+          : `ENEMY HP ${hp}/${maxHp}`,
+      );
+      emitEnemyStatus(enemy, hp, maxHp, { hidden: name.includes('Type: ???') });
       showSquad();
       showInventory();
       const pickOpt = await choose([
@@ -1117,35 +1221,48 @@ export async function playTrailMatch({
         const weapon = pickOpt.includes('AR') ? 'AR' : pickOpt.includes('SMG') ? 'SMG' : 'Shotgun';
         const dealt = squadAttack(enemy, weapon);
         log(`Total: ${dealt} damage.`);
-        enemyHp -= dealt;
+        hp = Math.max(0, hp - dealt);
+        dropEncounterChunks(hp, maxHp, enemy);
       } else if (pickOpt === 'Use item') {
         const [result, itemDmg] = await useItemInFight(enemy);
         if (result === 'win') {
-          enemyHp = 0;
+          hp = 0;
+          dropEncounterChunks(hp, maxHp, enemy);
           break;
         }
-        if (result === 'escaped') return 'escaped';
+        if (result === 'escaped') {
+          saveSquadWound(hp, maxHp);
+          return 'escaped';
+        }
         if (result === 'cancel') continue;
         const dealt = itemDmg + squadAttack(enemy, 'AR', 1);
         log(`Total: ${dealt} damage.`);
-        enemyHp -= dealt;
+        hp = Math.max(0, hp - dealt);
+        dropEncounterChunks(hp, maxHp, enemy);
       } else {
-        return fleeChase(enemy, enemyHp, 0.1, fleeBonus);
+        saveSquadWound(hp, maxHp);
+        return fleeChase(enemy, hp, 0.1, fleeBonus);
       }
-      enemyHp -= ongoingDamage(enemy);
-      emitEnemyStatus(enemy, Math.max(0, enemyHp), maxHp);
-      if (enemyHp <= 0) break;
-      log(`ENEMY HP ${Math.max(0, enemyHp)}/${maxHp}`);
+      hp = Math.max(0, hp - ongoingDamage(enemy));
+      dropEncounterChunks(hp, maxHp, enemy);
+      emitEnemyStatus(enemy, hp, maxHp);
+      if (hp <= 0) break;
+      log(
+        chunks > 1
+          ? `ENEMY HP ${hp}/${maxHp} · ${encounterMembers().filter((member) => member.alive).length}/${chunks} still up`
+          : `ENEMY HP ${hp}/${maxHp}`,
+      );
       if (
         !enemySkipsPanic(S.boogieRounds) &&
         (enemy === 'Solo bot' || enemy === 'Solo player') &&
         rand() < 0.25
       ) {
+        saveSquadWound(hp, maxHp);
         log('They panic and escape! No loot this time.');
         return 'escaped';
       }
       await enemyAttacks(enemy);
-      emitEnemyStatus(enemy, Math.max(0, enemyHp), maxHp);
+      emitEnemyStatus(enemy, hp, maxHp);
       if (
         enemy === 'Boss' &&
         Object.keys(S.squad).length &&
@@ -1155,10 +1272,10 @@ export async function playTrailMatch({
         bossAmbushed = true;
         if ((await bossThirdParty()) !== 'won') return Object.keys(S.squad).length ? 'fled' : 'lost';
         log('With the other squad gone, you turn back to the boss!');
-        emitEnemyStatus(enemy, Math.max(0, enemyHp), maxHp);
+        emitEnemyStatus(enemy, hp, maxHp);
       }
     }
-    if (Object.keys(S.squad).length && enemyHp <= 0) {
+    if (Object.keys(S.squad).length && hp <= 0) {
       emitEnemyStatus(enemy, 0, maxHp);
       reward(enemy);
       return 'won';
@@ -1171,7 +1288,8 @@ export async function playTrailMatch({
     let fleeBonus = 0;
     let odds = ambushOdds;
     const maxHp = enemyMaxHp(enemy);
-    emitEnemyStatus(enemy, maxHp, maxHp, { hidden: true, hpHidden: true });
+    const startHp = startHpForEncounter(enemy);
+    emitEnemyStatus(enemy, startHp, maxHp, { hidden: true, hpHidden: true });
     if (has('Bush')) {
       useItem('Bush');
       odds = Math.min(odds, inFinalCircle() ? 0.55 : 0.2);
@@ -1183,8 +1301,8 @@ export async function playTrailMatch({
       await enemyAttacks(enemy);
       if (!Object.keys(S.squad).length) return;
       const pickOpt = await choose(['Fight back', 'Flee']);
-      if (pickOpt === 'Flee') await fleeChase(enemy, null, 0, fleeBonus);
-      else await combat(enemy, maxHp, true, fleeBonus);
+      if (pickOpt === 'Flee') await fleeChase(enemy, startHp, 0, fleeBonus);
+      else await combat(enemy, startHp, true, fleeBonus);
       return;
     }
     log(`You spot ${text}. They haven't seen you.`);
@@ -1196,13 +1314,14 @@ export async function playTrailMatch({
         return;
       }
       log("They noticed you! They're giving chase!");
-      await fleeChase(enemy, null, 0, fleeBonus);
+      await fleeChase(enemy, startHp, 0, fleeBonus);
       return;
     }
     log('You open fire first!');
     const dealt = squadAttack(enemy);
     log(`Total: ${dealt} damage.`);
-    const hpLeft = enemyMaxHp(enemy) - dealt;
+    const hpLeft = Math.max(0, startHp - dealt);
+    dropEncounterChunks(hpLeft, maxHp, enemy);
     if (hpLeft <= 0) {
       emitEnemyStatus(enemy, 0, maxHp);
       reward(enemy);
@@ -1215,6 +1334,26 @@ export async function playTrailMatch({
     if (hp <= 0 || count <= 0 || maxHp <= 0) return 0;
     const chunk = maxHp / count;
     return Math.min(count, Math.ceil((hp - 1e-6) / chunk));
+  };
+
+  const dropEncounterChunks = (hp, maxHp, enemy) => {
+    if (enemy === 'Boss' || !lastEncounterRef?.members?.length) return 0;
+    const members = lastEncounterRef.members;
+    const should = aliveFromHp(hp, maxHp, members.length);
+    const living = members.filter((member) => member.alive);
+    let died = 0;
+    while (living.length > should) {
+      const victim = living.pop();
+      recordDeath(victim, killedByOutfit(partyKillerOutfit()));
+      died += 1;
+      log(`You killed a ${killNoun(enemy)}.`);
+    }
+    if (died) {
+      if (!members.some((member) => member.alive)) clearSquadWound();
+      syncPlayersLeft();
+      publishCodex();
+    }
+    return died;
   };
 
   const sideLabel = (side) => {
@@ -1456,6 +1595,16 @@ export async function playTrailMatch({
         await combat(enemyB, hpB, true);
       }
     } else if (pickOpt === 'Wait it out') {
+      if (left && right && rand() < 0.3) {
+        left.hp = Math.floor(left.maxHp * (0.45 + rand() * 0.25));
+        right.hp = Math.floor(right.maxHp * (0.45 + rand() * 0.25));
+        dropChunks(left, { attacker: right });
+        dropChunks(right, { attacker: left });
+        emitThirdParty(left, right);
+        log('They both spotted you watching the fight! Both squads turn their guns on you!');
+        await combatBoth(left, right);
+        return;
+      }
       if (S.playersLeft <= ENDGAME_LOCK) {
         log('You wait... the shooting stops. Both squads pull back. Nobody is eliminated.');
         const useB = rand() < 0.5;
@@ -1657,7 +1806,8 @@ export async function playTrailMatch({
     const maxHp = enemyMaxHp(enemy);
     const carDmg = randInt(180, 280);
     log(`You plow into ${text} for ${carDmg} damage!`);
-    const hpLeft = maxHp - carDmg;
+    const hpLeft = Math.max(0, maxHp - carDmg);
+    dropEncounterChunks(hpLeft, maxHp, enemy);
     if (hpLeft <= 0) {
       emitEnemyStatus(enemy, 0, maxHp);
       reward(enemy);

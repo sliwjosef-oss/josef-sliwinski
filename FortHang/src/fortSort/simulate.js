@@ -270,3 +270,59 @@ export function simulateEntireBracket(
 
   return { history: nextHistory, rolls, wins, done: true };
 }
+
+/**
+ * Quietly resolve matches across the whole bracket (including later rounds)
+ * until the next ready match involves a bet/super-bet skin, or the bracket ends.
+ * Does not resolve that bet match itself.
+ */
+export function simulateUntilBetMatch(
+  bracket,
+  history,
+  outfitsById,
+  bonusById = null,
+  minRollById = null,
+  extraLifeById = null,
+  betIds = [],
+  superBetIds = [],
+) {
+  const betSet = new Set(betIds || []);
+  const superSet = new Set(superBetIds || []);
+  let nextHistory = [...history];
+  const rolls = [];
+  const wins = [];
+
+  const classify = (participants = []) => {
+    if (participants.some((id) => superSet.has(id))) return 'super';
+    if (participants.some((id) => betSet.has(id))) return 'bet';
+    return null;
+  };
+
+  while (true) {
+    const state = resolveBracket(bracket, Object.fromEntries(nextHistory));
+    if (!state.current || state.done) {
+      return { history: nextHistory, rolls, wins, done: true, watchKind: null };
+    }
+    const outcome = state.outcomes.get(state.current.id);
+    const participants = outcome?.participants || [];
+    const watchKind = classify(participants);
+    if (watchKind) {
+      return { history: nextHistory, rolls, wins, done: false, watchKind, participants };
+    }
+
+    const step = simulateNextMatch(
+      bracket,
+      nextHistory,
+      outfitsById,
+      bonusById,
+      minRollById,
+      extraLifeById,
+    );
+    if (!step) {
+      return { history: nextHistory, rolls, wins, done: true, watchKind: null };
+    }
+    nextHistory = [...nextHistory, [step.matchId, step.winnerSlot]];
+    rolls.push(step.roll);
+    wins.push({ winnerId: step.winnerId, matchId: step.matchId });
+  }
+}
