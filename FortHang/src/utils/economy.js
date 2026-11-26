@@ -208,6 +208,19 @@ export const SHOP_UNLOCKS = {
     label: 'Seed bet skins',
     blurb: 'Super bets take the top seeds; bet skins are seeded right below them.',
   },
+  diceRollTier1: {
+    id: 'diceRollTier1',
+    cost: 500,
+    label: 'Dice roller → 1 second',
+    blurb: 'Dice rolls take 1 second instead of 2.',
+  },
+  diceRollTier2: {
+    id: 'diceRollTier2',
+    cost: 1000,
+    label: 'Dice roller → 0.5 seconds',
+    blurb: 'Dice rolls take 0.5 seconds instead of 1.',
+    requires: 'diceRollTier1',
+  },
 };
 
 /** Battle Bus Trail boss-drop unlocks (buying adds them to the boss loot pool). */
@@ -420,6 +433,7 @@ function defaultUnlocks() {
     dailyBetRuns: BASE_DAILY_BET_RUNS,
     superBetExtraLife: false,
     betSeeding: false,
+    diceRollMs: 2000,
     trailBossItems: [],
     trailEvents: [],
     trailStormResist: 0,
@@ -544,6 +558,7 @@ function normalizeUnlocks(unlocks) {
     dailyBetRuns,
     superBetExtraLife: !!unlocks.superBetExtraLife,
     betSeeding: !!unlocks.betSeeding,
+    diceRollMs: unlocks.diceRollMs === 500 || unlocks.diceRollMs === 1000 ? unlocks.diceRollMs : 2000,
     trailBossItems: Array.isArray(unlocks.trailBossItems)
       ? unlocks.trailBossItems.filter((name) => typeof name === 'string')
       : [],
@@ -616,15 +631,23 @@ export function getSidekickRarity(sidekick) {
 
 const CST = 'America/Chicago';
 
+export const MUSIC_TRACK_COST = 2000;
+
+/** Lobby songs sold in the Shop. Free songs stay available without a purchase. */
+export const MUSIC_SHOP_IDS = ['between-the-rows', 'under-broken-skin', 'perfect-despair'];
+
 function read() {
   try {
     const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (!parsed || typeof parsed !== 'object') return defaultEconomy();
     return {
       points: Math.max(0, Number(parsed.points) || 0),
-      ownedSidekickIds: Array.isArray(parsed.ownedSidekickIds)
-        ? parsed.ownedSidekickIds.filter((id) => typeof id === 'string')
-        : [],
+    ownedSidekickIds: Array.isArray(parsed.ownedSidekickIds)
+      ? parsed.ownedSidekickIds.filter((id) => typeof id === 'string')
+      : [],
+    ownedMusicIds: Array.isArray(parsed.ownedMusicIds)
+      ? parsed.ownedMusicIds.filter((id) => MUSIC_SHOP_IDS.includes(id))
+      : [],
       daily: normalizeDaily(parsed.daily),
       dailyBetRuns: normalizeDailyBetRuns(parsed.dailyBetRuns),
       dailyTrailRuns: normalizeDailyTrailRuns(parsed.dailyTrailRuns),
@@ -648,6 +671,7 @@ function defaultEconomy() {
   return {
     points: 0,
     ownedSidekickIds: [],
+    ownedMusicIds: [],
     daily: { dayKey: guessDayKey(), used: 0, bonus: 0 },
     dailyBetRuns: { dayKey: guessDayKey(), used: 0 },
     dailyTrailRuns: { dayKey: guessDayKey(), used: 0 },
@@ -723,6 +747,11 @@ export function hasBetSeedingUnlock(economy = loadEconomy()) {
   return normalizeUnlocks(economy.unlocks).betSeeding;
 }
 
+/** Milliseconds between each die in a Betting roll. 2000, then 1000, then 500. */
+export function getDiceRollMs(economy = loadEconomy()) {
+  return normalizeUnlocks(economy.unlocks).diceRollMs;
+}
+
 export function buyShopUnlock(unlockId, economy = loadEconomy()) {
   const state = withFreshMeta(economy);
   const item = Object.values(SHOP_UNLOCKS).find((entry) => entry.id === unlockId);
@@ -779,6 +808,9 @@ export function buyShopUnlock(unlockId, economy = loadEconomy()) {
       economy: state,
     };
   }
+  if (item.requires === 'diceRollTier1' && state.unlocks.diceRollMs > 1000) {
+    return { ok: false, reason: 'Buy Dice roller → 1 second first.', economy: state };
+  }
 
   const already =
     (unlockId === 'simulateAll' && state.unlocks.simulateAll) ||
@@ -802,7 +834,9 @@ export function buyShopUnlock(unlockId, economy = loadEconomy()) {
     (unlockId === 'boostSlotsTier1' && state.unlocks.boostSlots >= BOOST_BETS_TIER1) ||
     (unlockId === 'boostSlotsTier2' && state.unlocks.boostSlots >= BOOST_BETS_TIER2) ||
     (unlockId === 'betRunsTier1' && state.unlocks.dailyBetRuns >= DAILY_BET_RUNS_TIER1) ||
-    (unlockId === 'betRunsTier2' && state.unlocks.dailyBetRuns >= DAILY_BET_RUNS_TIER2);
+    (unlockId === 'betRunsTier2' && state.unlocks.dailyBetRuns >= DAILY_BET_RUNS_TIER2) ||
+    (unlockId === 'diceRollTier1' && state.unlocks.diceRollMs <= 1000) ||
+    (unlockId === 'diceRollTier2' && state.unlocks.diceRollMs <= 500);
 
   if (already) return { ok: false, reason: 'Already owned.', economy: state };
   if (state.points < item.cost) {
@@ -834,6 +868,8 @@ export function buyShopUnlock(unlockId, economy = loadEconomy()) {
   if (unlockId === 'boostSlotsTier2') state.unlocks.boostSlots = BOOST_BETS_TIER2;
   if (unlockId === 'betRunsTier1') state.unlocks.dailyBetRuns = DAILY_BET_RUNS_TIER1;
   if (unlockId === 'betRunsTier2') state.unlocks.dailyBetRuns = DAILY_BET_RUNS_TIER2;
+  if (unlockId === 'diceRollTier1') state.unlocks.diceRollMs = 1000;
+  if (unlockId === 'diceRollTier2') state.unlocks.diceRollMs = 500;
 
   return { ok: true, economy: write(state) };
 }
@@ -1155,6 +1191,8 @@ export function isShopUnlockOwned(unlockId, economy = loadEconomy()) {
   if (unlockId === 'boostSlotsTier2') return unlocks.boostSlots >= BOOST_BETS_TIER2;
   if (unlockId === 'betRunsTier1') return unlocks.dailyBetRuns >= DAILY_BET_RUNS_TIER1;
   if (unlockId === 'betRunsTier2') return unlocks.dailyBetRuns >= DAILY_BET_RUNS_TIER2;
+  if (unlockId === 'diceRollTier1') return unlocks.diceRollMs <= 1000;
+  if (unlockId === 'diceRollTier2') return unlocks.diceRollMs <= 500;
   return false;
 }
 
@@ -1169,7 +1207,10 @@ export function countPermanentShopUpgrades(economy = loadEconomy()) {
   for (const id of trailIds) {
     if (isTrailShopUnlockOwned(id, economy)) owned += 1;
   }
-  return { owned, total: bettingIds.length + trailIds.length };
+  for (const id of MUSIC_SHOP_IDS) {
+    if (isMusicTrackOwned(id, economy)) owned += 1;
+  }
+  return { owned, total: bettingIds.length + trailIds.length + MUSIC_SHOP_IDS.length };
 }
 
 export function isShopUnlockAvailable(unlockId, economy = loadEconomy()) {
@@ -1185,6 +1226,7 @@ export function isShopUnlockAvailable(unlockId, economy = loadEconomy()) {
   if (unlockId === 'starSlotsTier2') return unlocks.starSlots >= STAR_BETS_TIER1;
   if (unlockId === 'boostSlotsTier2') return unlocks.boostSlots >= BOOST_BETS_TIER1;
   if (unlockId === 'betRunsTier2') return unlocks.dailyBetRuns >= DAILY_BET_RUNS_TIER1;
+  if (unlockId === 'diceRollTier2') return unlocks.diceRollMs <= 1000;
   return true;
 }
 
@@ -1205,6 +1247,29 @@ export function buyGuessPack(economy = loadEconomy(), pack = GUESS_PACKS[0]) {
   state.points -= cost;
   state.daily = { ...state.daily, bonus: state.daily.bonus + amount };
   return { ok: true, economy: write(state), amount };
+}
+
+export function isMusicTrackOwned(trackId, economy = loadEconomy()) {
+  return (economy.ownedMusicIds || []).includes(trackId);
+}
+
+export function buyMusicTrack(trackId, economy = loadEconomy()) {
+  const state = {
+    ...economy,
+    ownedMusicIds: [...(economy.ownedMusicIds || [])],
+  };
+  if (!MUSIC_SHOP_IDS.includes(trackId)) {
+    return { ok: false, reason: 'That song is not for sale.', economy: state };
+  }
+  if (state.ownedMusicIds.includes(trackId)) {
+    return { ok: false, reason: 'You already own that song.', economy: state };
+  }
+  if ((Number(state.points) || 0) < MUSIC_TRACK_COST) {
+    return { ok: false, reason: `Need ${MUSIC_TRACK_COST} weebucks.`, economy: state };
+  }
+  state.points -= MUSIC_TRACK_COST;
+  state.ownedMusicIds.push(trackId);
+  return { ok: true, economy: write(state) };
 }
 
 function pickFromPool(pool) {

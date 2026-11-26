@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { setMenuMusicBlocked } from '../audio/menuMusic';
 
 const BET_MUSIC_URL = `${import.meta.env.BASE_URL}audio/The_Final_Bracket.mp3`;
 import {
@@ -55,6 +56,7 @@ import {
   hasRandomSelectUnlock,
   hasSimulateAllUnlock,
   hasSuperBetExtraLifeUnlock,
+  getDiceRollMs,
   lockBetSkins,
   spendBettingRun,
   unlockBetSkins,
@@ -385,18 +387,16 @@ function canFinishEarly(roll, revealed) {
   return false;
 }
 
-const ROLL_DIE_MS = 2000;
-
-function RollResult({ roll, outfitsById, starIds, boostIds, onNext }) {
+function RollResult({ roll, outfitsById, starIds, boostIds, onNext, dieMs = 2000 }) {
   const steps = useMemo(() => revealOrder(roll), [roll]);
   const [shown, setShown] = useState(0);
   const finished = shown >= steps.length;
 
   useEffect(() => {
     if (finished) return undefined;
-    const timer = setTimeout(() => setShown((count) => count + 1), ROLL_DIE_MS);
+    const timer = setTimeout(() => setShown((count) => count + 1), dieMs);
     return () => clearTimeout(timer);
-  }, [shown, finished]);
+  }, [shown, finished, dieMs]);
 
   const winnerId = roll.participants[roll.winnerSlot];
   const winner = outfitsById.get(winnerId);
@@ -1055,6 +1055,7 @@ export default function FortSort({
 
   useEffect(
     () => () => {
+      setMenuMusicBlocked('betting', false);
       musicRef.current?.pause();
       musicRef.current = null;
     },
@@ -1162,8 +1163,10 @@ export default function FortSort({
       !tournamentCompleteOnScreen;
     if (!inBettingBracket) {
       stopBetMusic();
+      setMenuMusicBlocked('betting', false);
       return undefined;
     }
+    setMenuMusicBlocked('betting', true);
     playBetMusic();
     const resumeOnTap = () => playBetMusic();
     window.addEventListener('pointerdown', resumeOnTap);
@@ -1295,7 +1298,10 @@ export default function FortSort({
       setPageIndex(0);
       setFollowPage(true);
     }
-    if (mode === 'betting') playBetMusic();
+    if (mode === 'betting') {
+      setMenuMusicBlocked('betting', true);
+      playBetMusic();
+    }
     setScreen('play');
   };
 
@@ -2169,6 +2175,7 @@ export default function FortSort({
             outfitsById={outfitsById}
             starIds={new Set(tournament.starBetIds ?? [])}
             boostIds={new Set(tournament.boostBetIds ?? [])}
+            dieMs={getDiceRollMs(economy)}
             onNext={() => {
               setMatchView('vs');
               setWatchPending(peekWatchKind());

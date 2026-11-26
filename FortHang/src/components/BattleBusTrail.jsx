@@ -26,12 +26,14 @@ import {
   awardXpAmounts,
   getSkinLevel,
   getTrailFightDamageResist,
+  getTrailDamageMultiplier,
   getTrailStartHp,
   getTrailStormDamageResist,
   levelFromXp,
   sortOutfitsByLevel,
   xpProgress,
 } from '../utils/skinLevels';
+import { setMenuMusicBlocked } from '../audio/menuMusic';
 import '../fortSort/FortSort.css';
 
 const TRAIL_MUSIC_URL = `${import.meta.env.BASE_URL}audio/Steel_Saddle_Pursuit.mp3`;
@@ -547,12 +549,18 @@ export default function BattleBusTrail({
   };
 
   useEffect(() => {
-    if (screen === 'play') playTrailMusic();
-    else stopTrailMusic();
+    if (screen === 'play') {
+      setMenuMusicBlocked('trail', true);
+      playTrailMusic();
+    } else {
+      stopTrailMusic();
+      setMenuMusicBlocked('trail', false);
+    }
   }, [screen]);
 
   useEffect(
     () => () => {
+      setMenuMusicBlocked('trail', false);
       musicRef.current?.pause();
       musicRef.current = null;
     },
@@ -773,6 +781,7 @@ export default function BattleBusTrail({
     runActiveRef.current = true;
     setBusy(true);
     setScreen('play');
+    setMenuMusicBlocked('trail', true);
     playTrailMusic();
     setResult(null);
     clearPlayLog();
@@ -786,6 +795,12 @@ export default function BattleBusTrail({
       party.map((outfit) => [
         outfit.name,
         getTrailFightDamageResist(getSkinLevel(skinLevels, outfit.id)),
+      ]),
+    );
+    const damageMultByName = Object.fromEntries(
+      party.map((outfit) => [
+        outfit.name,
+        getTrailDamageMultiplier(getSkinLevel(skinLevels, outfit.id)),
       ]),
     );
     const stormResistByName = Object.fromEntries(
@@ -843,6 +858,7 @@ export default function BattleBusTrail({
         partyOutfits: party,
         startingHpByName,
         fightResistByName,
+        damageMultByName,
         stormResistByName,
         stormResist: getTrailStormResist(runEconomy),
         fightResist: getTrailFightResist(runEconomy),

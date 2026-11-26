@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
+import { playMenuMusic, setOwnedMusicIds } from './audio/menuMusic';
 import BattleBusTrail from './components/BattleBusTrail';
 import FortSort from './components/FortSort';
 import HangmanGame from './components/HangmanGame';
 import HelpScreen from './components/HelpScreen';
+import MusicScreen from './components/MusicScreen';
 import Shop from './components/Shop';
 import SidekickCatalogue from './components/SidekickCatalogue';
 import SkinCatalogue from './components/SkinCatalogue';
@@ -38,6 +40,7 @@ const VIEWS = {
   FORTSORT: 'fortsort',
   TRAIL: 'trail',
   HELP: 'help',
+  MUSIC: 'music',
 };
 
 function initialView() {
@@ -48,6 +51,7 @@ function initialView() {
   if (view === 'shop') return VIEWS.SHOP;
   if (view === 'sidekicks') return VIEWS.SIDEKICKS;
   if (view === 'help') return VIEWS.HELP;
+  if (view === 'music') return VIEWS.MUSIC;
   return VIEWS.HANGMAN;
 }
 
@@ -60,6 +64,13 @@ function App() {
   const [guessedSkinIds, setGuessedSkinIds] = useState(loadGuessedSkinIds);
   const [economy, setEconomy] = useState(loadEconomy);
   const [skinLevels, setSkinLevels] = useState(loadSkinLevels);
+
+  useEffect(() => {
+    playMenuMusic();
+    const resume = () => playMenuMusic();
+    window.addEventListener('pointerdown', resume);
+    return () => window.removeEventListener('pointerdown', resume);
+  }, []);
 
   useEffect(() => {
     const result = claimDailyLoginBonus(loadEconomy());
@@ -148,13 +159,15 @@ function App() {
 
   const discoveredCount = countDiscoveredSkins(outfits, guessedSkinIds);
   const unlocks = featureUnlocks(discoveredCount);
+  setOwnedMusicIds(economy.ownedMusicIds);
 
   useEffect(() => {
     if (!outfits.length) return;
     if (view === VIEWS.TRAIL && !unlocks.trail) setView(VIEWS.HANGMAN);
     if (view === VIEWS.FORTSORT && !unlocks.betting) setView(VIEWS.HANGMAN);
     if (view === VIEWS.SHOP && !unlocks.shop) setView(VIEWS.HANGMAN);
-  }, [outfits.length, view, unlocks.trail, unlocks.betting, unlocks.shop]);
+    if (view === VIEWS.MUSIC && !unlocks.music) setView(VIEWS.HANGMAN);
+  }, [outfits.length, view, unlocks.trail, unlocks.betting, unlocks.shop, unlocks.music]);
 
   if (loading) {
     return (
@@ -198,6 +211,9 @@ function App() {
               if (unlocks.trail) setView(VIEWS.TRAIL);
             }}
             onOpenHelp={() => setView(VIEWS.HELP)}
+            onOpenMusic={() => {
+              if (unlocks.music) setView(VIEWS.MUSIC);
+            }}
             inputEnabled={view === VIEWS.HANGMAN}
           />
         </div>
@@ -229,6 +245,9 @@ function App() {
       ) : null}
       {view === VIEWS.HELP ? (
         <HelpScreen onBack={() => setView(VIEWS.HANGMAN)} onDeleteAllData={handleDeleteAllData} />
+      ) : null}
+      {view === VIEWS.MUSIC ? (
+        <MusicScreen onBack={() => setView(VIEWS.HANGMAN)} />
       ) : null}
       {view === VIEWS.TRAIL ? (
         <BattleBusTrail

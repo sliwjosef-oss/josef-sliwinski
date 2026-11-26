@@ -68,8 +68,8 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
         <p>
           Guess letters before Peely is fully bananated. Season and flavor hints appear while you play.
           A correct name adds that outfit to your Skin Catalogue. Only undiscovered skins are offered
-          for hangman rounds. Battle Bus Trail unlocks at 4 discovered skins, Betting at 16, and the
-          Shop at 32.
+          for hangman rounds. Battle Bus Trail unlocks at 4 discovered skins, Betting at 16, the
+          Shop at 32, and Music at 64.
         </p>
         <p>
           Discovering every skin awards a one-time catalogue-complete bonus of{' '}
@@ -101,14 +101,14 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           {TRAIL_FALLEN_PAYOUT_TIER1}. For Fun runs award no weebucks.
         </p>
         <p>
-          Spend weebucks in the Shop on more hangman attempts, sidekick rolls, betting upgrades, and
-          Battle Bus Trail unlocks.
+          Spend weebucks in the Shop on more hangman attempts, sidekick rolls, betting upgrades,
+          Battle Bus Trail unlocks, and lobby songs.
         </p>
       </section>
 
       <section id="help-shop" className="help-section">
         <h2>Shop</h2>
-        <p>The Shop has four kinds of purchases:</p>
+        <p>The Shop has five kinds of purchases:</p>
         <ul>
           <li>
             <strong>Skin attempt packs</strong> — add hangman attempts for today (they stack until the
@@ -119,12 +119,18 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           </li>
           <li>
             <strong>Betting upgrades</strong> — permanently unlock better Betting tools and
-            payouts (more slots, stronger dice, higher Top 8 / Top 64 / tournament rewards, Simulate
-            all, Select random, seeding, extra lives, and more Betting runs).
+            payouts (more slots, stronger dice, a faster dice roller, higher Top 8 / Top 64 / tournament
+            rewards, Simulate all, Select random, seeding, extra lives, and more Betting runs).
           </li>
           <li>
             <strong>Battle Bus Trail upgrades</strong> — daily runs, payouts, damage resists, For Fun
             mode, boss loot, and Trail events. Each item shows its own price.
+          </li>
+          <li>
+            <strong>Music</strong> — Between The Rows, Under Broken Skin, and Perfect Despair each
+            cost 2000 weebucks. Preview plays 30 seconds. Concrete Pressure, Break the Perimeter,
+            Candy in a Plastic Wrap, Beneath the Spires, and Heart Like A Piston are already in the
+            lobby list.
           </li>
         </ul>
         <p>Many upgrades unlock in tiers — buy the earlier one before the next appears as Available.</p>
@@ -258,8 +264,9 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           </li>
           <li>
             <strong>XP</strong> — skins earn {TRAIL_SURVIVOR_XP} XP if they survive, {TRAIL_FALLEN_XP}{' '}
-            XP if they fall. Level 1+ skins take 5% less Storm damage. Level 2+ skins start with +10
-            HP, and level 5 skins start with +20 HP instead. Level 4+ skins take 5% less fight damage.
+            XP if they fall. Level 1+ skins take 5% less Storm damage. Their fight damage is 1.2× at
+            level 1, 1.4× at level 2, 1.6× at level 3, 1.8× at level 4, and 2× at level 5. Level 4+
+            skins take 5% less fight damage.
           </li>
           <li>
             <strong>Shop</strong> — Trail upgrades cover storm and fight resist, daily runs, payouts,
@@ -386,13 +393,19 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             <strong>Level 1+</strong> — take 5% less Storm damage
           </li>
           <li>
-            <strong>Level 2–4</strong> — +10 HP at the start of a run (110 max)
+            <strong>Level 1</strong> — deal 1.2× damage
           </li>
           <li>
-            <strong>Level 4+</strong> — take 5% less damage from fights
+            <strong>Level 2</strong> — deal 1.4× damage
           </li>
           <li>
-            <strong>Level 5</strong> — +20 HP at the start of a run (120 max)
+            <strong>Level 3</strong> — deal 1.6× damage
+          </li>
+          <li>
+            <strong>Level 4</strong> — deal 1.8× damage, and take 5% less damage from fights
+          </li>
+          <li>
+            <strong>Level 5</strong> — deal 2× damage
           </li>
         </ul>
         <p>Check a skin’s level and XP in the Skin Catalogue.</p>

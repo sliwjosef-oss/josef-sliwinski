@@ -19,6 +19,58 @@
   gap: 0.75rem;
 }
 
+.music-screen {
+  width: min(760px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.music-song-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.music-song {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 52px;
+  padding: 0.75rem 0.95rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(20, 24, 48, 0.85);
+  color: #e2e8f0;
+  font: inherit;
+  font-size: 1rem;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: inset 0 3px 0 #22d3ee;
+}
+
+.music-song.is-current {
+  border-color: rgba(34, 211, 238, 0.7);
+  background: rgba(34, 211, 238, 0.12);
+  color: #cffafe;
+}
+
+.music-song-state {
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  color: #67e8f9;
+}
+
+.music-mute-button.is-muted {
+  color: #fda4af;
+}
+
 .hangman-game--menu .action-panel {
   gap: 0.65rem;
 }
@@ -416,6 +468,13 @@
 
 .result-message.lose {
   color: #ff8f8f;
+}
+
+.result-outfit-name {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #f8fafc;
 }
 
 .status-message {
@@ -1101,6 +1160,7 @@
   .menu-tile-betting { --tile: #fbbf24; }
   .menu-tile-shop { --tile: #34d399; }
   .menu-tile-help { --tile: #a78bfa; }
+  .menu-tile-music { --tile: #22d3ee; }
 
   .menu-tile:disabled {
     --tile: #475569;
@@ -1152,15 +1212,29 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.35rem;
+    gap: 0.28rem;
     width: 100%;
     min-height: 0;
     margin: 0;
+    padding: 0.7rem 0.85rem 0.75rem;
+    border-radius: 16px;
     text-align: center;
+    background: rgba(8, 12, 28, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .hangman-game--result.is-win .result-lead {
+    border-color: rgba(74, 222, 128, 0.38);
+    box-shadow: 0 0 28px rgba(74, 222, 128, 0.12);
+  }
+
+  .hangman-game--result.is-lose .result-lead {
+    border-color: rgba(248, 113, 113, 0.4);
+    box-shadow: 0 0 28px rgba(248, 113, 113, 0.12);
   }
 
   .hangman-game--result .result-lead .catalogue-unlock {
-    margin: 0;
+    margin: 0.15rem 0 0;
   }
 
   .hangman-game--result .discovery-count {
@@ -1179,40 +1253,66 @@
   }
 
   .hangman-game--result .play-peely {
-    width: min(118px, 30vw);
+    width: min(136px, 34vw);
+    filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.35));
   }
 
   .hangman-game--result .outfit-guess-board {
     min-height: 0;
+    padding: 0.55rem 0.7rem 0.7rem;
+    border-radius: 22px;
+    background: rgba(8, 12, 28, 0.72);
+  }
+
+  .hangman-game--result.is-win .outfit-guess-board {
+    border: 1px solid rgba(74, 222, 128, 0.45);
+    background:
+      radial-gradient(circle at 50% 18%, rgba(74, 222, 128, 0.22), transparent 58%),
+      rgba(8, 18, 24, 0.78);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28), 0 0 26px rgba(74, 222, 128, 0.16);
+  }
+
+  .hangman-game--result.is-lose .outfit-guess-board {
+    border: 1px solid rgba(248, 113, 113, 0.45);
+    background:
+      radial-gradient(circle at 50% 18%, rgba(248, 113, 113, 0.2), transparent 58%),
+      rgba(24, 10, 16, 0.78);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28), 0 0 26px rgba(248, 113, 113, 0.14);
   }
 
   .hangman-game--result .skin-reveal-panel {
-    gap: 0.35rem;
-    padding: 0.55rem 0.65rem;
+    gap: 0.4rem;
+    padding: 0.15rem 0.2rem 0.25rem;
   }
 
   .hangman-game--result .skin-reveal-panel:not(.lost) {
-    padding: 0.55rem 0.65rem;
+    padding: 0.15rem 0.2rem 0.25rem;
   }
 
   .hangman-game--result .skin-reveal-number {
-    font-size: 0.85rem;
-    padding: 0.1rem 0.45rem;
+    font-size: 0.95rem;
+    padding: 0.12rem 0.55rem;
+  }
+
+  .hangman-game--result .outfit-silhouette-inner {
+    padding: 0.55rem 0.65rem;
   }
 
   .hangman-game--result .outfit-guess-image,
   .hangman-game--result .outfit-guess-silhouette,
   .hangman-game--result .outfit-guess-silhouette-fallback {
-    width: min(120px, 34vw);
-    max-height: min(120px, 22dvh);
+    width: min(188px, 48vw);
+    max-height: min(200px, 30dvh);
   }
 
   .hangman-game--result .word-display {
     gap: 0.25rem 0.7rem;
     margin: 0;
-    padding: 0;
+    padding: 0.45rem 0.75rem;
     max-height: none;
     overflow: visible;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
   }
 
   .hangman-game--result .word-char {
@@ -1226,8 +1326,14 @@
   }
 
   .hangman-game--result .result-message {
-    font-size: 0.95rem;
-    line-height: 1.25;
+    font-size: 1.45rem;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: 0.01em;
+  }
+
+  .hangman-game--result .result-outfit-name {
+    font-size: 1.05rem;
   }
 
   .hangman-game--result .catalogue-unlock,
@@ -1358,12 +1464,16 @@
   .hangman-game--result .outfit-guess-image,
   .hangman-game--result .outfit-guess-silhouette,
   .hangman-game--result .outfit-guess-silhouette-fallback {
-    width: min(100px, 30vw);
-    max-height: min(100px, 18dvh);
+    width: min(168px, 46vw);
+    max-height: min(176px, 26dvh);
   }
 
   .hangman-game--result .result-message {
-    font-size: 0.9rem;
+    font-size: 1.28rem;
+  }
+
+  .hangman-game--result .play-peely {
+    width: min(112px, 30vw);
   }
 
   .hangman-stage-layout:not(.idle) {
@@ -1548,6 +1658,22 @@
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
   margin-top: 0.35rem;
+}
+
+.shop-grid--stack {
+  grid-template-columns: 1fr;
+}
+
+.shop-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.shop-card-actions .primary-button,
+.shop-card-actions .secondary-button,
+.shop-card-actions .ghost-button {
+  width: 100%;
 }
 
 .shop-card {

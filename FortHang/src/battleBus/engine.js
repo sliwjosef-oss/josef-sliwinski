@@ -96,6 +96,7 @@ function weighted(entries) {
  *   partyOutfits?: object[],
  *   startingHpByName?: Record<string, number>,
  *   fightResistByName?: Record<string, number>,
+ *   damageMultByName?: Record<string, number>,
  *   stormResistByName?: Record<string, number>,
  *   stormResist?: number,
  *   fightResist?: number,
@@ -129,6 +130,7 @@ export async function playTrailMatch({
   partyOutfits = [],
   startingHpByName = {},
   fightResistByName = {},
+  damageMultByName = {},
   stormResistByName = {},
   stormResist = 0,
   fightResist = 0,
@@ -167,6 +169,11 @@ export async function playTrailMatch({
     const value = Number(startingHpByName[name]);
     return Number.isFinite(value) && value > 0 ? Math.floor(value) : 100;
   };
+  const damageMultFor = (name) => {
+    const value = Number(damageMultByName[name]);
+    return Number.isFinite(value) && value > 0 ? value : 1;
+  };
+  const formatDamageMult = (value) => (value >= 2 ? '2x' : `${Number(value).toFixed(1)}x`);
   // 95 NPCs → 23 squads of 4 + one remnant squad of 3; skins unique vs party + each other.
   const LOBBY_NPCS = 95;
   const lobby = buildLobby({
@@ -773,7 +780,7 @@ export async function playTrailMatch({
         log(`${m} used ${aOrAn(weapon)} ${weapon} and missed!`);
         continue;
       }
-      const dmg = Math.floor(randInt(lo, hi) * mult);
+      const dmg = Math.floor(randInt(lo, hi) * mult * damageMultFor(m));
       total += dmg;
       log(`${m} used ${aOrAn(weapon)} ${weapon} and dealt ${dmg} damage.`);
     }
@@ -886,11 +893,12 @@ export async function playTrailMatch({
     }
     let dmg = 0;
     if (d.damage) {
-      dmg = randInt(...d.damage);
+      let rolled = randInt(...d.damage);
       if (isSweat(enemy) && d.vs_sweats) {
-        dmg = Math.floor(dmg * d.vs_sweats);
+        rolled *= d.vs_sweats;
         log("It's extra effective against sweats!");
       }
+      dmg = Math.floor(rolled * damageMultFor(user));
       log(`${user} ${d.text} ${pickItem} and dealt ${dmg} damage.`);
     } else if (d.turret) {
       S.turretRounds = d.turret;
@@ -1088,7 +1096,7 @@ export async function playTrailMatch({
     }
     useItem(pickItem);
     if (DAMAGE_ITEMS[pickItem]) {
-      const dmg = randInt(...DAMAGE_ITEMS[pickItem]);
+      const dmg = Math.floor(randInt(...DAMAGE_ITEMS[pickItem]) * damageMultFor(user));
       log(`${user} used a ${pickItem} and dealt ${dmg} damage. BOOM!`);
       return ['used', dmg];
     }
@@ -2277,8 +2285,8 @@ export async function playTrailMatch({
       : `Your squad: ${partyNames.join(', ')} (no sidekick)`,
   );
   for (const name of partyNames) {
-    const bonus = startHpFor(name) - 100;
-    if (bonus > 0) log(`${name} starts with ${startHpFor(name)} HP (+${bonus} from skin level).`);
+    const mult = damageMultFor(name);
+    if (mult > 1) log(`${name} deals ${formatDamageMult(mult)} damage (skin level).`);
   }
   log('You jump from the Battle Bus...');
   const typeTally = { Sweats: 0, 'Normal players': 0, Bots: 0 };

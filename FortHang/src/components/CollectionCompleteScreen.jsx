@@ -8,6 +8,7 @@ export default function CollectionCompleteScreen({
   onOpenFortSort,
   onOpenTrail,
   onOpenHelp,
+  onOpenMusic,
   showImage = true,
 }) {
   return (
@@ -50,6 +51,11 @@ export default function CollectionCompleteScreen({
         {onOpenShop ? (
           <button type="button" className="secondary-button" onClick={onOpenShop}>
             Shop
+          </button>
+        ) : null}
+        {onOpenMusic ? (
+          <button type="button" className="secondary-button menu-tile menu-tile-music" onClick={onOpenMusic}>
+            Music
           </button>
         ) : null}
         {onOpenHelp ? (

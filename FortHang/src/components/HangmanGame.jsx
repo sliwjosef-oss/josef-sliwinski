@@ -27,8 +27,10 @@ import {
   featureUnlocks,
   isCollectionComplete,
   SHOP_SKIN_UNLOCK,
+  MUSIC_SKIN_UNLOCK,
   TRAIL_SKIN_UNLOCK,
 } from '../utils/progress';
+import { setMenuMusicBlocked } from '../audio/menuMusic';
 import CollectionCompleteScreen, {
   COMPLETE_ALT,
   COMPLETE_IMAGE,
@@ -129,6 +131,7 @@ function MenuLinks({
   onOpenFortSort,
   onOpenTrail,
   onOpenHelp,
+  onOpenMusic,
 }) {
   return (
     <div className="menu-actions">
@@ -161,6 +164,15 @@ function MenuLinks({
         onClick={onOpenShop}
         tone="shop"
       />
+      {onOpenMusic ? (
+        <FeatureButton
+          label="Music"
+          needed={MUSIC_SKIN_UNLOCK}
+          owned={discoveredCount}
+          onClick={onOpenMusic}
+          tone="music"
+        />
+      ) : null}
       {onOpenHelp ? (
         <button type="button" className="secondary-button menu-tile menu-tile-help" onClick={onOpenHelp}>
           Help
@@ -198,6 +210,7 @@ export default function HangmanGame({
   onOpenFortSort,
   onOpenTrail,
   onOpenHelp,
+  onOpenMusic,
   inputEnabled = true,
 }) {
   const [gameState, setGameState] = useState(GAME_STATES.IDLE);
@@ -250,12 +263,18 @@ export default function HangmanGame({
       (gameState === GAME_STATES.PLAYING ||
         gameState === GAME_STATES.WON ||
         gameState === GAME_STATES.LOST);
-    if (shouldPlay) playGrindMusic();
-    else stopGrindMusic();
+    if (shouldPlay) {
+      setMenuMusicBlocked('hangman', true);
+      playGrindMusic();
+    } else {
+      stopGrindMusic();
+      setMenuMusicBlocked('hangman', false);
+    }
   }, [gameState, inputEnabled, playGrindMusic, stopGrindMusic]);
 
   useEffect(
     () => () => {
+      setMenuMusicBlocked('hangman', false);
       musicRef.current?.pause();
       musicRef.current = null;
     },
@@ -286,6 +305,7 @@ export default function HangmanGame({
     setGuessedLetters(new Set());
     setWrongGuesses(0);
     setGameState(GAME_STATES.PLAYING);
+    setMenuMusicBlocked('hangman', true);
     playGrindMusic();
   }, [outfits, guessedSkinIds, economy, onEconomyChange, playGrindMusic]);
 
@@ -416,7 +436,7 @@ export default function HangmanGame({
     currentOutfit
   ) {
     return (
-      <div className="hangman-game hangman-game--result">
+      <div className={`hangman-game hangman-game--result ${gameState === GAME_STATES.WON ? 'is-win' : 'is-lose'}`}>
         <header className="game-header play-header">
           <p className="attempts-left-heading">
             Attempts left today: <strong>{guessesRemaining}</strong> / {guessesLimit}
@@ -435,10 +455,9 @@ export default function HangmanGame({
 
         <div className="result-lead">
           <p className={`result-message ${gameState === GAME_STATES.WON ? 'win' : 'lose'}`}>
-            {gameState === GAME_STATES.WON
-              ? `You guessed it! The outfit was ${currentOutfit.name}.`
-              : `Game over! The outfit was ${currentOutfit.name}.`}
+            {gameState === GAME_STATES.WON ? 'You guessed it!' : 'Game over!'}
           </p>
+          <p className="result-outfit-name">{currentOutfit.name}</p>
           {gameState === GAME_STATES.WON ? (
             <p className="catalogue-unlock">
               Catalogue #{currentOutfit.number} — added to your skin catalogue!
@@ -527,6 +546,7 @@ export default function HangmanGame({
           onOpenFortSort={onOpenFortSort}
           onOpenTrail={onOpenTrail}
           onOpenHelp={onOpenHelp}
+          onOpenMusic={onOpenMusic}
         />
       ) : (
         <div className="action-panel">
@@ -562,6 +582,7 @@ export default function HangmanGame({
                 onOpenFortSort={onOpenFortSort}
                 onOpenTrail={onOpenTrail}
                 onOpenHelp={onOpenHelp}
+                onOpenMusic={onOpenMusic}
               />
             </>
           ) : (
@@ -578,6 +599,7 @@ export default function HangmanGame({
                 onOpenFortSort={onOpenFortSort}
                 onOpenTrail={onOpenTrail}
                 onOpenHelp={onOpenHelp}
+                onOpenMusic={onOpenMusic}
               />
             </>
           )}

@@ -52,6 +52,7 @@ export function isSkinGuessed(guessedIds, outfit) {
 export const TRAIL_SKIN_UNLOCK = 4;
 export const BETTING_SKIN_UNLOCK = 16;
 export const SHOP_SKIN_UNLOCK = 32;
+export const MUSIC_SKIN_UNLOCK = 64;
 
 export function countDiscoveredSkins(outfits, guessedIds) {
   return outfits.filter((outfit) => isSkinGuessed(guessedIds, outfit)).length;
@@ -62,6 +63,7 @@ export function featureUnlocks(discoveredCount) {
     trail: discoveredCount >= TRAIL_SKIN_UNLOCK,
     betting: discoveredCount >= BETTING_SKIN_UNLOCK,
     shop: discoveredCount >= SHOP_SKIN_UNLOCK,
+    music: discoveredCount >= MUSIC_SKIN_UNLOCK,
   };
 }
 

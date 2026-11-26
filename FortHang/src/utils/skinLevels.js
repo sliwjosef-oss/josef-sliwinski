@@ -38,15 +38,23 @@ export function getLevelBonusDice(level) {
   return 0;
 }
 
-/** Extra starting HP for Battle Bus Trail squad skins. */
-export function getTrailStartHpBonus(level) {
-  if (level >= 5) return 20;
-  if (level >= 2) return 10;
-  return 0;
+/** Trail squad skins always start at 100 HP. Levels raise damage instead. */
+export function getTrailStartHp() {
+  return 100;
 }
 
-export function getTrailStartHp(levels, skinId) {
-  return 100 + getTrailStartHpBonus(getSkinLevel(levels, skinId));
+/**
+ * Outgoing fight damage for a Trail squad skin.
+ * Level 1 → 1.2x, 2 → 1.4x, 3 → 1.6x, 4 → 1.8x, 5 → 2x.
+ */
+export function getTrailDamageMultiplier(level) {
+  const lv = Math.max(0, Math.floor(Number(level) || 0));
+  if (lv >= 5) return 2;
+  if (lv === 4) return 1.8;
+  if (lv === 3) return 1.6;
+  if (lv === 2) return 1.4;
+  if (lv === 1) return 1.2;
+  return 1;
 }
 
 /** Fraction of fight damage ignored at this skin level. */

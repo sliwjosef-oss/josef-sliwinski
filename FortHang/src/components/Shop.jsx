@@ -1,20 +1,25 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   GUESS_PACKS,
+  MUSIC_SHOP_IDS,
+  MUSIC_TRACK_COST,
   SHOP_UNLOCKS,
   SIDEKICK_ROLLS,
   TRAIL_SHOP_ORDER,
   TRAIL_SHOP_UNLOCKS,
   buyGuessPack,
+  buyMusicTrack,
   buyShopUnlock,
   buyTrailShopUnlock,
   countPermanentShopUpgrades,
+  isMusicTrackOwned,
   isShopUnlockAvailable,
   isShopUnlockOwned,
   isTrailShopUnlockAvailable,
   isTrailShopUnlockOwned,
   rollRandomSidekick,
 } from '../utils/economy';
+import { MENU_TRACKS, getPreviewTrackId, startMusicPreview, stopMusicPreview, subscribeMenuMusic } from '../audio/menuMusic';
 import { getSidekickIconSrc } from '../utils/sidekicks';
 
 function rarityLabel(rarity) {
@@ -113,19 +118,31 @@ const BETTING_UNLOCK_ORDER = [
   'tournamentWinTier2',
   'starDicePlus',
   'boostDicePlus',
+  'diceRollTier1',
+  'diceRollTier2',
 ];
 
 const SHOP_TABS = [
   { id: 'attempts', label: 'Skin attempt packs' },
   { id: 'betting', label: 'Betting upgrades' },
   { id: 'trail', label: 'Battle Bus Trail' },
+  { id: 'music', label: 'Music' },
   { id: 'sidekicks', label: 'Sidekick rolls' },
 ];
 
 export default function Shop({ economy, sidekicks, onEconomyChange, onBack }) {
   const [tab, setTab] = useState('attempts');
   const [rollResults, setRollResults] = useState(null);
+  const [, setPreviewRevision] = useState(0);
   const upgrades = useMemo(() => countPermanentShopUpgrades(economy), [economy]);
+
+  useEffect(() => subscribeMenuMusic(() => setPreviewRevision((current) => current + 1)), []);
+
+  useEffect(() => {
+    if (tab !== 'music') stopMusicPreview();
+  }, [tab]);
+
+  useEffect(() => () => stopMusicPreview(), []);
 
   const buyGuesses = (pack) => {
     const result = buyGuessPack(economy, pack);
@@ -167,6 +184,14 @@ export default function Shop({ economy, sidekicks, onEconomyChange, onBack }) {
     onEconomyChange(result.economy);
     if (!result.ok) window.alert(result.reason);
   };
+
+  const buySong = (trackId) => {
+    const result = buyMusicTrack(trackId, economy);
+    onEconomyChange(result.economy);
+    if (!result.ok) window.alert(result.reason);
+  };
+
+  const musicCards = MUSIC_SHOP_IDS.map((id) => MENU_TRACKS.find((track) => track.id === id)).filter(Boolean);
 
   const unlockCards = BETTING_UNLOCK_ORDER.map((id) => SHOP_UNLOCKS[id]).filter((item) => {
     if (!item) return false;
@@ -303,6 +328,48 @@ export default function Shop({ economy, sidekicks, onEconomyChange, onBack }) {
                         Buy for {item.cost} weebucks
                       </button>
                     )}
+                  </article>
+                );
+              })}
+            </div>
+          </>
+        ) : null}
+
+        {tab === 'music' ? (
+          <>
+            <h2 className="shop-section-title">Music</h2>
+            <div className="shop-grid shop-grid--stack">
+              {musicCards.map((track) => {
+                const owned = isMusicTrackOwned(track.id, economy);
+                const previewing = getPreviewTrackId() === track.id;
+                return (
+                  <article key={track.id} className={`shop-card ${owned ? 'is-owned' : ''}`}>
+                    <h2>{track.label}</h2>
+                    <p>Unlock this song for the lobby music list.</p>
+                    <p className="shop-meta">{owned ? 'Owned' : 'Available'}</p>
+                    <div className="shop-card-actions">
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => startMusicPreview(track.id)}
+                      >
+                        {previewing ? 'Stop preview' : 'Preview'}
+                      </button>
+                      {owned ? (
+                        <button type="button" className="ghost-button" disabled>
+                          Owned
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="primary-button"
+                          onClick={() => buySong(track.id)}
+                          disabled={economy.points < MUSIC_TRACK_COST}
+                        >
+                          Buy for {MUSIC_TRACK_COST} weebucks
+                        </button>
+                      )}
+                    </div>
                   </article>
                 );
               })}
