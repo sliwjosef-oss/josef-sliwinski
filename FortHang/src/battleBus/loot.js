@@ -1,3 +1,5 @@
+import { hasAchievement } from '../utils/achievementStore';
+
 /** Rarity-first loot. Roll a tier, then an unlocked item from that tier's pool. */
 
 export const TIER_ORDER = ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic'];
@@ -82,6 +84,7 @@ function candidates(tier, pool, unlocked) {
   const options = [];
   for (const [name, item] of Object.entries(LOOT_ITEMS)) {
     if (item.rarity !== tier || !item.pools.includes(pool)) continue;
+    if (name === 'Buggy Bomb' && !hasAchievement('bet-from-losers')) continue;
     if (item.shop && !unlocked.has(name)) continue;
     options.push([name, pool === 'loot' ? item.lootWeight : 1]);
   }

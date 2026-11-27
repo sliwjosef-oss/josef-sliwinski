@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { bindPageAudio, releasePageAudio, setMenuMusicBlocked } from '../audio/menuMusic';
+import { noteBettingResult } from '../utils/achievements';
+import { hasAchievement } from '../utils/achievementStore';
 
 const BET_MUSIC_URL = `${import.meta.env.BASE_URL}audio/The_Final_Bracket.mp3`;
 import {
@@ -1464,6 +1466,7 @@ export default function FortSort({
     let pointsGain = 0;
     let championBonusPaid = !!run.championBonusPaid;
     let xpAwarded = !!run.xpAwarded;
+    let bettingNote = null;
     const extraLifeById =
       nextExtraLifeById != null ? { ...nextExtraLifeById } : { ...(run.extraLifeById ?? {}) };
     if (run.betting) {
@@ -1506,9 +1509,21 @@ export default function FortSort({
         }
         xpAwarded = true;
       }
+      const gf1 = nextState.outcomes?.get('GF1');
+      const gf2 = nextState.outcomes?.get('GF2');
+      bettingNote = {
+        rolls: result.rolls ?? [],
+        completed: !wasDone && !!nextState.done,
+        hardMode: !!run.hardMode,
+        championId: nextState.champion,
+        runnerUpId: nextState.runnerUp,
+        fromLosers: gf1?.winnerSlot === 1 && gf2?.winner != null && gf2.winner === gf1.winner,
+        betIds: betIdSet,
+      };
     }
     const nextEconomy = pointsGain > 0 ? addPoints(pointsGain, economyState) : economyState;
     if (nextEconomy !== economy) onEconomyChange(nextEconomy);
+    if (bettingNote) noteBettingResult(bettingNote);
     const next = {
       ...run,
       history: result.history,
@@ -2049,19 +2064,21 @@ export default function FortSort({
               <span className="mode-feature-blurb">{MAIN_MODE.blurb}</span>
               {mode === MAIN_MODE.id ? <span className="mode-current">Current</span> : null}
             </button>
-            <button
-              type="button"
-              className={`mode-feature is-hard ${mode === HARD_MODE.id ? 'is-current' : ''}`}
-              onClick={() => {
-                setMode(HARD_MODE.id);
-                setScreen('select');
-              }}
-            >
-              <span className="mode-feature-kicker">Betting mode</span>
-              <span className="mode-feature-title">{HARD_MODE.label}</span>
-              <span className="mode-feature-blurb">{HARD_MODE.blurb}</span>
-              {mode === HARD_MODE.id ? <span className="mode-current">Current</span> : null}
-            </button>
+            {hasAchievement('bet-plays-100') ? (
+              <button
+                type="button"
+                className={`mode-feature is-hard ${mode === HARD_MODE.id ? 'is-current' : ''}`}
+                onClick={() => {
+                  setMode(HARD_MODE.id);
+                  setScreen('select');
+                }}
+              >
+                <span className="mode-feature-kicker">Betting mode</span>
+                <span className="mode-feature-title">{HARD_MODE.label}</span>
+                <span className="mode-feature-blurb">{HARD_MODE.blurb}</span>
+                {mode === HARD_MODE.id ? <span className="mode-current">Current</span> : null}
+              </button>
+            ) : null}
             <p className="mode-side-label">Side modes</p>
             <div className="mode-side-list">
               {SIDE_MODES.map((item) => (

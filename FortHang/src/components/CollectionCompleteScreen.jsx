@@ -8,6 +8,7 @@ export default function CollectionCompleteScreen({
   onOpenFortSort,
   onOpenTrail,
   onOpenHelp,
+  onOpenAchievements,
   onOpenMusic,
   showImage = true,
 }) {
@@ -56,6 +57,11 @@ export default function CollectionCompleteScreen({
         {onOpenMusic ? (
           <button type="button" className="secondary-button menu-tile menu-tile-music" onClick={onOpenMusic}>
             Music
+          </button>
+        ) : null}
+        {onOpenAchievements ? (
+          <button type="button" className="secondary-button menu-tile menu-tile-achievements" onClick={onOpenAchievements}>
+            Achievements
           </button>
         ) : null}
         {onOpenHelp ? (

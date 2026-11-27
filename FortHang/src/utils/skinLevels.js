@@ -1,3 +1,5 @@
+import { hasAchievement } from './achievementStore';
+
 const STORAGE_KEY = 'fort-hang-skin-levels-v1';
 
 export const MAX_SKIN_LEVEL = 5;
@@ -38,9 +40,9 @@ export function getLevelBonusDice(level) {
   return 0;
 }
 
-/** Trail squad skins always start at 100 HP. Levels raise damage instead. */
+/** Trail squad skins start at 100 HP, or 120 after the 100-game Trail achievement. */
 export function getTrailStartHp() {
-  return 100;
+  return hasAchievement('trail-plays-100') ? 120 : 100;
 }
 
 /**

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { START_PLAYERS, STATUS } from '../battleBus/constants';
 import { playTrailMatch } from '../battleBus/engine';
+import { noteTrailResult } from '../utils/achievements';
 import {
   TRAIL_FALLEN_XP,
   TRAIL_SURVIVOR_XP,
@@ -863,6 +864,7 @@ export default function BattleBusTrail({
           xpAwards: [],
         });
         setScreen('result');
+        noteTrailResult(match);
         return;
       }
 
@@ -887,6 +889,7 @@ export default function BattleBusTrail({
       }
       const xpResult = awardXpAmounts(skinLevels, xpAwards);
       onSkinLevelsChange?.(xpResult.levels);
+      noteTrailResult(match);
 
       setResult({
         ...match,

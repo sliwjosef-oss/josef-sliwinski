@@ -6,7 +6,6 @@ import {
   BASE_STAR_BETS,
   BET_WIN_POINTS,
   BOOST_BET_BONUS_DICE,
-  CATALOG_COMPLETE_BONUS,
   DAILY_BET_RUNS_TIER1,
   DAILY_BET_RUNS_TIER2,
   DAILY_GUESS_BASE,
@@ -29,6 +28,7 @@ import {
   TRAIL_SURVIVOR_XP,
 } from '../utils/economy';
 import { FIVE_STAR_NAMES, THREE_STAR_NAMES } from '../fortSort/simulate';
+import { hasAchievement } from '../utils/achievementStore';
 import { LEVEL_XP_THRESHOLDS, MAX_SKIN_LEVEL } from '../utils/skinLevels';
 
 const SECTIONS = [
@@ -67,8 +67,8 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
         <h2>Collecting skins</h2>
         <p>
           FortHang is hangman with Fortnite outfit names. Each round spends one skin attempt. You get{' '}
-          {DAILY_GUESS_BASE} free attempts per day (resets at 6:00 AM Central Time). Wins and losses
-          both use an attempt.
+          {DAILY_GUESS_BASE} free attempts per day (resets at 6:00 AM Central Time). Achievements can
+          raise that cap to 60, 70, or 80. Wins and losses both use an attempt.
         </p>
         <p>
           Guess letters before Peely is fully bananated. Season and flavor hints appear while you play.
@@ -77,8 +77,7 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           Shop at 32, and Music at 64.
         </p>
         <p>
-          Discovering every skin awards a one-time catalogue-complete bonus of{' '}
-          {CATALOG_COMPLETE_BONUS.toLocaleString()} weebucks.
+          Discovering every skin unlocks an achievement that awards 30,000 weebucks.
         </p>
       </section>
 
@@ -135,9 +134,8 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           <li>
             <strong>Music</strong> — the tab appears once Music is unlocked on the main menu. Between
             The Rows, Under Broken Skin, and Perfect Despair each cost 2000 weebucks. Preview plays 30
-            seconds. Concrete Pressure, Break the Perimeter,
-            Candy in a Plastic Wrap, Beneath the Spires, and Heart Like A Piston are already in the
-            lobby list.
+            seconds. Concrete Pressure and Break the Perimeter are already in the lobby list. Other
+            songs are unlocked through Achievements.
           </li>
         </ul>
         <p>Many upgrades unlock in tiers — buy the earlier one before the next appears as Available.</p>
@@ -166,13 +164,15 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             <strong>Betting</strong> — every discovered skin enters a simulated double-elim. You pick
             which skins to bet on.
           </li>
-          <li>
-            <strong>Hard Mode</strong> — a betting run where the rest of the field rolls{' '}
-            {HARD_FIELD_BONUS_DICE} extra dice. One rival bet is chosen per super bet. Rivals roll{' '}
-            {HARD_RIVAL_BONUS_DICE} extra dice instead, and reroll anything under {HARD_RIVAL_MIN_ROLL}.
-            Round payouts are ×{HARD_MODE_PAYOUT_MULT}, or ×{HARD_RIVAL_PAYOUT_MULT} when your bet or
-            super bet beats a rival.
-          </li>
+          {hasAchievement('bet-plays-100') ? (
+            <li>
+              <strong>Hard Mode</strong> — a betting run where the rest of the field rolls{' '}
+              {HARD_FIELD_BONUS_DICE} extra dice. One rival bet is chosen per super bet. Rivals roll{' '}
+              {HARD_RIVAL_BONUS_DICE} extra dice instead, and reroll anything under {HARD_RIVAL_MIN_ROLL}.
+              Round payouts are ×{HARD_MODE_PAYOUT_MULT}, or ×{HARD_RIVAL_PAYOUT_MULT} when your bet or
+              super bet beats a rival.
+            </li>
+          ) : null}
         </ul>
         <p>Dice counts, before any bet bonus:</p>
         <ul>
@@ -315,7 +315,8 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           </li>
           <li>
             <strong>Inventory</strong> — up to 10 item slots (stacks of the same item each use a
-            slot). Grenades deal 30–45. Clingers deal 40–55. A Buggy Bomb is Mythic: it deals 1000
+            slot). Grenades deal 30–45. Clingers deal 40–55. The Buggy Bomb stays out of loot until its
+            achievement is earned. It is Mythic: it deals 1000
             damage to the enemy squad and kills everyone on your squad except one, who is left at 1
             HP. A Stick of Truth is Mythic: while you carry it, the storm closes in around you, so
             shrinks and storm surges leave you in the zone. A rift can still throw you into the
@@ -352,7 +353,7 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             explosion for 100 damage each).
           </li>
           <li>
-            <strong>Overrides</strong> — a separate set of events that change the rest of the run.
+            <strong>Overrides</strong> — unlocked by playing 5 Trail games. A separate set of events that change the rest of the run.
             Each one starts with “Override Activated:”. Only one Override can happen in a run. Big Head mode
             doubles damage enemies take and damage your squad takes. Healing Overdrive fills your
             squad’s HP and shields, then doubles enemy health. Every round, everyone still standing

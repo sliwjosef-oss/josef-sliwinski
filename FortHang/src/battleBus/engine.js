@@ -72,6 +72,7 @@ import {
   soloEnemyType,
   takeAliveMembers,
 } from './lobby';
+import { hasAchievement } from '../utils/achievementStore';
 
 function rand() {
   return Math.random();
@@ -287,6 +288,12 @@ export async function playTrailMatch({
       fasterStorm: false,
       bigBoom: false,
     },
+    achievements: {
+      carExploded: false,
+      usedBuggyBomb: false,
+      infinityBlade: false,
+      sweatWipe: false,
+    },
   };
 
   const emitSquad = () => {
@@ -412,6 +419,7 @@ export async function playTrailMatch({
   const give = (item) => {
     if (item === 'Kneecapper' && rand() < LEEKCAPPER_CHANCE) item = 'Leekcapper';
     if (MULTI_USE[item] && has(item)) {
+      if (item === 'Infinity Blade') S.achievements.infinityBlade = true;
       S.itemUses[item] = MULTI_USE[item];
       log(`* Found another ${item} — uses refilled!`);
       showFoundItem(item, `Refilled ${item}`);
@@ -424,6 +432,7 @@ export async function playTrailMatch({
       return;
     }
     S.inventory[item] = (S.inventory[item] || 0) + 1;
+    if (item === 'Infinity Blade') S.achievements.infinityBlade = true;
     if (MULTI_USE[item]) S.itemUses[item] = MULTI_USE[item];
     log(`* Found: ${item} (${rarityOf(item)})!`);
     showFoundItem(item, `Found ${item}`);
@@ -1118,6 +1127,7 @@ export async function playTrailMatch({
   };
 
   const detonateBuggyBomb = async (user) => {
+    S.achievements.usedBuggyBomb = true;
     const living = Object.keys(S.squad);
     const survivor = pick(living);
     const blast = bigHeadOut(BUG_BOMB_DAMAGE);
@@ -1386,10 +1396,10 @@ export async function playTrailMatch({
       await fleeChase(squadEnemy);
       return 'fled';
     }
-    return combat(squadEnemy, enemyMaxHp(squadEnemy), true);
+    return combat(squadEnemy, enemyMaxHp(squadEnemy), true, 0, false);
   };
 
-  combat = async (enemy, enemyHp, showRead = false, fleeBonus = 0) => {
+  combat = async (enemy, enemyHp, showRead = false, fleeBonus = 0, countSweatWipe = true) => {
     const maxHp = enemyMaxHp(enemy);
     let hp = Math.max(0, Math.min(maxHp, Math.floor(enemyHp)));
     S.fortRounds = 0;
@@ -1487,6 +1497,7 @@ export async function playTrailMatch({
     }
     if (Object.keys(S.squad).length && hp <= 0) {
       emitEnemyStatus(enemy, 0, maxHp);
+      if (enemy === 'Sweats' && countSweatWipe) S.achievements.sweatWipe = true;
       reward(enemy);
       return 'won';
     }
@@ -1832,10 +1843,10 @@ export async function playTrailMatch({
       const hpB = Math.floor(enemyMaxHp(enemyB) * (0.5 + rand() * 0.2));
       log('You crash the fight! Both squads are already hurt.');
       if (squadA && membersA) setEncounter(squadA, membersA);
-      if ((await combat(enemyA, hpA, true)) === 'won' && Object.keys(S.squad).length) {
+      if ((await combat(enemyA, hpA, true, 0, false)) === 'won' && Object.keys(S.squad).length) {
         log('The other squad turns their guns on you!');
         if (squadB && membersB) setEncounter(squadB, membersB);
-        await combat(enemyB, hpB, true);
+        await combat(enemyB, hpB, true, 0, false);
       }
     } else if (pickOpt === 'Wait it out') {
       if (left && right && rand() < 0.3) {
@@ -1855,7 +1866,7 @@ export async function playTrailMatch({
         if ((await choose(['Attack them', 'Leave'])) === 'Attack them') {
           if (useB && squadB && membersB) setEncounter(squadB, membersB);
           else if (squadA && membersA) setEncounter(squadA, membersA);
-          await combat(target, enemyMaxHp(target), true);
+          await combat(target, enemyMaxHp(target), true, 0, false);
         }
       } else {
         const aWins = rand() < 0.5;
@@ -1879,7 +1890,7 @@ export async function playTrailMatch({
         log('You wait... the shooting stops. One squad is left standing, badly hurt.');
         if ((await choose(['Ambush the winner', 'Leave'])) === 'Ambush the winner') {
           if (winnerSquad && winnerMembers) setEncounter(winnerSquad, winnerMembers);
-          await combat(winner, hp, true);
+          await combat(winner, hp, true, 0, false);
         }
       }
     } else if (rand() < 0.1) {
@@ -2060,6 +2071,7 @@ export async function playTrailMatch({
     S.stormDistance = Math.max(0, S.stormDistance - 1);
     log(`You peel out. The drive puts you farther from the Storm. Now: ${STATUS[S.stormDistance]}`);
     if (rand() < 0.3) {
+      S.achievements.carExploded = true;
       if (S.fortressTurns > 0) {
         log(`The car explodes, but the Port-a-Fortress holds. (${S.fortressTurns} turn(s) left)`);
       } else {
@@ -2269,6 +2281,7 @@ export async function playTrailMatch({
   };
 
   const rollOverride = () => {
+    if (!hasAchievement('trail-plays-5')) return false;
     if (Object.values(S.overrides).some(Boolean)) return false;
     if (rand() >= OVERRIDE_EVENT_CHANCE) return false;
     const options = ['bigHead', 'healing', 'fasterStorm', 'bigBoom'];
@@ -2708,5 +2721,6 @@ export async function playTrailMatch({
     partyNames: [...partyNames],
     sidekickName: sidekick,
     bonusWeebucks: S.bonusWeebucks || 0,
+    stats: S.achievements,
   };
 }

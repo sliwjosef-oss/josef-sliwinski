@@ -1,3 +1,6 @@
+import { isAchievementSidekickName } from '../achievements/catalog';
+import { addEarnedWeebucks } from './achievementStore';
+
 const STORAGE_KEY = 'fort-hang-economy-v1';
 
 export const DAILY_GUESS_BASE = 50;
@@ -627,6 +630,7 @@ function normalizeUnlocks(unlocks) {
     trailForFun: !!unlocks.trailForFun,
     runsCapsMigratedV2,
     bettingPayoutsDoubledV1,
+    dailyGuessBase: [60, 70, 80].includes(unlocks.dailyGuessBase) ? unlocks.dailyGuessBase : DAILY_GUESS_BASE,
   };
 }
 
@@ -1125,6 +1129,7 @@ export function claimDailyLoginBonus(economy = loadEconomy()) {
     return { ok: false, awarded: 0, alreadyClaimed: true, economy: write(state) };
   }
   state.points = Math.max(0, (Number(state.points) || 0) + DAILY_LOGIN_BONUS);
+  addEarnedWeebucks(DAILY_LOGIN_BONUS);
   state.dailyLogin = { dayKey: guessDayKey(), claimed: true };
   return {
     ok: true,
@@ -1162,8 +1167,29 @@ export function spendBettingRun(economy = loadEconomy()) {
 }
 
 export function getDailyGuessLimit(economy = loadEconomy()) {
-  const fresh = { ...economy, daily: normalizeDaily(economy.daily) };
-  return DAILY_GUESS_BASE + fresh.daily.bonus;
+  const fresh = {
+    ...economy,
+    daily: normalizeDaily(economy.daily),
+    unlocks: normalizeUnlocks(economy.unlocks),
+  };
+  return fresh.unlocks.dailyGuessBase + fresh.daily.bonus;
+}
+
+export function setDailyGuessBase(base, economy = loadEconomy()) {
+  const state = withFreshMeta(economy);
+  const next = [60, 70, 80].includes(base) ? base : DAILY_GUESS_BASE;
+  const current = state.unlocks.dailyGuessBase || DAILY_GUESS_BASE;
+  if (next <= current) return state;
+  state.unlocks = { ...state.unlocks, dailyGuessBase: next };
+  return write(state);
+}
+
+export function grantSidekickById(id, economy = loadEconomy()) {
+  if (!id) return economy;
+  const state = withFreshMeta(economy);
+  if ((state.ownedSidekickIds || []).includes(id)) return state;
+  state.ownedSidekickIds = [...state.ownedSidekickIds, id];
+  return write(state);
 }
 
 export function getDailyGuessesRemaining(economy = loadEconomy()) {
@@ -1194,6 +1220,7 @@ export function addPoints(amount, economy = loadEconomy()) {
     weeklyBets: normalizeWeekly(economy.weeklyBets),
     unlocks: normalizeUnlocks(economy.unlocks),
   };
+  if (amount > 0) addEarnedWeebucks(amount);
   return write(state);
 }
 
@@ -1327,9 +1354,10 @@ function pickFromPool(pool) {
 }
 
 function rollOneSidekick(sidekicks) {
-  const ultraPool = sidekicks.filter((sidekick) => ULTRA_RARE_SIDEKICK_NAMES.has(sidekick.name));
-  const rarePool = sidekicks.filter((sidekick) => RARE_SIDEKICK_NAMES.has(sidekick.name));
-  const commonPool = sidekicks.filter((sidekick) => !RARE_SIDEKICK_NAMES.has(sidekick.name));
+  const rollable = sidekicks.filter((sidekick) => !isAchievementSidekickName(sidekick.name));
+  const ultraPool = rollable.filter((sidekick) => ULTRA_RARE_SIDEKICK_NAMES.has(sidekick.name));
+  const rarePool = rollable.filter((sidekick) => RARE_SIDEKICK_NAMES.has(sidekick.name));
+  const commonPool = rollable.filter((sidekick) => !RARE_SIDEKICK_NAMES.has(sidekick.name));
 
   const roll = Math.random();
   let rarity = 'common';
@@ -1344,7 +1372,7 @@ function rollOneSidekick(sidekicks) {
   }
 
   if (!pick) {
-    pick = pickFromPool(commonPool) ?? pickFromPool(sidekicks);
+    pick = pickFromPool(commonPool) ?? pickFromPool(rollable);
     rarity = pick ? getSidekickRarity(pick) : 'common';
   }
 

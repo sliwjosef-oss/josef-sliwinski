@@ -132,6 +132,7 @@ function MenuLinks({
   onOpenFortSort,
   onOpenTrail,
   onOpenHelp,
+  onOpenAchievements,
   onOpenMusic,
 }) {
   return (
@@ -174,6 +175,15 @@ function MenuLinks({
           tone="music"
         />
       ) : null}
+      {onOpenAchievements ? (
+        <button
+          type="button"
+          className="secondary-button menu-tile menu-tile-achievements"
+          onClick={onOpenAchievements}
+        >
+          Achievements
+        </button>
+      ) : null}
       {onOpenHelp ? (
         <button type="button" className="secondary-button menu-tile menu-tile-help" onClick={onOpenHelp}>
           Help
@@ -211,6 +221,7 @@ export default function HangmanGame({
   onOpenFortSort,
   onOpenTrail,
   onOpenHelp,
+  onOpenAchievements,
   onOpenMusic,
   inputEnabled = true,
 }) {
@@ -557,6 +568,7 @@ export default function HangmanGame({
           onOpenFortSort={onOpenFortSort}
           onOpenTrail={onOpenTrail}
           onOpenHelp={onOpenHelp}
+          onOpenAchievements={onOpenAchievements}
           onOpenMusic={onOpenMusic}
         />
       ) : (
@@ -584,6 +596,7 @@ export default function HangmanGame({
                 onOpenFortSort={onOpenFortSort}
                 onOpenTrail={onOpenTrail}
                 onOpenHelp={onOpenHelp}
+                onOpenAchievements={onOpenAchievements}
                 onOpenMusic={onOpenMusic}
               />
             </>
@@ -601,6 +614,7 @@ export default function HangmanGame({
                 onOpenFortSort={onOpenFortSort}
                 onOpenTrail={onOpenTrail}
                 onOpenHelp={onOpenHelp}
+                onOpenAchievements={onOpenAchievements}
                 onOpenMusic={onOpenMusic}
               />
             </>

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { playMenuMusic, setOwnedMusicIds } from './audio/menuMusic';
+import { playMenuMusic, setMenuTrack, setOwnedMusicIds } from './audio/menuMusic';
+import AchievementPopup from './components/AchievementPopup';
+import AchievementsScreen from './components/AchievementsScreen';
 import BattleBusTrail from './components/BattleBusTrail';
 import FortSort from './components/FortSort';
 import HangmanGame from './components/HangmanGame';
@@ -9,14 +11,14 @@ import Shop from './components/Shop';
 import SidekickCatalogue from './components/SidekickCatalogue';
 import SkinCatalogue from './components/SkinCatalogue';
 import {
-  CATALOG_COMPLETE_BONUS,
   DAILY_LOGIN_BONUS,
-  awardCatalogCompleteBonus,
   claimDailyLoginBonus,
   loadEconomy,
   migrateOwnedSidekickIds,
   resetEconomy,
 } from './utils/economy';
+import { checkAchievements } from './utils/achievements';
+import { clearAchievementState } from './utils/achievementStore';
 import { clearAllFortSortData } from './fortSort/storage';
 import { getGameOutfits } from './utils/outfits';
 import {
@@ -24,7 +26,6 @@ import {
   clearGuessedSkinIds,
   countDiscoveredSkins,
   featureUnlocks,
-  isCollectionComplete,
   loadGuessedSkinIds,
   normalizeGuessedSkinIds,
   saveGuessedSkinIds,
@@ -40,6 +41,7 @@ const VIEWS = {
   FORTSORT: 'fortsort',
   TRAIL: 'trail',
   HELP: 'help',
+  ACHIEVEMENTS: 'achievements',
   MUSIC: 'music',
 };
 
@@ -64,6 +66,7 @@ function App() {
   const [guessedSkinIds, setGuessedSkinIds] = useState(loadGuessedSkinIds);
   const [economy, setEconomy] = useState(loadEconomy);
   const [skinLevels, setSkinLevels] = useState(loadSkinLevels);
+  const [achievementQueue, setAchievementQueue] = useState([]);
 
   useEffect(() => {
     playMenuMusic();
@@ -125,21 +128,6 @@ function App() {
     (outfit) => {
       setGuessedSkinIds((current) => {
         const next = addGuessedSkinId(current, outfit.id);
-        if (
-          outfits.length > 0 &&
-          !isCollectionComplete(outfits, current) &&
-          isCollectionComplete(outfits, next)
-        ) {
-          setEconomy((eco) => {
-            const result = awardCatalogCompleteBonus(eco);
-            if (result.ok) {
-              window.alert(
-                `Catalogue complete! You earned ${CATALOG_COMPLETE_BONUS.toLocaleString()} weebucks.`,
-              );
-            }
-            return result.economy;
-          });
-        }
         return next;
       });
     },
@@ -150,6 +138,8 @@ function App() {
     setGuessedSkinIds(clearGuessedSkinIds());
     setSkinLevels(clearSkinLevels());
     setEconomy(resetEconomy());
+    clearAchievementState();
+    setAchievementQueue([]);
     clearAllFortSortData();
   }, []);
 
@@ -157,7 +147,34 @@ function App() {
     setSkinLevels(next);
   }, []);
 
-  const discoveredCount = countDiscoveredSkins(outfits, guessedSkinIds);
+  const gameOutfits = getGameOutfits(outfits);
+  const discoveredCount = countDiscoveredSkins(gameOutfits, guessedSkinIds);
+
+  useEffect(() => {
+    const onUnlock = (event) => {
+      const unlocked = event.detail?.unlocked || [];
+      if (unlocked.length) setAchievementQueue((current) => [...current, ...unlocked]);
+      if (event.detail?.economy) setEconomy(event.detail.economy);
+    };
+    window.addEventListener('forthang-achievements', onUnlock);
+    return () => window.removeEventListener('forthang-achievements', onUnlock);
+  }, []);
+
+  useEffect(() => {
+    if (!outfits.length) return;
+    checkAchievements({
+      discoveredCount,
+      totalSkins: gameOutfits.length,
+      sidekicks,
+    });
+  }, [outfits, sidekicks, guessedSkinIds, economy, skinLevels, discoveredCount, gameOutfits.length]);
+
+  useEffect(() => {
+    const current = achievementQueue[0];
+    if (!current?.trackId) return;
+    setMenuTrack(current.trackId);
+    playMenuMusic();
+  }, [achievementQueue]);
   const unlocks = featureUnlocks(discoveredCount);
   setOwnedMusicIds(economy.ownedMusicIds);
 
@@ -211,6 +228,7 @@ function App() {
               if (unlocks.trail) setView(VIEWS.TRAIL);
             }}
             onOpenHelp={() => setView(VIEWS.HELP)}
+            onOpenAchievements={() => setView(VIEWS.ACHIEVEMENTS)}
             onOpenMusic={() => {
               if (unlocks.music) setView(VIEWS.MUSIC);
             }}
@@ -247,6 +265,18 @@ function App() {
       {view === VIEWS.HELP ? (
         <HelpScreen onBack={() => setView(VIEWS.HANGMAN)} onDeleteAllData={handleDeleteAllData} />
       ) : null}
+      {view === VIEWS.ACHIEVEMENTS ? (
+        <AchievementsScreen
+          onBack={() => setView(VIEWS.HANGMAN)}
+          discoveredCount={discoveredCount}
+          totalSkins={gameOutfits.length}
+          sidekicks={sidekicks}
+        />
+      ) : null}
+      <AchievementPopup
+        achievement={achievementQueue[0] || null}
+        onClose={() => setAchievementQueue((current) => current.slice(1))}
+      />
       {view === VIEWS.MUSIC ? (
         <MusicScreen onBack={() => setView(VIEWS.HANGMAN)} />
       ) : null}

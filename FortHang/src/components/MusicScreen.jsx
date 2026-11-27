@@ -14,7 +14,7 @@ export default function MusicScreen({ onBack }) {
 
   useEffect(() => subscribeMenuMusic(() => setRevision((current) => current + 1)), []);
 
-  const unlockedIds = new Set(getSelectableTracks().map((track) => track.id));
+  const tracks = getSelectableTracks();
   const trackId = getMenuTrackId();
   const muted = isMenuMuted();
 
@@ -23,7 +23,7 @@ export default function MusicScreen({ onBack }) {
       <header className="catalogue-header">
         <h1>Music</h1>
         <p className="subtitle">
-          {unlockedIds.size} of {MENU_TRACKS.length} tracks discovered
+          Music tracks collected: {tracks.length} / {MENU_TRACKS.length}
         </p>
         <p className="subtitle">
           Choose the song that plays in the lobby. More songs can be unlocked in the Shop.
@@ -45,24 +45,18 @@ export default function MusicScreen({ onBack }) {
 
       <div className="catalogue-scroll" tabIndex={0} aria-label="Lobby songs">
         <ul className="music-song-list">
-          {MENU_TRACKS.map((track) => {
-            const unlocked = unlockedIds.has(track.id);
-            const selected = unlocked && track.id === trackId;
+          {tracks.map((track) => {
+            const selected = track.id === trackId;
             return (
               <li key={track.id}>
                 <button
                   type="button"
-                  className={`music-song${selected ? ' is-current' : ''}${unlocked ? '' : ' is-locked'}`}
+                  className={`music-song${selected ? ' is-current' : ''}`}
                   aria-pressed={selected}
-                  disabled={!unlocked}
                   onClick={() => setMenuTrack(track.id)}
                 >
                   <span>{track.label}</span>
-                  {selected ? (
-                    <span className="music-song-state">{muted ? 'Muted' : 'Playing'}</span>
-                  ) : unlocked ? null : (
-                    <span className="music-song-state">Locked</span>
-                  )}
+                  {selected ? <span className="music-song-state">{muted ? 'Muted' : 'Playing'}</span> : null}
                 </button>
               </li>
             );

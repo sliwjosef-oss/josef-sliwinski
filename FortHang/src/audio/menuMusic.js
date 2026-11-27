@@ -1,3 +1,5 @@
+import { unlockedMusicIds } from '../utils/achievementStore';
+
 const TRACK_STORAGE_KEY = 'fort-hang-menu-track';
 const MUTE_STORAGE_KEY = 'fort-hang-menu-muted';
 
@@ -38,6 +40,41 @@ export const MENU_TRACKS = [
     file: 'Heart_Like_A_Piston.mp3',
   },
   {
+    id: 'winning-the-morning',
+    label: 'Winning the Morning',
+    file: 'Winning_the_Morning.mp3',
+  },
+  {
+    id: 'king-of-aisle-four',
+    label: 'King of Aisle Four',
+    file: 'King_of_Aisle_Four.mp3',
+  },
+  {
+    id: 'the-velvet-arc',
+    label: 'The Velvet Arc',
+    file: 'The_Velvet_Arc.mp3',
+  },
+  {
+    id: 'gold-pump-loaded',
+    label: 'Gold Pump Loaded',
+    file: 'Gold_Pump_Loaded.mp3',
+  },
+  {
+    id: 'queen-of-the-underground',
+    label: 'Queen of the Underground',
+    file: 'Queen_of_the_Underground.mp3',
+  },
+  {
+    id: 'the-final-page',
+    label: 'The Final Page',
+    file: 'The_Final_Page.mp3',
+  },
+  {
+    id: 'velocity-breach',
+    label: 'Velocity Breach',
+    file: 'Velocity_Breach.mp3',
+  },
+  {
     id: 'perfect-despair',
     label: 'Perfect Despair',
     file: 'perfect_despair.mp3',
@@ -76,17 +113,11 @@ let previewAudio = null;
 let previewTimer = null;
 let previewTrackId = null;
 
-const FREE_TRACK_IDS = [
-  'concrete-pressure',
-  'break-the-perimeter',
-  'candy-in-a-plastic-wrap',
-  'beneath-the-spires',
-  'heart-like-a-piston',
-];
+const FREE_TRACK_IDS = ['concrete-pressure', 'break-the-perimeter'];
 const PREVIEW_SECONDS = 30;
 
 function canPlayTrack(id) {
-  return FREE_TRACK_IDS.includes(id) || ownedMusicIds.has(id);
+  return FREE_TRACK_IDS.includes(id) || ownedMusicIds.has(id) || unlockedMusicIds().includes(id);
 }
 
 export function getSelectableTracks() {
