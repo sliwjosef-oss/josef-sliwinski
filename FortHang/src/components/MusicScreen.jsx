@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  MENU_TRACKS,
   getMenuTrackId,
   getSelectableTracks,
   isMenuMuted,
@@ -13,7 +14,7 @@ export default function MusicScreen({ onBack }) {
 
   useEffect(() => subscribeMenuMusic(() => setRevision((current) => current + 1)), []);
 
-  const tracks = getSelectableTracks();
+  const unlockedIds = new Set(getSelectableTracks().map((track) => track.id));
   const trackId = getMenuTrackId();
   const muted = isMenuMuted();
 
@@ -21,6 +22,9 @@ export default function MusicScreen({ onBack }) {
     <div className="music-screen">
       <header className="catalogue-header">
         <h1>Music</h1>
+        <p className="subtitle">
+          {unlockedIds.size} of {MENU_TRACKS.length} tracks discovered
+        </p>
         <p className="subtitle">
           Choose the song that plays in the lobby. More songs can be unlocked in the Shop.
         </p>
@@ -39,24 +43,32 @@ export default function MusicScreen({ onBack }) {
         </div>
       </header>
 
-      <ul className="music-song-list" aria-label="Lobby songs">
-        {tracks.map((track) => {
-          const selected = track.id === trackId;
-          return (
-            <li key={track.id}>
-              <button
-                type="button"
-                className={`music-song${selected ? ' is-current' : ''}`}
-                aria-pressed={selected}
-                onClick={() => setMenuTrack(track.id)}
-              >
-                <span>{track.label}</span>
-                {selected ? <span className="music-song-state">{muted ? 'Muted' : 'Playing'}</span> : null}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+      <div className="catalogue-scroll" tabIndex={0} aria-label="Lobby songs">
+        <ul className="music-song-list">
+          {MENU_TRACKS.map((track) => {
+            const unlocked = unlockedIds.has(track.id);
+            const selected = unlocked && track.id === trackId;
+            return (
+              <li key={track.id}>
+                <button
+                  type="button"
+                  className={`music-song${selected ? ' is-current' : ''}${unlocked ? '' : ' is-locked'}`}
+                  aria-pressed={selected}
+                  disabled={!unlocked}
+                  onClick={() => setMenuTrack(track.id)}
+                >
+                  <span>{track.label}</span>
+                  {selected ? (
+                    <span className="music-song-state">{muted ? 'Muted' : 'Playing'}</span>
+                  ) : unlocked ? null : (
+                    <span className="music-song-state">Locked</span>
+                  )}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </div>
   );
 }
