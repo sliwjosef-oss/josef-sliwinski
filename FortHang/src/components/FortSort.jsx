@@ -1050,12 +1050,12 @@ function SelectScreen({
               className="betting-skin-search"
               value={skinSearch}
               onChange={(event) => setSkinSearch(event.target.value)}
-              placeholder="Search skins"
+              placeholder="Search"
               enterKeyHint="search"
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
-              aria-label="Search skins"
+              aria-label="Search"
             />
             {canRandomSelect ? (
               <button type="button" className="primary-button" onClick={selectRandomBets}>

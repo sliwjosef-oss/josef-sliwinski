@@ -4,10 +4,6 @@ import { fileURLToPath } from 'url';
 import sharp from 'sharp';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const OUTPUT_DIRS = [
-  join(__dirname, '..', 'public', 'hangman'),
-  join(__dirname, '..', '..', 'fort-hang', 'hangman'),
-];
 const BUNDLE_DIR = join(__dirname, '..', 'src', 'assets', 'hangman');
 
 const SIZE = 500;
@@ -301,9 +297,7 @@ async function writeStagePng(stage, pngBuffer, dirs) {
   }
 }
 
-for (const outputDir of [...OUTPUT_DIRS, BUNDLE_DIR]) {
-  mkdirSync(outputDir, { recursive: true });
-}
+mkdirSync(BUNDLE_DIR, { recursive: true });
 
 const STAGE0_SOURCE = join(__dirname, 'hangman_0-source.png');
 const stage0SourceExists = await sharp(STAGE0_SOURCE).metadata().then(() => true).catch(() => false);
@@ -321,8 +315,7 @@ for (let stage = 0; stage <= 6; stage += 1) {
     pngBuffer = await sharp(Buffer.from(svg)).png().toBuffer();
   }
 
-  const dirs = stage === 0 ? [...OUTPUT_DIRS, BUNDLE_DIR] : OUTPUT_DIRS;
-  await writeStagePng(stage, pngBuffer, dirs);
+  await writeStagePng(stage, pngBuffer, [BUNDLE_DIR]);
   console.log(`Created hangman_${stage}.png (${STAGES[stage]})`);
 }
 
