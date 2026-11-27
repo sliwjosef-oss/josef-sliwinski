@@ -29,9 +29,7 @@ import {
   getTrailDamageMultiplier,
   getTrailStartHp,
   getTrailStormDamageResist,
-  levelFromXp,
   sortOutfitsByLevel,
-  xpProgress,
 } from '../utils/skinLevels';
 import { bindPageAudio, releasePageAudio, setMenuMusicBlocked } from '../audio/menuMusic';
 import '../fortSort/FortSort.css';
@@ -85,42 +83,6 @@ function formatTrailLogLine(line) {
     remaining = remaining.slice(earliest + match.length);
   }
   return nodes;
-}
-
-function TrailSquadXp({ outfit, earned, skinLevels }) {
-  const progress = xpProgress(skinLevels, outfit.id);
-  const prevLevel = earned > 0 ? levelFromXp(Math.max(0, progress.xp - earned)) : progress.level;
-  const leveledUp = earned > 0 && progress.level > prevLevel;
-  const maxed = progress.next == null;
-  const fill = maxed ? 100 : Math.max(0, Math.min(100, (progress.intoLevel / progress.needed) * 100));
-  return (
-    <div className="placement-skin trail-result-skin">
-      <SkinThumb outfit={outfit} />
-      <span className="placement-skin-body">
-        <span className="placement-skin-top">
-          <span className="placement-skin-name">{outfit.name}</span>
-          <span className="placement-level">Lv {progress.level}</span>
-          {leveledUp ? <span className="level-up-sign">Level up!</span> : null}
-        </span>
-        <span
-          className="xp-bar"
-          role="progressbar"
-          aria-valuemin={0}
-          aria-valuemax={maxed ? progress.xp : progress.needed}
-          aria-valuenow={maxed ? progress.xp : progress.intoLevel}
-          aria-label={maxed ? `Level ${progress.level}, max level` : `Level ${progress.level}`}
-        >
-          <span className="xp-bar-fill" style={{ width: `${fill}%` }} />
-        </span>
-        <span className="placement-xp-line">
-          <span className="placement-xp">+{earned} XP</span>
-          <span className="placement-xp-progress">
-            {maxed ? 'Max' : `${progress.intoLevel} / ${progress.needed}`}
-          </span>
-        </span>
-      </span>
-    </div>
-  );
 }
 
 function SkinThumb({ outfit }) {
@@ -1153,8 +1115,64 @@ export default function BattleBusTrail({
               </div>
             ) : (
               <div className="trail-field-body">
-                {codex.squads?.length ? (
-                  codex.squads.map((squad) => {
+                {codex.party?.length ? (
+                  <section className="trail-seen-squad">
+                    <h3>Your squad</h3>
+                    <ul>
+                      {codex.party.map((member) => {
+                        const survived = result?.won && result.survivors?.includes(member.name);
+                        const killerKnown =
+                          member.killerId && guessedSkinIds.includes(member.killerId);
+                        let fate = 'Alive';
+                        if (!member.alive) {
+                          if (member.cause === 'the Storm') fate = 'eliminated by the Storm';
+                          else if (member.cause === 'a sniper') fate = 'eliminated by a sniper';
+                          else if (member.cause === 'fall damage') fate = 'eliminated by fall damage';
+                          else if (member.cause === 'a car explosion') {
+                            fate = 'eliminated by a car explosion';
+                          } else if (member.killerName || member.killerId) {
+                            fate = `eliminated by ${killerKnown ? member.killerName : '???'}`;
+                          } else if (member.cause) fate = `eliminated by ${member.cause}`;
+                          else fate = 'eliminated';
+                        } else if (survived) {
+                          fate = 'Victory Royale';
+                        }
+                        return (
+                          <li key={member.name} className={member.alive ? '' : 'is-dead'}>
+                            <EventIconImg outfit={member.outfit} alt="" />
+                            <span className="trail-seen-name">
+                              {member.name}
+                              {member.sidekick ? ' · sidekick' : ''}
+                            </span>
+                            {!member.alive && member.placement ? (
+                              <span className="trail-seen-place">#{member.placement}</span>
+                            ) : null}
+                            {survived ? <span className="trail-seen-place">#1</span> : null}
+                            <span className={`trail-seen-fate ${member.alive ? 'is-alive' : ''}`}>
+                              {fate}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </section>
+                ) : null}
+                {(() => {
+                  const revealUnseen = screen === 'result';
+                  const squads = (codex.squads || [])
+                    .map((squad) => ({
+                      ...squad,
+                      members: squad.members.filter(
+                        (member) => revealUnseen || member.seen || !member.alive,
+                      ),
+                    }))
+                    .filter((squad) => squad.members.length);
+                  if (!squads.length) {
+                    return codex.party?.length ? null : (
+                      <p className="hint">No living players spotted yet, and nobody else has been eliminated.</p>
+                    );
+                  }
+                  return squads.map((squad) => {
                     const members = [...squad.members].sort((a, b) => Number(a.alive) - Number(b.alive));
                     const deadCount = members.filter((member) => !member.alive).length;
                     return (
@@ -1170,7 +1188,7 @@ export default function BattleBusTrail({
                             member.death?.killerId && guessedSkinIds.includes(member.death.killerId);
                           let fate = '';
                           if (!member.alive) {
-                            if (member.death?.kind === 'fall') fate = 'died of fall damage';
+                            if (member.death?.kind === 'fall') fate = 'died in the storm';
                             else if (member.death?.kind === 'killed') {
                               fate = `killed by ${killerKnown ? member.death.killerName : '???'}`;
                             } else fate = 'eliminated';
@@ -1195,10 +1213,8 @@ export default function BattleBusTrail({
                       </ul>
                     </section>
                     );
-                  })
-                ) : (
-                  <p className="hint">No living players spotted yet, and nobody else has been eliminated.</p>
-                )}
+                  });
+                })()}
               </div>
             )}
           </div>
@@ -1228,35 +1244,10 @@ export default function BattleBusTrail({
         {screen === 'result' && result ? (
           <div className="trail-result">
             <h2>{result.won ? 'Victory Royale!' : `Placed #${result.placement}`}</h2>
-            {result.forFun ? (
-              <p>For Fun — no weebucks or skin XP earned.</p>
-            ) : (
-              <>
-                <p>
-                  +{result.weebucks} weebucks ({result.survivorCount} alive × {result.survivorPay},{' '}
-                  {result.fallenCount} fallen × {result.fallenPay}
-                  {result.bonusWeebucks
-                    ? `, Pirate Shop +${result.bonusWeebucks}`
-                    : ''}
-                  )
-                </p>
-                <div className="trail-result-squad">
-                  {(result.squadXp || []).map((entry) => {
-                    const outfit = outfits.find((item) => item.id === entry.id);
-                    if (!outfit) return null;
-                    return (
-                      <TrailSquadXp
-                        key={entry.id}
-                        outfit={outfit}
-                        earned={entry.earned}
-                        skinLevels={result.levelsAfter || skinLevels}
-                      />
-                    );
-                  })}
-                </div>
-              </>
-            )}
             <div className="import-actions">
+              <button type="button" className="primary-button" onClick={() => setFieldMenu('players')}>
+                Results
+              </button>
               <button type="button" className="primary-button" onClick={backToSelect}>
                 Back to squad select
               </button>

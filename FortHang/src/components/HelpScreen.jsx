@@ -278,7 +278,9 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           <li>
             <strong>Rest</strong> — use a healing item, or search for heals. Both can still draw the
             Storm. Medkits add +100 HP to one squad member you pick, and they do not add shield. Shield Potions
-            add +50 shield to one member.
+            add +50 shield to one member. A Shield Keg is Epic. It takes 2 turns to pour +100 shield
+            for everyone. The Storm can catch up while you wait, and an ambush halfway through cuts
+            it to +50 shield.
             Slurp Juice, found in chests (about 4%), fills one member's health and shield. Chug
             Splash heals every living squad member, sidekick included, for +20 total — HP first,
             then any leftover fills shield (for example 94 HP gets +6 HP and +14 shield). Chug
@@ -294,13 +296,18 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           </li>
           <li>
             <strong>Inventory</strong> — up to 10 item slots (stacks of the same item each use a
-            slot). Grenades deal 30–45. Clingers deal 40–55. A Boogie Bomb makes the enemy dance
+            slot). Grenades deal 30–45. Clingers deal 40–55. A Buggy Bomb is Mythic: it deals 1000
+            damage to the enemy squad and kills everyone on your squad except one, who is left at 1
+            HP. A Stick of Truth is Mythic: while you carry it, the storm closes in around you, so
+            shrinks and storm surges leave you in the zone. A rift can still throw you into the
+            storm. A Port-a-Fortress is Legendary. Throw it to block damage for 5 turns. A Boogie Bomb makes the enemy dance
             for 2 rounds (they deal no damage); each squad member has a 10% chance to dance too.
             A Bush still makes you harder to spot, and it also blocks one sniper shot, then it's
             used up. A Kneecapper is a Leekcapper 10% of the time. Same swing. Pack on the trail
             screen opens your inventory (with item art) and the players list. Living players show
-            up once you have seen them. Every player who dies is listed, even if you never met them,
-            with their placement and how they died.
+            up once you have seen them. The results screen also lists players still alive that you
+            never met. Every player who dies is listed, even if you never met them, with their
+            placement and how they died.
           </li>
           <li>
             <strong>Lobby</strong> — before you drop, 95 other players spawn with unique skins in
@@ -311,7 +318,7 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             whole living squad piles in. Random deaths hit the lobby
             every turn. Early on those are usually bots, and sweats almost never drop until the
             lobby is thin. Off-screen, bots are killed by players or sweats. Players and sweats are
-            killed by sweats. Some of those deaths are fall damage instead. Squads that already lost
+            killed by sweats. Some of those deaths are in the Storm instead. Squads that already lost
             someone die faster. Third-partying puts both
             full squads on screen. Each round you pick a side to shoot. Their health bar is one
             chunk per living player, and emptying a chunk kills that player even if you flee.
@@ -324,6 +331,16 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             rare while the Storm moves), jump a sky rift (closer to zone or dropped in danger), or
             hop in a car (70% massive ambush on the next squad and farther from the Storm, 30%
             explosion for 100 damage each).
+          </li>
+          <li>
+            <strong>Overrides</strong> — a separate set of events that change the rest of the run.
+            Each one starts with “Override Activated:”. Only one Override can happen in a run. Big Head mode
+            doubles damage enemies take and damage your squad takes. Healing Overdrive fills your
+            squad’s HP and shields, then doubles enemy health. Every round, everyone still standing
+            gains 30 HP and 30 shield. Faster Storm eliminates players
+            faster, is more likely to leave you on the edge or in the Storm, and off-screen deaths
+            are more likely to say the player died in the Storm. Big Boom doubles
+            fall damage, and explosions have a high chance to eliminate an enemy player.
           </li>
           <li>
             <strong>Final 10</strong> — once 10 players are left, the others stop dying on their own

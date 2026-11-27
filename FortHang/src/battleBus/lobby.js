@@ -173,9 +173,9 @@ function killerFromMember(member) {
   };
 }
 
-/** Off-screen: bots fall to players or sweats. Players and sweats fall to sweats. Some just fall. */
-export function offscreenCause(lobby, squad, victim) {
-  if (rand() < OFFSCREEN_FALL_CHANCE) return { kind: 'fall' };
+/** Off-screen: bots fall to players or sweats. Players and sweats fall to sweats. Some die in the storm. */
+export function offscreenCause(lobby, squad, victim, stormChance = OFFSCREEN_FALL_CHANCE) {
+  if (rand() < stormChance) return { kind: 'fall' };
   const types = squad?.type === 'Bots' ? ['Normal players', 'Sweats'] : ['Sweats'];
   const pool = [];
   for (const other of lobby) {
@@ -201,7 +201,13 @@ function applyDeath(member, placement, death) {
 export function killLobbyMembers(
   lobby,
   n,
-  { preferSquadId = null, playersLeft = null, killerOutfit = null, offscreen = true } = {},
+  {
+    preferSquadId = null,
+    playersLeft = null,
+    killerOutfit = null,
+    offscreen = true,
+    stormDeathChance = OFFSCREEN_FALL_CHANCE,
+  } = {},
 ) {
   const killed = [];
   let remaining = Math.max(0, Math.floor(Number(n) || 0));
@@ -215,7 +221,7 @@ export function killLobbyMembers(
         killerName: killerOutfit?.name || '',
       };
     }
-    return offscreenCause(lobby, squad, target);
+    return offscreenCause(lobby, squad, target, stormDeathChance);
   };
 
   const killOneFrom = (squad) => {

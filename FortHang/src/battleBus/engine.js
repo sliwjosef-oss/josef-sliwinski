@@ -6,6 +6,7 @@ import {
   BOSS_FIGHT_AMBUSH,
   BOSS_ITEMS,
   CHASE,
+  BUG_BOMB_DAMAGE,
   DAMAGE_ITEMS,
   ENEMY_DAMAGE_MULT,
   ENEMY_HP_MULT,
@@ -33,6 +34,10 @@ import {
   REST_STORM,
   SOLO_ACTIVITIES,
   SOLO_WORDS,
+  BIG_BOOM_KILL_CHANCE,
+  FASTER_STORM_DEATH_CHANCE,
+  FASTER_STORM_PUSH_CHANCE,
+  OVERRIDE_EVENT_CHANCE,
   SQUAD_EVENT_CHANCE,
   STATUS,
   STORM_DAMAGE_MULT,
@@ -253,6 +258,7 @@ export async function playTrailMatch({
     boogieRounds: 0,
     dancers: new Set(),
     fortRounds: 0,
+    fortressTurns: 0,
     enemyStunned: false,
     turretRounds: 0,
     burnDamage: 0,
@@ -267,6 +273,7 @@ export async function playTrailMatch({
       .sort((a, b) => b - a),
     campfireTurns: 0,
     vaultTurns: 0,
+    kegTurns: 0,
     bonusWeebucks: 0,
     turn: 1,
     afk: {},
@@ -274,6 +281,12 @@ export async function playTrailMatch({
     killers: {},
     fallen: [],
     lastRead: '',
+    overrides: {
+      bigHead: false,
+      healing: false,
+      fasterStorm: false,
+      bigBoom: false,
+    },
   };
 
   const emitSquad = () => {
@@ -345,28 +358,40 @@ export async function playTrailMatch({
         usesLeft: usesLeftFor(name),
         iconUrls: getFortniteGgIconUrls(name),
       })),
-      squads: lobby
-        .filter((squad) => squad.members.some((member) => member.seen || !member.alive))
-        .map((squad) => ({
-          id: squad.id,
-          theme: squad.theme || '',
-          members: squad.members
-            .filter((member) => member.seen || !member.alive)
-            .map((member) => ({
-              id: member.outfit?.id,
-              name: member.outfit?.name || '???',
-              alive: Boolean(member.alive),
-              outfit: member.outfit,
-              placement: member.placement || null,
-              death: member.death
-                ? {
-                    kind: member.death.kind,
-                    killerId: member.death.killerId || '',
-                    killerName: member.death.killerName || '',
-                  }
-                : null,
-            })),
+      party: names.map((name) => {
+        const fallen = S.fallen.find((entry) => entry.name === name);
+        const outfit =
+          partyByName.get(name) || (name === sidekick && sidekickOutfit ? sidekickOutfit : null);
+        return {
+          name,
+          sidekick: name === sidekick,
+          alive: Boolean(S.squad[name]),
+          outfit,
+          placement: fallen?.placement || null,
+          cause: fallen?.cause || '',
+          killerId: fallen?.killerOutfit?.id || '',
+          killerName: fallen?.killerOutfit?.name || '',
+        };
+      }),
+      squads: lobby.map((squad) => ({
+        id: squad.id,
+        theme: squad.theme || '',
+        members: squad.members.map((member) => ({
+          id: member.outfit?.id,
+          name: member.outfit?.name || '???',
+          alive: Boolean(member.alive),
+          seen: Boolean(member.seen),
+          outfit: member.outfit,
+          placement: member.placement || null,
+          death: member.death
+            ? {
+                kind: member.death.kind,
+                killerId: member.death.killerId || '',
+                killerName: member.death.killerName || '',
+              }
+            : null,
         })),
+      })),
     });
   };
   publishCodex();
@@ -402,6 +427,12 @@ export async function playTrailMatch({
     if (MULTI_USE[item]) S.itemUses[item] = MULTI_USE[item];
     log(`* Found: ${item} (${rarityOf(item)})!`);
     showFoundItem(item, `Found ${item}`);
+    if (item === 'Stick of Truth' && S.inventory[item] === 1) {
+      S.stormDistance = 0;
+      log(
+        'The storm closes in on you. You stay in the zone unless a rift throws you out.',
+      );
+    }
     publishCodex();
   };
 
@@ -479,6 +510,7 @@ export async function playTrailMatch({
     if (cause === 'sweats') return 'sweats';
     if (cause === 'a solo player') return 'solo';
     if (cause === 'fall damage') return 'fall';
+    if (cause === 'the Buggy Bomb') return 'buggy';
     return 'squad';
   };
 
@@ -495,10 +527,11 @@ export async function playTrailMatch({
     return Math.max(1, Math.floor(amount * (1 - factor)));
   };
 
-  const fightDamage = (name, amount, cause = 'an enemy') => {
+  const fightDamage = (name, amount, cause = 'an enemy', { attackerName = null, killerOutfit = null } = {}) => {
+    if (S.fortressTurns > 0) return;
     S.lastHit[name] = cause;
     if (isPvpCause(cause)) {
-      const killer = pickEnemyKillerOutfit();
+      const killer = killerOutfit || pickEnemyKillerOutfit();
       if (killer) S.killers[name] = killer;
     }
     const s = S.squad[name];
@@ -509,12 +542,58 @@ export async function playTrailMatch({
     s.hp -= reduced - absorbed;
     S.damage += Math.floor((reduced - absorbed) / 4);
     if (absorbed && s.shield === 0) log(`${name}'s shield broke!`);
-    const note = reduced < amount ? ` (resisted to ${reduced})` : '';
-    log(`${name} took ${reduced} damage (${absorbed} shield, ${reduced - absorbed} HP)${note}`);
+    if (attackerName) {
+      log(`${attackerName} did ${reduced} damage to ${name}.`);
+    } else {
+      const note = reduced < amount ? ` (resisted to ${reduced})` : '';
+      log(`${name} took ${reduced} damage (${absorbed} shield, ${reduced - absorbed} HP)${note}`);
+    }
     emitSquad();
   };
 
+  /** Living encounter members each fire a share of the squad's damage. Dead members stop shooting. */
+  const enemyVolley = (enemy, { bonus = 0, range = null, attackers = null } = {}) => {
+    if (S.fortressTurns > 0) {
+      log(`The Port-a-Fortress blocks their shots! (${S.fortressTurns} turn(s) left)`);
+      return;
+    }
+    const team = ENEMY_TEAMS[enemy];
+    const [, hitChance] = ENEMY_SKILL[enemy];
+    const roster = attackers || encounterMembers();
+    const living = roster.filter((member) => member?.alive);
+    const squadSize = Math.max(1, roster.length || living.length || 1);
+    const share = (range ? 1 : team.hits || 1) / squadSize;
+    const [lo, hi] = range || team.dmg;
+    const swings = living.length ? [...living].sort(() => rand() - 0.5) : [null];
+    const sweatFocusChance = 0.75;
+    let focus = null;
+    for (const member of swings) {
+      const pool = Object.keys(S.squad).filter((name) => S.squad[name]?.hp > 0);
+      if (!pool.length) break;
+      const stick =
+        isSweat(enemy) && focus && pool.includes(focus) && rand() < sweatFocusChance;
+      const target = stick ? focus : pick(pool);
+      if (!focus || !pool.includes(focus)) focus = target;
+      const attackerName = member?.outfit
+        ? encounterLabel(member.outfit, '???')
+        : enemy === 'Boss'
+          ? 'The boss'
+          : '???';
+      if (rand() >= hitChance) {
+        log(`${attackerName} shot at ${target} and missed!`);
+        continue;
+      }
+      const raw = Math.floor((randInt(lo, hi) + bonus) * ENEMY_DAMAGE_MULT * share);
+      const hit = S.overrides.bigHead ? raw * 2 : raw;
+      fightDamage(target, Math.max(1, hit), causeOf(enemy), {
+        attackerName,
+        killerOutfit: member?.outfit || null,
+      });
+    }
+  };
+
   const stormHit = (name, amount) => {
+    if (S.fortressTurns > 0) return;
     S.lastHit[name] = 'the Storm';
     const personal = Number(stormResistByName[name]) || 0;
     const reduced = applyResist(amount, stormResist + personal);
@@ -524,6 +603,10 @@ export async function playTrailMatch({
   };
 
   const sniperHit = (name) => {
+    if (S.fortressTurns > 0) {
+      log(`A sniper shot glances off the Port-a-Fortress. (${S.fortressTurns} turn(s) left)`);
+      return;
+    }
     const s = S.squad[name];
     const outcome = applySniperShot(s, S.inventory);
     if (outcome === 'blocked') {
@@ -561,7 +644,15 @@ export async function playTrailMatch({
       });
       emitSquad();
       await choose(['Continue']);
-      S.fallen.push({ name, cause, blurb, playersLeft: S.playersLeft, killerOutfit });
+      const placement = Object.keys(S.squad).length + countLobbyAlive(lobby);
+      S.fallen.push({
+        name,
+        cause,
+        blurb,
+        playersLeft: placement,
+        placement,
+        killerOutfit,
+      });
       delete S.squad[name];
       delete S.afk[name];
       syncPlayersLeft();
@@ -621,11 +712,30 @@ export async function playTrailMatch({
       playersLeft: S.playersLeft,
       killerOutfit: fromFight ? partyKillerOutfit() : null,
       offscreen: !fromFight,
+      stormDeathChance:
+        !fromFight && S.overrides.fasterStorm ? FASTER_STORM_DEATH_CHANCE : undefined,
     });
     syncPlayersLeft();
   };
 
-  const enemyMaxHp = (enemy) => Math.floor(ENEMY_TEAMS[enemy].hp * ENEMY_HP_MULT);
+  const enemyMaxHp = (enemy) => {
+    const base = Math.floor(ENEMY_TEAMS[enemy].hp * ENEMY_HP_MULT);
+    return S.overrides.healing ? base * 2 : base;
+  };
+
+  const bigHeadOut = (amount) => (S.overrides.bigHead ? amount * 2 : amount);
+
+  /** Big Boom: an explosion often eliminates one enemy. In a fight, that is one health chunk. */
+  const explosionCatch = (enemy = null) => {
+    if (!S.overrides.bigBoom || rand() >= BIG_BOOM_KILL_CHANCE || rivalsLeft() <= 0) return 0;
+    const living = enemy ? encounterMembers().filter((member) => member.alive) : [];
+    log('The explosion catches an enemy player!');
+    if (living.length) {
+      return Math.max(1, Math.ceil(enemyMaxHp(enemy) / living.length));
+    }
+    eliminateOthers(1, { fromFight: true, preferSquadId: lastEncounterRef?.squadId ?? null });
+    return 0;
+  };
 
   const setEncounter = (squad, members) => {
     lastEncounterRef = { squadId: squad.id, members };
@@ -780,14 +890,14 @@ export async function playTrailMatch({
         log(`${m} used ${aOrAn(weapon)} ${weapon} and missed!`);
         continue;
       }
-      const dmg = Math.floor(randInt(lo, hi) * mult * damageMultFor(m));
+      const dmg = bigHeadOut(Math.floor(randInt(lo, hi) * mult * damageMultFor(m)));
       total += dmg;
       log(`${m} used ${aOrAn(weapon)} ${weapon} and dealt ${dmg} damage.`);
     }
     return total;
   };
 
-  const enemyAttacks = async (enemy, bonus = 0) => {
+  const enemyAttacks = async (enemy, bonus = 0, attackers = null) => {
     if (S.boogieRounds > 0) {
       S.boogieRounds -= 1;
       if (S.boogieRounds > 0) {
@@ -809,19 +919,7 @@ export async function playTrailMatch({
       log(`Their attack is blocked! (${S.fortRounds} round(s) of cover left)`);
       return;
     }
-    const team = ENEMY_TEAMS[enemy];
-    const [, hitChance] = ENEMY_SKILL[enemy];
-    const who = enemy === 'Boss' ? 'The boss' : 'They';
-    const targets = Object.keys(S.squad);
-    const sample = [...targets].sort(() => rand() - 0.5).slice(0, Math.min(team.hits, targets.length));
-    for (const m of sample) {
-      if (rand() < hitChance) {
-        const dmg = Math.floor((randInt(...team.dmg) + bonus) * ENEMY_DAMAGE_MULT);
-        fightDamage(m, dmg, causeOf(enemy));
-      } else {
-        log(`${who} shot at ${m} and missed!`);
-      }
-    }
+    enemyVolley(enemy, { bonus, attackers });
     await removeEliminated();
   };
 
@@ -898,11 +996,16 @@ export async function playTrailMatch({
         rolled *= d.vs_sweats;
         log("It's extra effective against sweats!");
       }
-      dmg = Math.floor(rolled * damageMultFor(user));
+      dmg = bigHeadOut(Math.floor(rolled * damageMultFor(user)));
       log(`${user} ${d.text} ${pickItem} and dealt ${dmg} damage.`);
     } else if (d.turret) {
       S.turretRounds = d.turret;
       log(`${user} ${d.text} ${pickItem}! It will fire on its own for ${d.turret} rounds.`);
+    } else if (d.protectTurns) {
+      S.fortressTurns = d.protectTurns;
+      log(
+        `${user} ${d.text} ${pickItem}! The squad is protected from damage for ${d.protectTurns} turns.`,
+      );
     } else if (d.cover) {
       log(`${user} ${d.text} ${pickItem}!`);
     }
@@ -973,7 +1076,18 @@ export async function playTrailMatch({
     return pickName;
   };
 
-  const HEAL_ITEMS = ['Medkit', 'Shield Potion', 'Slurp Juice', 'Chug Jug', 'Chug Splash'];
+  const HEAL_ITEMS = ['Medkit', 'Shield Potion', 'Shield Keg', 'Slurp Juice', 'Chug Jug', 'Chug Splash'];
+
+  const grantSquadShield = (amount, source) => {
+    for (const name of Object.keys(S.squad)) {
+      const member = S.squad[name];
+      const before = member.shield ?? 0;
+      member.shield = Math.min(100, before + amount);
+      const gain = member.shield - before;
+      log(gain > 0 ? `${name} +${gain} shield from the ${source}.` : `${name} is already at full shield.`);
+    }
+    emitSquad();
+  };
 
   const splashSquad = () => {
     for (const name of Object.keys(S.squad)) {
@@ -1003,6 +1117,33 @@ export async function playTrailMatch({
     emitSquad();
   };
 
+  const detonateBuggyBomb = async (user) => {
+    const living = Object.keys(S.squad);
+    const survivor = pick(living);
+    const blast = bigHeadOut(BUG_BOMB_DAMAGE);
+    log(`${user} throws a Buggy Bomb! It hits for ${blast} damage.`);
+    for (const name of living) {
+      const member = S.squad[name];
+      if (name === survivor) {
+        member.hp = 1;
+        member.shield = 0;
+      } else {
+        member.hp = 0;
+        member.shield = 0;
+        S.lastHit[name] = 'the Buggy Bomb';
+      }
+    }
+    emitSquad();
+    await removeEliminated();
+    if (S.squad[survivor]) {
+      log(
+        living.length === 1
+          ? `${survivor} is caught in the blast and left with 1 HP.`
+          : `The blast wipes the squad. ${survivor} is the only one left, with 1 HP.`,
+      );
+    }
+  };
+
   const throwBoogie = (enemy) => {
     const dancers = rollBoogieDancers(Object.keys(S.squad), rand);
     S.boogieRounds = BOOGIE_ROUNDS;
@@ -1017,6 +1158,7 @@ export async function playTrailMatch({
       ...Object.keys(BOSS_ITEMS),
       'Grenade',
       'Clinger',
+      'Buggy Bomb',
       'Boogie Bomb',
       'Chug Splash',
       'Rocket Launcher',
@@ -1082,6 +1224,11 @@ export async function playTrailMatch({
       splashSquad();
       return ['used', 0];
     }
+    if (pickItem === 'Buggy Bomb') {
+      useItem(pickItem);
+      await detonateBuggyBomb(user);
+      return ['buggy', bigHeadOut(BUG_BOMB_DAMAGE)];
+    }
     if (pickItem === 'Boogie Bomb') {
       useItem(pickItem);
       throwBoogie(enemy);
@@ -1096,8 +1243,9 @@ export async function playTrailMatch({
     }
     useItem(pickItem);
     if (DAMAGE_ITEMS[pickItem]) {
-      const dmg = Math.floor(randInt(...DAMAGE_ITEMS[pickItem]) * damageMultFor(user));
+      let dmg = bigHeadOut(Math.floor(randInt(...DAMAGE_ITEMS[pickItem]) * damageMultFor(user)));
       log(`${user} used a ${pickItem} and dealt ${dmg} damage. BOOM!`);
+      dmg += explosionCatch(enemy);
       return ['used', dmg];
     }
     log(`You used a ${pickItem}.`);
@@ -1107,13 +1255,14 @@ export async function playTrailMatch({
   const ongoingDamage = (enemy) => {
     let total = 0;
     if (S.burnDamage) {
-      log(`The fire burns them for ${S.burnDamage} damage!`);
-      total += S.burnDamage;
+      const burn = bigHeadOut(S.burnDamage);
+      log(`The fire burns them for ${burn} damage!`);
+      total += burn;
       S.burnDamage = 0;
     }
     if (S.turretRounds > 0) {
       const [mult] = ENEMY_SKILL[enemy];
-      const dmg = Math.floor(randInt(...TURRET_DAMAGE) * mult);
+      const dmg = bigHeadOut(Math.floor(randInt(...TURRET_DAMAGE) * mult));
       S.turretRounds -= 1;
       log(`The Business Turret fires for ${dmg} damage! (${S.turretRounds} round(s) left)`);
       total += dmg;
@@ -1123,6 +1272,36 @@ export async function playTrailMatch({
 
   let fleeChase;
   let combat;
+
+  const overdriveHeal = () => {
+    if (!S.overrides.healing) return;
+    let any = false;
+    for (const [name, member] of Object.entries(S.squad)) {
+      const beforeHp = member.hp;
+      const beforeShield = member.shield ?? 0;
+      member.hp = Math.min(member.maxHp, member.hp + 30);
+      member.shield = Math.min(100, (member.shield ?? 0) + 30);
+      const hpGain = member.hp - beforeHp;
+      const shieldGain = member.shield - beforeShield;
+      if (hpGain <= 0 && shieldGain <= 0) continue;
+      any = true;
+      const parts = [];
+      if (hpGain > 0) parts.push(`+${hpGain} HP`);
+      if (shieldGain > 0) parts.push(`+${shieldGain} shield`);
+      log(`${name} recovers: ${parts.join(' and ')}.`);
+    }
+    if (any) emitSquad();
+  };
+
+  const tickFortress = () => {
+    if (S.fortressTurns <= 0) return;
+    S.fortressTurns -= 1;
+    if (S.fortressTurns > 0) {
+      log(`Port-a-Fortress: ${S.fortressTurns} turn(s) of protection left.`);
+    } else {
+      log('The Port-a-Fortress falls apart.');
+    }
+  };
 
   fleeChase = async (enemy, enemyHp = null, penalty = 0, bonus = 0) => {
     let hp = enemyHp == null ? enemyMaxHp(enemy) : enemyHp;
@@ -1141,15 +1320,18 @@ export async function playTrailMatch({
       }
       if (roll < esc + cau) {
         log('They caught up!');
-        const dmg = Math.floor(randInt(clo, chi) * ENEMY_DAMAGE_MULT);
-        fightDamage(pick(Object.keys(S.squad)), dmg, causeOf(enemy));
+        enemyVolley(enemy, { range: [clo, chi] });
       } else {
         log("You're running... they're still on your tail.");
       }
       if (S.stormDistance >= 2 && Object.keys(S.squad).length) {
-        const dmg = Math.max(1, Math.floor((S.stormDamage[0] * STORM_DAMAGE_MULT) / 2));
-        log(`Running through the Storm hurts! -${dmg} HP each`);
-        for (const m of Object.keys(S.squad)) stormHit(m, dmg);
+        if (S.fortressTurns > 0) {
+          log(`The Port-a-Fortress blocks the Storm. (${S.fortressTurns} turn(s) left)`);
+        } else {
+          const dmg = Math.max(1, Math.floor((S.stormDamage[0] * STORM_DAMAGE_MULT) / 2));
+          log(`Running through the Storm hurts! -${dmg} HP each`);
+          for (const m of Object.keys(S.squad)) stormHit(m, dmg);
+        }
       }
       await removeEliminated();
       if (!Object.keys(S.squad).length) return 'lost';
@@ -1258,10 +1440,15 @@ export async function playTrailMatch({
           return 'escaped';
         }
         if (result === 'cancel') continue;
-        const dealt = itemDmg + squadAttack(enemy, 'AR', 1);
-        log(`Total: ${dealt} damage.`);
-        hp = Math.max(0, hp - dealt);
-        dropEncounterChunks(hp, maxHp, enemy);
+        if (result === 'buggy') {
+          hp = Math.max(0, hp - itemDmg);
+          dropEncounterChunks(hp, maxHp, enemy);
+        } else {
+          const dealt = itemDmg + squadAttack(enemy, 'AR', 1);
+          log(`Total: ${dealt} damage.`);
+          hp = Math.max(0, hp - dealt);
+          dropEncounterChunks(hp, maxHp, enemy);
+        }
       } else {
         saveSquadWound(hp, maxHp);
         return fleeChase(enemy, hp, 0.1, fleeBonus);
@@ -1507,7 +1694,7 @@ export async function playTrailMatch({
     for (let i = 0; i < shots; i += 1) {
       if (defender.hp <= 0) return;
       if (rand() < hitChance) {
-        const dmg = Math.floor(randInt(...team.dmg) * ENEMY_DAMAGE_MULT);
+        const dmg = bigHeadOut(Math.floor(randInt(...team.dmg) * ENEMY_DAMAGE_MULT));
         defender.hp = Math.max(0, defender.hp - dmg);
         log(`${sideLabel(attacker)} hits the other squad for ${dmg}.`);
         dropChunks(defender, { attacker });
@@ -1555,6 +1742,10 @@ export async function playTrailMatch({
           focus.hp = 0;
           dropChunks(focus, { byYou: true });
           wipeLoot(focus);
+        } else if (result === 'buggy') {
+          focus.hp = Math.max(0, focus.hp - itemDmg);
+          dropChunks(focus, { byYou: true });
+          if (focus.hp <= 0) wipeLoot(focus);
         } else {
           if (S.boogieRounds > 0) focus.dance = S.boogieRounds;
           const dealt = itemDmg + squadAttack(focus.enemy, 'AR', 1);
@@ -1608,7 +1799,7 @@ export async function playTrailMatch({
           strikeOtherSquad(side, other);
         } else {
           log(`${sideLabel(side)} shoots at you!`);
-          await enemyAttacks(side.enemy);
+          await enemyAttacks(side.enemy, 0, side.members);
         }
       }
       S.boogieRounds = savedBoogie;
@@ -1752,14 +1943,20 @@ export async function playTrailMatch({
       showMemberEvent(m, line);
     } else {
       const m = pick(Object.keys(S.squad));
-      const dmg = randInt(...FALL_DAMAGE);
-      S.lastHit[m] = 'fall damage';
-      S.squad[m].hp -= dmg;
-      S.damage += Math.floor(dmg / 4);
-      const line = `[SQUAD] ${m} ${pick(FALL_REASONS)} and took ${dmg} fall damage.`;
-      log(line);
-      showMemberEvent(m, line);
-      emitSquad();
+      const dmg = randInt(...FALL_DAMAGE) * (S.overrides.bigBoom ? 2 : 1);
+      if (S.fortressTurns > 0) {
+        const line = `[SQUAD] ${m} ${pick(FALL_REASONS)}, but the Port-a-Fortress caught them.`;
+        log(line);
+        showMemberEvent(m, line);
+      } else {
+        S.lastHit[m] = 'fall damage';
+        S.squad[m].hp -= dmg;
+        S.damage += Math.floor(dmg / 4);
+        const line = `[SQUAD] ${m} ${pick(FALL_REASONS)} and took ${dmg} fall damage.`;
+        log(line);
+        showMemberEvent(m, line);
+        emitSquad();
+      }
     }
   };
 
@@ -1863,8 +2060,13 @@ export async function playTrailMatch({
     S.stormDistance = Math.max(0, S.stormDistance - 1);
     log(`You peel out. The drive puts you farther from the Storm. Now: ${STATUS[S.stormDistance]}`);
     if (rand() < 0.3) {
-      log('The car explodes! Everyone takes 100 damage!');
-      for (const m of Object.keys(S.squad)) fightDamage(m, 100, 'a car explosion');
+      if (S.fortressTurns > 0) {
+        log(`The car explodes, but the Port-a-Fortress holds. (${S.fortressTurns} turn(s) left)`);
+      } else {
+        log('The car explodes! Everyone takes 100 damage!');
+        for (const m of Object.keys(S.squad)) fightDamage(m, 100, 'a car explosion');
+      }
+      explosionCatch();
       await removeEliminated();
       return;
     }
@@ -1876,7 +2078,7 @@ export async function playTrailMatch({
     }
     const [text, enemy] = described;
     const maxHp = enemyMaxHp(enemy);
-    const carDmg = randInt(180, 280);
+    const carDmg = bigHeadOut(randInt(180, 280));
     log(`You plow into ${text} for ${carDmg} damage!`);
     const hpLeft = Math.max(0, maxHp - carDmg);
     dropEncounterChunks(hpLeft, maxHp, enemy);
@@ -1971,10 +2173,12 @@ export async function playTrailMatch({
         log('A big one got away.');
       }
       const phase = PHASES[phaseIndex()];
-      eliminateOthers(randInt(...phase.elims));
+      eliminateOthers(randInt(...phase.elims) * (S.overrides.fasterStorm ? 2 : 1));
       stormShrinkCheck();
       stormTick();
       await removeEliminated();
+      overdriveHeal();
+      tickFortress();
       afkTick();
       S.turn += 1;
       if (!Object.keys(S.squad).length) return;
@@ -2030,8 +2234,50 @@ export async function playTrailMatch({
     return true;
   };
 
+  const activateOverride = (id) => {
+    if (S.overrides[id]) return false;
+    S.overrides[id] = true;
+    if (id === 'bigHead') {
+      log(
+        'Override Activated: Big Head mode. Enemies take double damage, and your squad takes double damage too.',
+      );
+    } else if (id === 'healing') {
+      log(
+        'Override Activated: Healing Overdrive. Your squad is fully healed, but every enemy now has double health. Everyone gains 30 HP and 30 shield each round.',
+      );
+      for (const member of Object.values(S.squad)) {
+        member.hp = member.maxHp;
+        member.shield = 100;
+      }
+      for (const squad of lobby) {
+        if (Number.isFinite(squad.woundedMaxHp)) {
+          squad.woundedHp = Math.floor(squad.woundedHp * 2);
+          squad.woundedMaxHp = Math.floor(squad.woundedMaxHp * 2);
+        }
+      }
+      emitSquad();
+    } else if (id === 'fasterStorm') {
+      log(
+        'Override Activated: Faster Storm. Players drop faster, the storm is more likely to catch you on the edge or inside it, and more deaths are in the storm.',
+      );
+    } else if (id === 'bigBoom') {
+      log(
+        'Override Activated: Big Boom. Fall damage is doubled, but explosions have a high chance to eliminate an enemy player.',
+      );
+    }
+    return true;
+  };
+
+  const rollOverride = () => {
+    if (Object.values(S.overrides).some(Boolean)) return false;
+    if (rand() >= OVERRIDE_EVENT_CHANCE) return false;
+    const options = ['bigHead', 'healing', 'fasterStorm', 'bigBoom'];
+    return activateOverride(pick(options));
+  };
+
   const randomEvent = async () => {
     if (rivalsLeft() <= 0) return;
+    if (rollOverride()) return;
     if (eventUnlocks.has('legendarySupplyDrop') && rand() < 0.08) {
       await eventLegendarySupplyDrop();
       return;
@@ -2110,6 +2356,10 @@ export async function playTrailMatch({
 
   const restStormRisk = () => {
     if (S.stormDistance === 1 && rand() < chance(REST_STORM)) {
+      if (has('Stick of Truth')) {
+        log('The Storm rolls in while you rest, but the Stick of Truth keeps you in the zone.');
+        return;
+      }
       S.stormDistance = 2;
       S.campfireTurns = 0;
       log('The Storm rolled in while you rested! Any fire goes out.');
@@ -2136,6 +2386,14 @@ export async function playTrailMatch({
       useItem(pickItem);
       log('Chug Splash! +20 HP to everyone still standing.');
       splashSquad();
+      return true;
+    }
+    if (pickItem === 'Shield Keg') {
+      useItem(pickItem);
+      S.kegTurns = 2;
+      log(
+        'You tap a Shield Keg. It takes 2 turns to finish. The Storm keeps moving, and someone might crash it.',
+      );
       return true;
     }
     const target = await chooseMember(`Who should use the ${pickItem}?`);
@@ -2235,7 +2493,9 @@ export async function playTrailMatch({
       log(`You move carefully along the trees. Now: ${STATUS[S.stormDistance]}`);
       log('The cover keeps other squads from spotting you.');
       const dmg = Math.floor(S.stormDamage[0] * STORM_DAMAGE_MULT);
-      if (dmg > 0) {
+      if (dmg > 0 && S.fortressTurns > 0) {
+        log(`The Port-a-Fortress blocks the Storm on the long way. (${S.fortressTurns} turn(s) left)`);
+      } else if (dmg > 0) {
         log(`The Storm still rolls over the long way. -${dmg} HP to everyone (shields don't help)`);
         for (const m of Object.keys(S.squad)) stormHit(m, dmg);
         await removeEliminated();
@@ -2255,8 +2515,22 @@ export async function playTrailMatch({
     while (S.nextShrinks.length && S.playersLeft <= S.nextShrinks[0]) {
       const threshold = S.nextShrinks.shift();
       S.stormDamage = STORM_SCHEDULE[threshold];
-      S.stormDistance = Math.min(3, S.stormDistance + 1);
-      log(`>>> THE STORM IS SHRINKING! You are now: ${STATUS[S.stormDistance]}`);
+      if (has('Stick of Truth')) {
+        log(
+          '>>> THE STORM IS SHRINKING! The Stick of Truth pulls it in around you. You stay in the zone.',
+        );
+      } else {
+        S.stormDistance = Math.min(3, S.stormDistance + 1);
+        log(`>>> THE STORM IS SHRINKING! You are now: ${STATUS[S.stormDistance]}`);
+      }
+    }
+    if (S.overrides.fasterStorm && S.stormDistance < 3 && rand() < FASTER_STORM_PUSH_CHANCE) {
+      if (has('Stick of Truth')) {
+        log('The storm tries to surge, but the Stick of Truth keeps you in the zone.');
+      } else {
+        S.stormDistance += 1;
+        log(`The storm is closing faster. You are now: ${STATUS[S.stormDistance]}`);
+      }
     }
   };
 
@@ -2267,10 +2541,14 @@ export async function playTrailMatch({
       S.stormDistance = 0;
       log('You use a Rift-To-Go and land safely inside the zone!');
     } else {
-      const base = S.stormDistance === 2 ? S.stormDamage[0] : S.stormDamage[1];
-      const dmg = Math.floor(base * S.stormMult * STORM_DAMAGE_MULT);
-      log(`Storm damage! -${dmg} HP to everyone (shields don't help)`);
-      for (const m of Object.keys(S.squad)) stormHit(m, dmg);
+      if (S.fortressTurns > 0) {
+        log(`The Port-a-Fortress blocks the Storm. (${S.fortressTurns} turn(s) left)`);
+      } else {
+        const base = S.stormDistance === 2 ? S.stormDamage[0] : S.stormDamage[1];
+        const dmg = Math.floor(base * S.stormMult * STORM_DAMAGE_MULT);
+        log(`Storm damage! -${dmg} HP to everyone (shields don't help)`);
+        for (const m of Object.keys(S.squad)) stormHit(m, dmg);
+      }
     }
     S.stormMult = 1;
   };
@@ -2338,6 +2616,24 @@ export async function playTrailMatch({
         log('The vault finally opens! Guaranteed rare loot.');
         grantLoot('sweats');
       }
+    } else if (S.kegTurns > 0) {
+      S.kegTurns -= 1;
+      if (!has('Stick of Truth') && S.stormDistance < 3 && rand() < 0.4) {
+        S.stormDistance += 1;
+        log(`The Storm catches up while the Shield Keg pours. Now: ${STATUS[S.stormDistance]}`);
+      }
+      const midway = S.kegTurns > 0;
+      if (midway && rivalsLeft() > 0 && rand() < 0.5) {
+        log('Halfway through the Shield Keg, someone ambushes you! It only gets out +50 shield.');
+        grantSquadShield(50, 'Shield Keg');
+        S.kegTurns = 0;
+        await playerEncounter(1);
+      } else if (midway) {
+        log('The Shield Keg is still pouring... (1 turn left). The Storm keeps moving.');
+      } else if (squadAlive()) {
+        log('The Shield Keg finishes! +100 shield for everyone.');
+        grantSquadShield(100, 'Shield Keg');
+      }
     } else {
       const pickOpt = await choose(['Fight', 'Loot', 'Rest', 'Rotate']);
       if (pickOpt === 'Fight') await actionFight();
@@ -2370,15 +2666,19 @@ export async function playTrailMatch({
       await removeEliminated();
     }
     if (squadAlive() && rivalsLeft() > 0) {
-      eliminateOthers(elims);
+      eliminateOthers(elims * (S.overrides.fasterStorm ? 2 : 1));
       stormShrinkCheck();
       stormTick();
       await removeEliminated();
+      overdriveHeal();
+      tickFortress();
       afkTick();
     } else if (squadAlive()) {
       stormShrinkCheck();
       stormTick();
       await removeEliminated();
+      overdriveHeal();
+      tickFortress();
       afkTick();
     }
     if (shouldWin()) {

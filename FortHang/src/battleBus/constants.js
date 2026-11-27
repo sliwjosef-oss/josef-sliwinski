@@ -54,6 +54,9 @@ export const DAMAGE_ITEMS = {
   'Rocket Launcher': [60, 100],
 };
 
+/** Flat hit. Also drops every squad member except one, who is left at 1 HP. */
+export const BUG_BOMB_DAMAGE = 1000;
+
 export const CHASE = {
   Bots: [0.6, 0.1, [5, 15]],
   'Normal players': [0.4, 0.25, [15, 35]],
@@ -199,6 +202,7 @@ export const BOSS_ITEMS = {
   'Business Turret': { uses: 1, turret: 3, rarity: 'Epic', text: 'deployed a' },
   Jetpack: { uses: 3, escape: 'Fly away', rarity: 'Epic', text: 'used the' },
   'Port-a-Fort': { uses: 1, cover: 3, rarity: 'Epic', text: 'threw a' },
+  'Port-a-Fortress': { uses: 1, protectTurns: 5, rarity: 'Legendary', text: 'threw a' },
   'Port-a-Bunker': { uses: 1, cover: 2, rarity: 'Uncommon', text: 'threw a' },
 };
 
@@ -263,6 +267,14 @@ export const STATUS = {
 };
 
 export const SQUAD_EVENT_CHANCE = 0.08;
+/** Chance a random event is an Override. Only one Override can happen per run. */
+export const OVERRIDE_EVENT_CHANCE = 0.4;
+/** Each turn while Faster Storm is on, chance to step further out of zone. */
+export const FASTER_STORM_PUSH_CHANCE = 0.45;
+/** Off-screen deaths that read as dying in the storm while Faster Storm is on. Normally 20%. */
+export const FASTER_STORM_DEATH_CHANCE = 0.65;
+/** While Big Boom is on, chance an explosion eliminates an enemy player. */
+export const BIG_BOOM_KILL_CHANCE = 0.75;
 export const AFK_TURNS = [2, 4];
 export const FALL_DAMAGE = [10, 30];
 export const AFK_REASONS = [
@@ -317,6 +329,11 @@ export const DEATH_BLURBS = {
   fall: [
     "{name} forgot he wasn't on a launch pad.",
     "{name} jumped off the tower to look cool. It didn't go well.",
+  ],
+  buggy: [
+    '{name} did not get clear of the Buggy Bomb.',
+    '{name} was still too close when the Buggy Bomb went off.',
+    'The Buggy Bomb did not pick favorites. {name} is gone.',
   ],
   oregon: [
     '{name} has died of dysentery. Nobody knows how.',
