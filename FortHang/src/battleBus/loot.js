@@ -69,6 +69,21 @@ export function itemRarity(name) {
   return LOOT_ITEMS[name]?.rarity || 'Common';
 }
 
+/** One random item of a rarity that can actually drop. Shop items stay locked until unlocked. */
+export function rollItemByRarity(rarity, { unlocked = new Set(), rand = Math.random } = {}) {
+  const options = Object.entries(LOOT_ITEMS)
+    .filter(([name, item]) => {
+      if (item.rarity !== rarity) return false;
+      if (!item.pools.includes('loot') && !item.pools.includes('boss')) return false;
+      if (item.shop && !unlocked.has(name)) return false;
+      if (name === 'Buggy Bomb' && !hasAchievement('bet-from-losers')) return false;
+      return true;
+    })
+    .map(([name]) => name);
+  if (!options.length) return null;
+  return options[Math.floor(rand() * options.length)];
+}
+
 function weighted(entries, rand) {
   const total = entries.reduce((sum, [, weight]) => sum + weight, 0);
   if (total <= 0) return null;

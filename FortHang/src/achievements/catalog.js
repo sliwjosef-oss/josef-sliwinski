@@ -14,6 +14,8 @@ export const ACHIEVEMENT_SIDEKICK_NAMES = [
   'Mothman Jr.',
   'Tails',
   'The Knight',
+  'D0GB0T',
+  'Towelie',
 ];
 
 const sidekickNames = new Set(ACHIEVEMENT_SIDEKICK_NAMES.map((name) => name.trim().toLowerCase()));
@@ -124,7 +126,7 @@ export const ACHIEVEMENTS = [
   {
     id: 'trail-infinity',
     group: 'Battle Bus Trail',
-    name: 'Obtain an Infinity Blade',
+    name: 'Obtain an Infinity Blade in a Trail run',
     rewardText: '(new sidekick unlocked: Dart Monkey)',
     reward: { type: 'sidekick', name: 'Dart Monkey' },
     kind: 'flag',
@@ -318,5 +320,32 @@ export const ACHIEVEMENTS = [
     reward: { type: 'cap', cap: 80 },
     target: 50,
     kind: 'shop',
+  },
+  {
+    id: 'sidekicks-5',
+    group: 'Sidekicks',
+    name: 'Collect 5 sidekicks',
+    rewardText: '(new sidekick unlocked: D0GB0T)',
+    reward: { type: 'sidekick', name: 'D0GB0T' },
+    target: 5,
+    kind: 'sidekicks',
+  },
+  {
+    id: 'sidekicks-20',
+    group: 'Sidekicks',
+    name: 'Collect 20 sidekicks',
+    rewardText: '(new sidekick unlocked: Towelie)',
+    reward: { type: 'sidekick', name: 'Towelie' },
+    target: 20,
+    kind: 'sidekicks',
+  },
+  {
+    id: 'sidekicks-50',
+    group: 'Sidekicks',
+    name: 'Collect 50 sidekicks',
+    rewardText: '(sidekicks can enter Betting, and they show up as Trail bots)',
+    reward: { type: 'unlock' },
+    target: 50,
+    kind: 'sidekicks',
   },
 ];

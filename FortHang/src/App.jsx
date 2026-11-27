@@ -296,6 +296,7 @@ function App() {
         <FortSort
           outfits={outfits}
           guessedSkinIds={guessedSkinIds}
+          sidekicks={sidekicks}
           economy={economy}
           onEconomyChange={setEconomy}
           skinLevels={skinLevels}

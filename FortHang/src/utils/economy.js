@@ -641,12 +641,10 @@ export const RARE_SIDEKICK_NAMES = new Set([
   'Morgana (P5R)',
   'PAC-MAN',
   'Rush (Mega Man)',
-  'Spyro the Dragon',
+  'Super Meat Boy',
   'Tails',
   'Patrick Star',
-  'SpongeBob SquarePants',
   'Ace the Bat-Hound',
-  'Krypto',
   'BDX Droid',
   'Aisha',
   'Dart Monkey',
@@ -656,14 +654,16 @@ export const RARE_SIDEKICK_NAMES = new Set([
   'Rigby',
   'Peppermint Butler',
   'Toy Story Alien',
-  'Super Meat Boy',
   'Dante',
   'Snowball',
+  'Mr. PB',
 ]);
 
 /** Ultra rare sidekicks (1% roll tier). */
 export const ULTRA_RARE_SIDEKICK_NAMES = new Set([
   'SpongeBob SquarePants',
+  'Spyro the Dragon',
+  'Krypto',
   'PAC-MAN',
   'The Knight',
 ]);
@@ -673,6 +673,19 @@ export function getSidekickRarity(sidekick) {
   if (ULTRA_RARE_SIDEKICK_NAMES.has(sidekick.name)) return 'ultra';
   if (RARE_SIDEKICK_NAMES.has(sidekick.name)) return 'rare';
   return 'common';
+}
+
+/** Outfit-shaped entry so a sidekick can share a bracket or a bot slot with skins. */
+export function sidekickAsEntrant(sidekick) {
+  const rarity = getSidekickRarity(sidekick);
+  return {
+    id: sidekick.id,
+    name: sidekick.name,
+    icon: sidekick.icon,
+    number: sidekick.number,
+    sidekick: true,
+    sidekickRarity: rarity,
+  };
 }
 
 const CST = 'America/Chicago';
@@ -1356,8 +1369,14 @@ function pickFromPool(pool) {
 function rollOneSidekick(sidekicks) {
   const rollable = sidekicks.filter((sidekick) => !isAchievementSidekickName(sidekick.name));
   const ultraPool = rollable.filter((sidekick) => ULTRA_RARE_SIDEKICK_NAMES.has(sidekick.name));
-  const rarePool = rollable.filter((sidekick) => RARE_SIDEKICK_NAMES.has(sidekick.name));
-  const commonPool = rollable.filter((sidekick) => !RARE_SIDEKICK_NAMES.has(sidekick.name));
+  const rarePool = rollable.filter(
+    (sidekick) =>
+      RARE_SIDEKICK_NAMES.has(sidekick.name) && !ULTRA_RARE_SIDEKICK_NAMES.has(sidekick.name),
+  );
+  const commonPool = rollable.filter(
+    (sidekick) =>
+      !RARE_SIDEKICK_NAMES.has(sidekick.name) && !ULTRA_RARE_SIDEKICK_NAMES.has(sidekick.name),
+  );
 
   const roll = Math.random();
   let rarity = 'common';

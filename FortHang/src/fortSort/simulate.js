@@ -42,6 +42,11 @@ const FOUR_DICE_SERIES = new Set(['tv-legends', 'wwe-legends', 'anime-legends', 
 
 export function getBaseDiceCount(outfit) {
   if (!outfit) return 1;
+  if (outfit.sidekick) {
+    if (outfit.sidekickRarity === 'ultra') return 5;
+    if (outfit.sidekickRarity === 'rare') return 4;
+    return 2;
+  }
   if (FIVE_STAR_NAMES.has(outfit.name)) return 5;
   if (THREE_STAR_NAMES.has(outfit.name)) return 3;
   const series = getCatalogueSeriesKey(outfit);

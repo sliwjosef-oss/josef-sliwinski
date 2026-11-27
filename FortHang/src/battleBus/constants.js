@@ -276,7 +276,8 @@ export const FASTER_STORM_DEATH_CHANCE = 0.65;
 /** While Big Boom is on, chance an explosion eliminates an enemy player. */
 export const BIG_BOOM_KILL_CHANCE = 0.75;
 export const AFK_TURNS = [2, 4];
-export const FALL_DAMAGE = [10, 30];
+/** Inclusive. Enough to eliminate a squad member who is already at 60 HP or below. */
+export const FALL_DAMAGE = [10, 60];
 export const AFK_REASONS = [
   'had to go eat dinner',
   'got called away by their mom',

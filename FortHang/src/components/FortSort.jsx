@@ -64,6 +64,7 @@ import {
   hasRandomSelectUnlock,
   hasSimulateAllUnlock,
   hasSuperBetExtraLifeUnlock,
+  sidekickAsEntrant,
   getDiceRollMs,
   lockBetSkins,
   spendBettingRun,
@@ -406,7 +407,17 @@ function SkinCard({ outfit, onPick, placeLabel, showDice = false, bonusDice = 0,
       {showDice && !compact ? <DiceBadge outfit={outfit} bonus={bonusDice} /> : null}
       {compact ? null : (
         <p className="skin-meta">
-          {outfit.chapter && outfit.season ? `Chapter ${outfit.chapter} · Season ${outfit.season}` : ''}
+          {outfit.sidekick
+            ? `Sidekick · ${
+                outfit.sidekickRarity === 'ultra'
+                  ? 'Ultra rare'
+                  : outfit.sidekickRarity === 'rare'
+                    ? 'Rare'
+                    : 'Common'
+              }`
+            : outfit.chapter && outfit.season
+              ? `Chapter ${outfit.chapter} · Season ${outfit.season}`
+              : ''}
         </p>
       )}
     </>
@@ -837,12 +848,15 @@ function SelectScreen({
   const startLabel = (() => {
     if (mode === 'rank') return `Start ranking ${selectedIds.length} skins`;
     if (mode === 'simulate') return `Simulate bracket with ${selectedIds.length} skins`;
+    const fieldLabel = discovered.some((outfit) => outfit.sidekick)
+      ? `${discovered.length} entrants`
+      : `${discovered.length} skins`;
     if (isHard) {
       const rivals = starBetIds.length;
-      return `Start hard mode (${discovered.length} skins · ${starBetIds.length} super · ${boostBetIds.length} bets · ${rivals} rival${rivals === 1 ? '' : 's'})`;
+      return `Start hard mode (${fieldLabel} · ${starBetIds.length} super · ${boostBetIds.length} bets · ${rivals} rival${rivals === 1 ? '' : 's'})`;
     }
     if (mode === 'betting') {
-      return `Start betting sim (${discovered.length} skins · ${starBetIds.length} super · ${boostBetIds.length} bets)`;
+      return `Start betting sim (${fieldLabel} · ${starBetIds.length} super · ${boostBetIds.length} bets)`;
     }
     return `Start bracket with ${selectedIds.length} skins`;
   })();
@@ -884,7 +898,11 @@ function SelectScreen({
           <SkinIcon outfit={outfit} className="catalogue-image" />
         </div>
         <p className="catalogue-name">{owned ? outfit.name : '???'}</p>
-        {owned ? <p className="skin-level-badge">{isBetting ? `Lvl. ${level}` : level}</p> : null}
+        {owned ? (
+          <p className="skin-level-badge">
+            {outfit.sidekick ? 'Sidekick' : isBetting ? `Lvl. ${level}` : level}
+          </p>
+        ) : null}
         {owned && (mode === 'simulate' || isBetting) ? (
           <DiceBadge outfit={outfit} bonus={bonus} rowSize={isBetting ? 6 : 0} />
         ) : null}
@@ -944,9 +962,17 @@ function SelectScreen({
             : mode === 'simulate'
               ? 'Pick discovered skins for a dice-simulated double-elim bracket.'
               : isHard
-                ? 'Every discovered skin enters. Other skins roll 2 extra dice. One rival is chosen per super bet, with 4 extra dice and a floor of 10. Round payouts are ×2, or ×5 when your bet beats a rival.'
+                ? `${
+                    discovered.some((outfit) => outfit.sidekick)
+                      ? 'Every discovered skin enters, plus your owned sidekicks.'
+                      : 'Every discovered skin enters.'
+                  } Other skins roll 2 extra dice. One rival is chosen per super bet, with 4 extra dice and a floor of 10. Round payouts are ×2, or ×5 when your bet beats a rival.`
                 : mode === 'betting'
-                  ? 'Every discovered skin enters. Pick your super bet and your bets, then start.'
+                  ? `${
+                      discovered.some((outfit) => outfit.sidekick)
+                        ? 'Every discovered skin enters, plus your owned sidekicks.'
+                        : 'Every discovered skin enters.'
+                    } Pick your super bet and your bets, then start.`
                   : 'Pick discovered skins, then run a double-elimination bracket.'}{' '}
           {isBetting ? 'Rules are in Help.' : 'Only discovered skins can enter.'}
         </p>
@@ -1099,18 +1125,34 @@ function SelectScreen({
 export default function FortSort({
   outfits,
   guessedSkinIds,
+  sidekicks = [],
   economy,
   onEconomyChange,
   skinLevels = {},
   onSkinLevelsChange,
   onBack,
 }) {
-  const outfitsById = useMemo(() => new Map(outfits.map((outfit) => [outfit.id, outfit])), [outfits]);
+  const sidekickBetting = hasAchievement('sidekicks-50');
+  const sidekickField = useMemo(() => {
+    if (!sidekickBetting) return [];
+    const owned = new Set(economy.ownedSidekickIds || []);
+    return sidekicks.filter((sidekick) => owned.has(sidekick.id)).map(sidekickAsEntrant);
+  }, [sidekickBetting, sidekicks, economy.ownedSidekickIds]);
+  const outfitsById = useMemo(() => {
+    const map = new Map(outfits.map((outfit) => [outfit.id, outfit]));
+    for (const pet of sidekickField) map.set(pet.id, pet);
+    return map;
+  }, [outfits, sidekickField]);
   const discovered = useMemo(
     () => sortOutfitsByNumber(outfits.filter((outfit) => isSkinGuessed(guessedSkinIds, outfit))),
     [outfits, guessedSkinIds],
   );
   const discoveredIds = useMemo(() => new Set(discovered.map((outfit) => outfit.id)), [discovered]);
+  const bettingField = useMemo(() => [...discovered, ...sidekickField], [discovered, sidekickField]);
+  const bettingFieldIds = useMemo(
+    () => new Set(bettingField.map((outfit) => outfit.id)),
+    [bettingField],
+  );
   const lockedBetIds = useMemo(() => getLockedBetIds(economy), [economy]);
 
   const [mode, setMode] = useState('betting');
@@ -1178,19 +1220,19 @@ export default function FortSort({
       return next;
     });
     setStarBetIds((current) =>
-      current.filter((id) => discoveredIds.has(id) && !lockedBetIds.has(id)).slice(0, maxStarBets),
+      current.filter((id) => bettingFieldIds.has(id) && !lockedBetIds.has(id)).slice(0, maxStarBets),
     );
     setBoostBetIds((current) =>
-      current.filter((id) => discoveredIds.has(id) && !lockedBetIds.has(id)).slice(0, maxBoostBets),
+      current.filter((id) => bettingFieldIds.has(id) && !lockedBetIds.has(id)).slice(0, maxBoostBets),
     );
-  }, [discoveredIds, lockedBetIds, maxStarBets, maxBoostBets]);
+  }, [discoveredIds, bettingFieldIds, lockedBetIds, maxStarBets, maxBoostBets]);
 
   useEffect(() => {
     saveSortMode(mode);
     if (isBettingMode(mode)) {
-      setSelectedIds(discovered.map((outfit) => outfit.id));
+      setSelectedIds(bettingField.map((outfit) => outfit.id));
     }
-  }, [mode, discovered]);
+  }, [mode, bettingField]);
 
   useEffect(() => {
     if (!isBettingMode(mode)) saveSelectedIds(selectedIds);
@@ -1214,7 +1256,7 @@ export default function FortSort({
     }
     const savedSim = loadSimBracketProgress();
     const resumeSim =
-      savedSim?.entrants.every((id) => discoveredIds.has(id)) &&
+      savedSim?.entrants.every((id) => discoveredIds.has(id) || bettingFieldIds.has(id)) &&
       ((isBettingMode(mode) && savedSim.betting) || (mode === 'simulate' && !savedSim.betting));
     if (resumeSim) {
       if (savedSim.hardMode) setMode('hard');
@@ -1339,15 +1381,15 @@ export default function FortSort({
       saveRankProgress(progress);
       setTournament(null);
     } else if (isBettingMode(mode)) {
-      const entrants = discovered.map((outfit) => outfit.id);
+      const entrants = bettingField.map((outfit) => outfit.id);
       if (entrants.length < 2) return;
       if (!canStartBettingRun(economy)) {
         setStatus('No betting runs left today.');
         return;
       }
-      const stars = starBetIds.filter((id) => discoveredIds.has(id) && !lockedBetIds.has(id));
+      const stars = starBetIds.filter((id) => bettingFieldIds.has(id) && !lockedBetIds.has(id));
       const boosts = boostBetIds.filter(
-        (id) => discoveredIds.has(id) && !lockedBetIds.has(id) && !stars.includes(id),
+        (id) => bettingFieldIds.has(id) && !lockedBetIds.has(id) && !stars.includes(id),
       );
       if (stars.length + boosts.length === 0) return;
       const spent = spendBettingRun(economy);
@@ -1496,11 +1538,13 @@ export default function FortSort({
       }
       if (!wasDone && nextState.done && !xpAwarded) {
         const finalStandings = computeStandings(run.bracket, nextState.outcomes, nextState);
-        const awards = [...betIdSet].map((id) => ({
-          id,
-          place: finalStandings.placeById.get(id) ?? 999,
-          superBet: superBetIdSet.has(id),
-        }));
+        const awards = [...betIdSet]
+          .filter((id) => !outfitsById.get(id)?.sidekick)
+          .map((id) => ({
+            id,
+            place: finalStandings.placeById.get(id) ?? 999,
+            superBet: superBetIdSet.has(id),
+          }));
         const xpResult = awardPlacementXp(levelState, awards);
         onSkinLevelsChange?.(xpResult.levels);
         const totalXp = xpResult.gained.reduce((sum, entry) => sum + entry.amount, 0);
@@ -1604,6 +1648,7 @@ export default function FortSort({
           const stars = new Set(tournament.starBetIds ?? []);
           const nextLevels = { ...skinLevels };
           for (const id of betIdSet) {
+            if (outfitsById.get(id)?.sidekick) continue;
             const place = standings.placeById.get(id);
             if (place == null) continue;
             const amount = placementXp(place, stars.has(id));
@@ -2114,9 +2159,9 @@ export default function FortSort({
   if (screen === 'select') {
     return (
       <SelectScreen
-        discovered={discovered}
+        discovered={isBettingMode(mode) ? bettingField : discovered}
         catalogue={outfits}
-        discoveredIds={discoveredIds}
+        discoveredIds={isBettingMode(mode) ? bettingFieldIds : discoveredIds}
         selectedIds={selectedIds}
         setSelectedIds={setSelectedIds}
         mode={mode}

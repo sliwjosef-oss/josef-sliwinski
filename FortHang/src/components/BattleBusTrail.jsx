@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { START_PLAYERS, STATUS } from '../battleBus/constants';
 import { playTrailMatch } from '../battleBus/engine';
 import { noteTrailResult } from '../utils/achievements';
+import { hasAchievement } from '../utils/achievementStore';
 import {
   TRAIL_FALLEN_XP,
   TRAIL_SURVIVOR_XP,
@@ -13,7 +14,9 @@ import {
   getTrailStormResist,
   getTrailUnlockedBossItems,
   getTrailUnlockedEvents,
+  getSidekickRarity,
   hasTrailForFun,
+  sidekickAsEntrant,
   lockTrailSidekick,
   lockTrailSkins,
   settleTrailPayout,
@@ -466,6 +469,15 @@ export default function BattleBusTrail({
     }
     return sidekicks.filter((sidekick) => counts.has(sidekick.id));
   }, [sidekicks, economy.ownedSidekickIds]);
+  const sidekickSquadsUnlocked = hasAchievement('sidekicks-50');
+  const knowsId = (id) =>
+    guessedSkinIds.includes(id) ||
+    (sidekickSquadsUnlocked && (economy.ownedSidekickIds || []).includes(id));
+  const encounterKnownIds = useMemo(() => {
+    const ids = [...guessedSkinIds];
+    if (sidekickSquadsUnlocked) ids.push(...(economy.ownedSidekickIds || []));
+    return ids;
+  }, [guessedSkinIds, economy.ownedSidekickIds, sidekickSquadsUnlocked]);
 
   const [screen, setScreen] = useState('select'); // select | forFunSelect | play | result
   const [forFunMode, setForFunMode] = useState(false);
@@ -815,6 +827,15 @@ export default function BattleBusTrail({
         partyNames: party.map((outfit) => outfit.name),
         sidekickName: sidekick?.name || null,
         sidekickOutfit: sidekick || null,
+        sidekickRarity: sidekick ? getSidekickRarity(sidekick) : 'common',
+        botOutfits: hasAchievement('sidekicks-50')
+          ? sidekicks
+              .map(sidekickAsEntrant)
+              .filter(
+                (outfit) => outfit.sidekickRarity === 'rare' || outfit.sidekickRarity === 'ultra',
+              )
+          : [],
+        ownedSidekickIds: hasAchievement('sidekicks-50') ? economy.ownedSidekickIds || [] : [],
         // Full catalogue for encounter art — not limited to discovered/owned skins.
         outfits,
         discoveredSkinIds: guessedSkinIds,
@@ -1068,7 +1089,7 @@ export default function BattleBusTrail({
           </div>
           <SquadStatusBar members={headerMembers} />
         </header>
-        <EventVisualPanel visual={eventVisual} discoveredIds={guessedSkinIds} />
+        <EventVisualPanel visual={eventVisual} discoveredIds={encounterKnownIds} />
         {fieldMenu ? (
           <div className="trail-field-menu" role="dialog" aria-label="Pack">
             <div className="trail-field-tabs">
@@ -1124,8 +1145,7 @@ export default function BattleBusTrail({
                     <ul>
                       {codex.party.map((member) => {
                         const survived = result?.won && result.survivors?.includes(member.name);
-                        const killerKnown =
-                          member.killerId && guessedSkinIds.includes(member.killerId);
+                        const killerKnown = member.killerId && knowsId(member.killerId);
                         let fate = 'Alive';
                         if (!member.alive) {
                           if (member.cause === 'the Storm') fate = 'eliminated by the Storm';
@@ -1186,9 +1206,8 @@ export default function BattleBusTrail({
                       </h3>
                       <ul>
                         {members.map((member) => {
-                          const known = guessedSkinIds.includes(member.id);
-                          const killerKnown =
-                            member.death?.killerId && guessedSkinIds.includes(member.death.killerId);
+                          const known = knowsId(member.id);
+                          const killerKnown = member.death?.killerId && knowsId(member.death.killerId);
                           let fate = '';
                           if (!member.alive) {
                             if (member.death?.kind === 'fall') fate = 'died in the storm';

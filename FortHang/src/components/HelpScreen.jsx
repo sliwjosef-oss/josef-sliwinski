@@ -84,9 +84,11 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
       <section id="help-sidekicks" className="help-section">
         <h2>Collecting sidekicks</h2>
         <p>
-          Unlock sidekicks in the Shop. Rolls can duplicate. Rare collabs are 10%; SpongeBob, PAC-MAN,
-          and The Knight are 1% ultra rare. Unowned sidekicks show as silhouettes. Rolls come in packs
-          of 1, 3, or 5, and the Sidekick Catalogue tracks unique kinds and total copies.
+          Unlock sidekicks in the Shop. Rolls can duplicate. Rare collabs are 10%; SpongeBob, Spyro,
+          and Krypto are 1% ultra rare. On Battle Bus Trail, a rare sidekick starts the match with a
+          random Epic item, and an ultra rare sidekick starts with a random Legendary item. Unowned
+          sidekicks show as silhouettes. Rolls come in packs of 1, 3, or 5, and the Sidekick
+          Catalogue tracks unique kinds and total copies.
         </p>
       </section>
 
@@ -192,6 +194,14 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           <li>
             <strong>5</strong> — star skins: {[...FIVE_STAR_NAMES].join(', ')}
           </li>
+          {hasAchievement('sidekicks-50') ? (
+            <li>
+              <strong>Sidekicks</strong> — owned sidekicks enter Betting with discovered skins. Common
+              sidekicks roll 2 dice, rare ones roll 4, and ultra rare ones roll 5. Rare and ultra rare
+              sidekicks also appear as Sidekick squads in Battle Bus Trail. Icons show either way, and
+              an unowned sidekick is labeled ???.
+            </li>
+          ) : null}
         </ul>
         <p>Finished tournaments can be saved and reopened from the Saved list.</p>
         <p>
@@ -249,10 +259,12 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
         <ul>
           <li>
             <strong>Squad</strong> — pick 4 discovered skins before you drop in. An owned sidekick
-            is optional. After a ranked run, that sidekick rests until the next 6:00 AM Central
+            is optional. A rare sidekick packs a random Epic item, and an ultra rare sidekick packs
+            a random Legendary item. After a ranked run, that sidekick rests until the next 6:00 AM Central
             reset, the same day boundary as hangman attempts. Squad skins lock until that same
             6:00 AM Central Time reset. The top row shows health (♥) and shield (🛡). The shield bar
-            hides at 0. Fallen members are crossed out.
+            hides at 0. Fallen members are crossed out. Between turns, a squad member can go
+            AFK or take fall damage. A hard fall can eliminate them.
           </li>
           <li>
             <strong>Enemy type</strong> — you can see who showed up, but not whether they are bots,
@@ -271,7 +283,11 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             <strong>Event images</strong> — encounters show skin icons from Anime Legends, Anime
             Originals, Cartoon Legends, TV Legends, WWE Legends, Star Wars, Marvel, DC, Icon, Gaming
             Legends, Sports, Space Explorers, Peely, Food, Toys, Robots, Animals, Aliens, Midas
-            Family, Winterfest, and Fortnightmares pools. Those picks use the full catalogue —
+            Family, Winterfest, and Fortnightmares pools.
+            {hasAchievement('sidekicks-50')
+              ? ' Rare and ultra rare sidekicks can also appear together as Sidekick squads.'
+              : ''}{' '}
+            Those picks use the full catalogue —
             icons always show, but undiscovered skins are labeled ???. Solos show 1 skin, squads show
             up to 4. Bosses use a random collab skin. Loot drops show an item card (icons from
             fortnite.gg when available).

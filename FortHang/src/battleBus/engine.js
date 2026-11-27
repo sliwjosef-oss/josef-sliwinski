@@ -52,7 +52,7 @@ import {
   groupOutfitsBySeriesKey,
   pickOutfitsFromSeries,
 } from './visuals';
-import { itemRarity, LOOT_ITEMS, lootTableForEnemy, rollLootDrop } from './loot';
+import { itemRarity, LOOT_ITEMS, lootTableForEnemy, rollItemByRarity, rollLootDrop } from './loot';
 import {
   applySniperShot,
   BOOGIE_ROUNDS,
@@ -144,6 +144,9 @@ export async function playTrailMatch({
   unlockedEvents = [],
   discoveredSkinIds = [],
   forFun = false,
+  sidekickRarity = 'common',
+  botOutfits = [],
+  ownedSidekickIds = [],
   startingInventory = null,
   log,
   clearLog,
@@ -155,9 +158,11 @@ export async function playTrailMatch({
   const unlocked = new Set(unlockedBossItems);
   const eventUnlocks = new Set(unlockedEvents);
   const discoveredIds = new Set(discoveredSkinIds);
+  const ownedSidekicks = new Set(ownedSidekickIds);
   const isRanked = !forFun;
   const encounterLabel = (outfit, fallback = '???') => {
     if (!outfit) return fallback;
+    if (outfit.sidekick) return ownedSidekicks.has(outfit.id) ? outfit.name : '???';
     if (outfit.id && discoveredIds.has(outfit.id)) return outfit.name;
     return '???';
   };
@@ -191,6 +196,31 @@ export async function playTrailMatch({
     ],
     count: LOBBY_NPCS,
   });
+  if (botOutfits.length) {
+    const blocked = new Set(names);
+    const pets = botOutfits.filter(
+      (outfit) =>
+        outfit?.id &&
+        outfit?.name &&
+        !blocked.has(outfit.name) &&
+        (outfit.sidekickRarity === 'rare' || outfit.sidekickRarity === 'ultra'),
+    );
+    for (let i = pets.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(rand() * (i + 1));
+      [pets[i], pets[j]] = [pets[j], pets[i]];
+    }
+    let cursor = 0;
+    for (const squad of lobby) {
+      if (squad.type !== 'Bots') continue;
+      const size = squad.members.length;
+      if (cursor + size > pets.length) continue;
+      for (const member of squad.members) {
+        member.outfit = pets[cursor];
+        cursor += 1;
+      }
+      squad.theme = 'Sidekick squads';
+    }
+  }
   let lastEncounterOutfits = [];
   /** @type {{ squadId: number, members: Array<{ outfit: object, alive: boolean }> } | null} */
   let lastEncounterRef = null;
@@ -416,7 +446,7 @@ export async function playTrailMatch({
     });
   };
 
-  const give = (item) => {
+  const give = (item, { broughtBy = null } = {}) => {
     if (item === 'Kneecapper' && rand() < LEEKCAPPER_CHANCE) item = 'Leekcapper';
     if (MULTI_USE[item] && has(item)) {
       if (item === 'Infinity Blade') S.achievements.infinityBlade = true;
@@ -434,8 +464,13 @@ export async function playTrailMatch({
     S.inventory[item] = (S.inventory[item] || 0) + 1;
     if (item === 'Infinity Blade') S.achievements.infinityBlade = true;
     if (MULTI_USE[item]) S.itemUses[item] = MULTI_USE[item];
-    log(`* Found: ${item} (${rarityOf(item)})!`);
-    showFoundItem(item, `Found ${item}`);
+    if (broughtBy) {
+      log(`${broughtBy} brought a ${rarityOf(item)} ${item}.`);
+      showFoundItem(item, `Brought ${item}`);
+    } else {
+      log(`* Found: ${item} (${rarityOf(item)})!`);
+      showFoundItem(item, `Found ${item}`);
+    }
     if (item === 'Stick of Truth' && S.inventory[item] === 1) {
       S.stormDistance = 0;
       log(
@@ -1961,7 +1996,7 @@ export async function playTrailMatch({
         showMemberEvent(m, line);
       } else {
         S.lastHit[m] = 'fall damage';
-        S.squad[m].hp -= dmg;
+        S.squad[m].hp = Math.max(0, S.squad[m].hp - dmg);
         S.damage += Math.floor(dmg / 4);
         const line = `[SQUAD] ${m} ${pick(FALL_REASONS)} and took ${dmg} fall damage.`;
         log(line);
@@ -2580,6 +2615,11 @@ export async function playTrailMatch({
     if (mult > 1) log(`${name} deals ${formatDamageMult(mult)} damage (skin level).`);
   }
   log('You jump from the Battle Bus...');
+  const giftTier = sidekickRarity === 'ultra' ? 'Legendary' : sidekickRarity === 'rare' ? 'Epic' : null;
+  if (sidekick && giftTier) {
+    const gift = rollItemByRarity(giftTier, { unlocked, rand });
+    if (gift) give(gift, { broughtBy: sidekick });
+  }
   const typeTally = { Sweats: 0, 'Normal players': 0, Bots: 0 };
   for (const squad of lobby) {
     typeTally[squad.type] = (typeTally[squad.type] || 0) + 1;

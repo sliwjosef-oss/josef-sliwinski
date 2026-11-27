@@ -4,7 +4,14 @@ import {
   loadAchievementState,
   saveAchievementState,
 } from './achievementStore';
-import { addPoints, countPermanentShopUpgrades, grantSidekickById, loadEconomy, setDailyGuessBase } from './economy';
+import {
+  addPoints,
+  countOwnedSidekickKinds,
+  countPermanentShopUpgrades,
+  grantSidekickById,
+  loadEconomy,
+  setDailyGuessBase,
+} from './economy';
 
 const LEVEL_FIVE_XP = 1500;
 const SKIN_LEVEL_KEY = 'fort-hang-skin-levels-v1';
@@ -43,6 +50,7 @@ function measure(state, extra = {}) {
     totalSkins: state.totalSkins,
     levelFive: countLevelFive(),
     shopOwned: countPermanentShopUpgrades(loadEconomy()).owned,
+    sidekickKinds: countOwnedSidekickKinds(loadEconomy()),
     weebucks: state.weebucksEarned,
     trailRuns: state.trailRuns,
     bettingRuns: state.bettingRuns,
@@ -57,6 +65,7 @@ function currentFor(achievement, stats) {
   if (achievement.kind === 'levels') return stats.levelFive;
   if (achievement.kind === 'weebucks') return stats.weebucks;
   if (achievement.kind === 'shop') return stats.shopOwned;
+  if (achievement.kind === 'sidekicks') return stats.sidekickKinds;
   return stats.flags[achievement.flag] ? 1 : 0;
 }
 
@@ -193,10 +202,13 @@ export function noteBettingResult({
 } = {}, extra = {}) {
   const state = ensureState();
   for (const roll of rolls) {
-    const left = Number(roll?.sides?.[0]?.best);
-    const right = Number(roll?.sides?.[1]?.best);
-    if (!Number.isFinite(left) || !Number.isFinite(right) || Math.abs(left - right) !== 1) continue;
-    const winnerId = left > right ? roll.participants?.[0] : roll.participants?.[1];
+    const slot = Number(roll?.winnerSlot);
+    if (slot !== 0 && slot !== 1) continue;
+    const winnerBest = Number(roll?.sides?.[slot]?.best);
+    const loserBest = Number(roll?.sides?.[1 - slot]?.best);
+    if (!Number.isFinite(winnerBest) || !Number.isFinite(loserBest)) continue;
+    if (winnerBest - loserBest !== 1) continue;
+    const winnerId = roll?.participants?.[slot];
     if (betIds.has(winnerId)) state.flags.betOnePoint = true;
   }
   if (completed) {
