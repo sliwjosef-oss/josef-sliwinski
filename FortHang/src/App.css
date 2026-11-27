@@ -456,6 +456,15 @@
   box-shadow: 0 8px 20px rgba(88, 101, 242, 0.35);
 }
 
+.primary-button:disabled,
+.primary-button:disabled:hover {
+  background: #4b5568;
+  color: #c5c9d4;
+  cursor: default;
+  transform: none;
+  box-shadow: none;
+}
+
 .result-message {
   margin: 0;
   font-size: 1.1rem;

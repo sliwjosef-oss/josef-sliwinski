@@ -26,11 +26,12 @@ import {
   countDiscoveredSkins,
   featureUnlocks,
   isCollectionComplete,
+  newlyUnlockedModes,
   SHOP_SKIN_UNLOCK,
   MUSIC_SKIN_UNLOCK,
   TRAIL_SKIN_UNLOCK,
 } from '../utils/progress';
-import { setMenuMusicBlocked } from '../audio/menuMusic';
+import { bindPageAudio, releasePageAudio, setMenuMusicBlocked } from '../audio/menuMusic';
 import CollectionCompleteScreen, {
   COMPLETE_ALT,
   COMPLETE_IMAGE,
@@ -241,7 +242,7 @@ export default function HangmanGame({
   const playGrindMusic = useCallback(() => {
     let audio = musicRef.current;
     if (!audio) {
-      audio = new Audio(GRIND_MUSIC_URL);
+      audio = bindPageAudio(new Audio(GRIND_MUSIC_URL));
       audio.loop = true;
       audio.volume = 0.55;
       musicRef.current = audio;
@@ -253,7 +254,7 @@ export default function HangmanGame({
   const stopGrindMusic = useCallback(() => {
     const audio = musicRef.current;
     if (!audio) return;
-    audio.pause();
+    releasePageAudio(audio);
     audio.currentTime = 0;
   }, []);
 
@@ -275,7 +276,7 @@ export default function HangmanGame({
   useEffect(
     () => () => {
       setMenuMusicBlocked('hangman', false);
-      musicRef.current?.pause();
+      releasePageAudio(musicRef.current);
       musicRef.current = null;
     },
     []
@@ -332,11 +333,21 @@ export default function HangmanGame({
       setGuessedLetters(nextGuessed);
 
       if (isWordComplete(currentOutfit.name, nextGuessed)) {
+        const previousCount = countDiscoveredSkins(outfits, guessedSkinIds);
         onSkinWon(currentOutfit);
+        const nextCount = guessedSkinIds.includes(currentOutfit.id) ? previousCount : previousCount + 1;
+        const unlocked = newlyUnlockedModes(previousCount, nextCount);
+        if (unlocked.length) {
+          for (const mode of unlocked) {
+            window.alert(`Mode Unlocked: ${mode.name}`);
+          }
+          returnToMenu();
+          return;
+        }
         setGameState(GAME_STATES.WON);
       }
     },
-    [gameState, currentOutfit, guessedLetters, wrongGuesses, onSkinWon]
+    [gameState, currentOutfit, guessedLetters, wrongGuesses, onSkinWon, outfits, guessedSkinIds, returnToMenu]
   );
 
   useEffect(() => {
@@ -506,9 +517,9 @@ export default function HangmanGame({
               <button type="button" className="primary-button" onClick={startGame}>
                 Play Again
               </button>
-            ) : remainingOutfits.length > 0 && unlocks.shop ? (
-              <button type="button" className="primary-button" onClick={onOpenShop}>
-                Open Shop
+            ) : remainingOutfits.length > 0 ? (
+              <button type="button" className="primary-button" onClick={returnToMenu}>
+                Main Menu
               </button>
             ) : null}
           </div>
@@ -558,18 +569,9 @@ export default function HangmanGame({
                   Start Game
                 </button>
               ) : (
-                <>
-                  <p className="prompt">
-                    {unlocks.shop
-                      ? 'Buy more attempts in the Shop with weebucks. Wins and losses both use an attempt.'
-                      : `The Shop unlocks after ${SHOP_SKIN_UNLOCK} discovered skins (${discoveredCount}/${SHOP_SKIN_UNLOCK}).`}
-                  </p>
-                  {unlocks.shop ? (
-                    <button type="button" className="primary-button" onClick={onOpenShop}>
-                      Open Shop
-                    </button>
-                  ) : null}
-                </>
+                <button type="button" className="primary-button" disabled>
+                  Locked
+                </button>
               )}
               <p className="discovery-count">
                 Catalogue: {discoveredCount} / {outfits.length} skins discovered

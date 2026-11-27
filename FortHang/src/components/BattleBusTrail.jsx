@@ -33,7 +33,7 @@ import {
   sortOutfitsByLevel,
   xpProgress,
 } from '../utils/skinLevels';
-import { setMenuMusicBlocked } from '../audio/menuMusic';
+import { bindPageAudio, releasePageAudio, setMenuMusicBlocked } from '../audio/menuMusic';
 import '../fortSort/FortSort.css';
 
 const TRAIL_MUSIC_URL = `${import.meta.env.BASE_URL}audio/Steel_Saddle_Pursuit.mp3`;
@@ -532,7 +532,7 @@ export default function BattleBusTrail({
   const playTrailMusic = () => {
     let audio = musicRef.current;
     if (!audio) {
-      audio = new Audio(TRAIL_MUSIC_URL);
+      audio = bindPageAudio(new Audio(TRAIL_MUSIC_URL));
       audio.loop = true;
       audio.volume = 0.55;
       musicRef.current = audio;
@@ -544,7 +544,7 @@ export default function BattleBusTrail({
   const stopTrailMusic = () => {
     const audio = musicRef.current;
     if (!audio) return;
-    audio.pause();
+    releasePageAudio(audio);
     audio.currentTime = 0;
   };
 
@@ -561,7 +561,7 @@ export default function BattleBusTrail({
   useEffect(
     () => () => {
       setMenuMusicBlocked('trail', false);
-      musicRef.current?.pause();
+      releasePageAudio(musicRef.current);
       musicRef.current = null;
     },
     [],
@@ -738,7 +738,7 @@ export default function BattleBusTrail({
         return;
       }
       if (partyIds.some((id) => lockedIds.has(id))) {
-        window.alert('One of those skins is locked until Monday. Use For Fun, or pick other skins.');
+        window.alert('One of those skins is locked until 6:00 AM Central Time. Use For Fun, or pick other skins.');
         return;
       }
       if (sidekickId && lockedSidekickIds.has(sidekickId)) {

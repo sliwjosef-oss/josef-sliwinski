@@ -189,7 +189,7 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           otherwise. Levels permanently add dice (level 2: +1, level 4: +2, level 5: +3) and raise
           roll floors (level 1: no 1–5, level 3: no 1–10, level 5: no 1–20), even for non-bets.
           Base payout is {BET_WIN_POINTS} weebucks per bet win. Winning the tournament pays{' '}
-          {TOURNAMENT_WIN_POINTS} weebucks. Bets lock until Monday at midnight Central Time. Betting
+          {TOURNAMENT_WIN_POINTS} weebucks. Bets lock until 6:00 AM Central Time. Betting
           runs start at {BASE_DAILY_BET_RUNS} and can be raised in the Shop to {DAILY_BET_RUNS_TIER1},
           then {DAILY_BET_RUNS_TIER2}.
         </p>
@@ -208,7 +208,7 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             {TOURNAMENT_WIN_POINTS}).
           </li>
           <li>
-            <strong>Locks</strong> — skins you bet stay locked until Monday 00:00 Central Time.
+            <strong>Locks</strong> — skins you bet stay locked until 6:00 AM Central Time.
           </li>
           <li>
             <strong>Seeding</strong> — with the shop unlock, super bets take the top seeds, then bet
@@ -231,8 +231,8 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           <li>
             <strong>Squad</strong> — pick 4 discovered skins before you drop in. An owned sidekick
             is optional. After a ranked run, that sidekick rests until the next 6:00 AM Central
-            reset, the same day boundary as hangman attempts. Squad skins still lock until Monday
-            at midnight Central Time. The top row shows health (♥) and shield (🛡). The shield bar
+            reset, the same day boundary as hangman attempts. Squad skins lock until that same
+            6:00 AM Central Time reset. The top row shows health (♥) and shield (🛡). The shield bar
             hides at 0. Fallen members are crossed out.
           </li>
           <li>
@@ -243,7 +243,7 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           <li>
             <strong>Trail runs</strong> — {BASE_DAILY_TRAIL_RUNS} per day by default (shop can raise
             to {DAILY_TRAIL_RUNS_TIER1}, then {DAILY_TRAIL_RUNS_TIER2}). These are separate from
-            Betting runs. Ranked Drop in locks those skins until Monday at midnight Central Time.{" "}
+            Betting runs. Ranked Drop in locks those skins until 6:00 AM Central Time.{" "}
             <strong>For Fun</strong> is locked until you buy it in the Shop (5000 weebucks). It
             opens a separate squad select with no locks or Trail-run limit, and awards no weebucks
             or skin XP.

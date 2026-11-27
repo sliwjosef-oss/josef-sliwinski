@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { setMenuMusicBlocked } from '../audio/menuMusic';
+import { bindPageAudio, releasePageAudio, setMenuMusicBlocked } from '../audio/menuMusic';
 
 const BET_MUSIC_URL = `${import.meta.env.BASE_URL}audio/The_Final_Bracket.mp3`;
 import {
@@ -1037,7 +1037,7 @@ export default function FortSort({
   const playBetMusic = () => {
     let audio = musicRef.current;
     if (!audio) {
-      audio = new Audio(BET_MUSIC_URL);
+      audio = bindPageAudio(new Audio(BET_MUSIC_URL));
       audio.loop = true;
       audio.volume = 0.55;
       musicRef.current = audio;
@@ -1049,14 +1049,14 @@ export default function FortSort({
   const stopBetMusic = () => {
     const audio = musicRef.current;
     if (!audio) return;
-    audio.pause();
+    releasePageAudio(audio);
     audio.currentTime = 0;
   };
 
   useEffect(
     () => () => {
       setMenuMusicBlocked('betting', false);
-      musicRef.current?.pause();
+      releasePageAudio(musicRef.current);
       musicRef.current = null;
     },
     [],

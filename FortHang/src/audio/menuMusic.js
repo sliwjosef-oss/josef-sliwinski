@@ -126,9 +126,47 @@ function notify() {
   for (const listener of listeners) listener();
 }
 
+function isPageHidden() {
+  return document.visibilityState === 'hidden';
+}
+
+const pageAudios = new Set();
+
+/** Keep this audio quiet while FortHang is in a background tab, then resume it. */
+export function bindPageAudio(element) {
+  if (!element || element.__pageBound) return element;
+  element.__pageBound = true;
+  pageAudios.add(element);
+  const play = element.play.bind(element);
+  element.play = () => {
+    if (isPageHidden()) {
+      element.__resumeOnVisible = true;
+      return Promise.resolve();
+    }
+    const pending = play();
+    if (pending?.then) {
+      return pending.then((value) => {
+        if (isPageHidden()) {
+          element.pause();
+          element.__resumeOnVisible = true;
+        }
+        return value;
+      });
+    }
+    return pending;
+  };
+  return element;
+}
+
+export function releasePageAudio(element) {
+  if (!element) return;
+  element.__resumeOnVisible = false;
+  element.pause();
+}
+
 function ensureAudio() {
   if (!audio) {
-    audio = new Audio(trackUrl(trackId));
+    audio = bindPageAudio(new Audio(trackUrl(trackId)));
     audio.loop = true;
     audio.volume = 0.55;
   }
@@ -137,7 +175,7 @@ function ensureAudio() {
 
 function stopMenuAudio() {
   wantsPlayback = false;
-  audio?.pause();
+  releasePageAudio(audio);
 }
 
 export function getMenuTrackId() {
@@ -191,13 +229,17 @@ export function playMenuMusic() {
     return;
   }
   wantsPlayback = true;
+  if (isPageHidden()) return;
   const track = ensureAudio();
   const pending = track.play();
   if (!pending?.then) return;
   pending
     .then(() => {
-      if (!wantsPlayback || blocks.size > 0 || muted) {
+      if (!wantsPlayback || blocks.size > 0 || muted || isPageHidden()) {
         track.pause();
+        if (isPageHidden() && wantsPlayback && blocks.size === 0 && !muted) {
+          track.__resumeOnVisible = true;
+        }
         return;
       }
       retries = 0;
@@ -206,15 +248,28 @@ export function playMenuMusic() {
       if (!wantsPlayback || blocks.size > 0 || muted || retries >= MAX_RETRIES) return;
       retries += 1;
       window.setTimeout(() => {
-        if (wantsPlayback && blocks.size === 0 && !muted && audio?.paused) playMenuMusic();
+        if (wantsPlayback && blocks.size === 0 && !muted && !isPageHidden() && audio?.paused) playMenuMusic();
       }, 400);
     });
 }
 
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && wantsPlayback && blocks.size === 0 && !muted) {
-    playMenuMusic();
+  if (isPageHidden()) {
+    for (const element of pageAudios) {
+      if (!element.paused && !element.ended) {
+        element.pause();
+        element.__resumeOnVisible = true;
+      }
+    }
+    return;
   }
+  for (const element of pageAudios) {
+    if (!element.__resumeOnVisible) continue;
+    element.__resumeOnVisible = false;
+    const pending = element.play();
+    if (pending?.catch) pending.catch(() => {});
+  }
+  if (wantsPlayback && blocks.size === 0 && !muted) playMenuMusic();
 });
 
 /** Pause menu music while another track owns the screen. Same reason twice does not stack. */
@@ -239,7 +294,7 @@ function haltPreviewAudio() {
   if (previewAudio) {
     previewAudio.onended = null;
     previewAudio.ontimeupdate = null;
-    previewAudio.pause();
+    releasePageAudio(previewAudio);
     previewAudio.currentTime = 0;
   }
 }
@@ -261,7 +316,7 @@ export function startMusicPreview(id) {
   }
   haltPreviewAudio();
   if (!previewAudio) {
-    previewAudio = new Audio();
+    previewAudio = bindPageAudio(new Audio());
     previewAudio.loop = false;
     previewAudio.volume = 0.55;
   }

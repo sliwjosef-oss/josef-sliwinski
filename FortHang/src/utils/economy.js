@@ -2,9 +2,9 @@ const STORAGE_KEY = 'fort-hang-economy-v1';
 
 export const DAILY_GUESS_BASE = 50;
 export const GUESS_PACKS = [
-  { id: 'guess-5', amount: 5, cost: 10 },
-  { id: 'guess-50', amount: 50, cost: 50 },
-  { id: 'guess-125', amount: 125, cost: 100 },
+  { id: 'guess-5', amount: 5, cost: 100 },
+  { id: 'guess-50', amount: 50, cost: 500 },
+  { id: 'guess-125', amount: 125, cost: 1000 },
 ];
 /** @deprecated use GUESS_PACKS[0] */
 export const GUESS_PACK_COST = GUESS_PACKS[0].cost;
@@ -677,8 +677,8 @@ function defaultEconomy() {
     dailyTrailRuns: { dayKey: guessDayKey(), used: 0 },
     dailyLogin: { dayKey: guessDayKey(), claimed: false },
     dailyTrailSidekicks: { dayKey: guessDayKey(), usedIds: [] },
-    weeklyBets: { weekKey: cstWeekKey(), usedIds: [] },
-    weeklyTrail: { weekKey: cstWeekKey(), usedIds: [] },
+    weeklyBets: { dayKey: guessDayKey(), usedIds: [] },
+    weeklyTrail: { dayKey: guessDayKey(), usedIds: [] },
     unlocks: defaultUnlocks(),
   };
 }
@@ -933,28 +933,26 @@ function normalizeDailyTrailSidekicks(dailyTrailSidekicks) {
   };
 }
 
-function normalizeWeeklyTrail(weekly) {
-  const weekKey = cstWeekKey();
-  if (!weekly || weekly.weekKey !== weekKey) {
-    return { weekKey, usedIds: [] };
+/** Bet and Trail skin locks clear at 6:00 AM Central, with hangman attempts. Old Monday locks are dropped. */
+function normalizeDailySkinLock(entry) {
+  const dayKey = guessDayKey();
+  if (!entry || entry.dayKey !== dayKey) {
+    return { dayKey, usedIds: [] };
   }
   return {
-    weekKey,
-    usedIds: Array.isArray(weekly.usedIds)
-      ? weekly.usedIds.filter((id) => typeof id === 'string')
+    dayKey,
+    usedIds: Array.isArray(entry.usedIds)
+      ? entry.usedIds.filter((id) => typeof id === 'string')
       : [],
   };
 }
 
+function normalizeWeeklyTrail(weekly) {
+  return normalizeDailySkinLock(weekly);
+}
+
 function normalizeWeekly(weekly) {
-  const weekKey = cstWeekKey();
-  if (!weekly || weekly.weekKey !== weekKey) {
-    return { weekKey, usedIds: [] };
-  }
-  return {
-    weekKey,
-    usedIds: Array.isArray(weekly.usedIds) ? weekly.usedIds.filter((id) => typeof id === 'string') : [],
-  };
+  return normalizeDailySkinLock(weekly);
 }
 
 function chicagoParts(date = new Date()) {
@@ -1032,34 +1030,6 @@ export function formatCountdown(ms) {
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-}
-
-/**
- * Monday 00:00 CST week key (YYYY-MM-DD of that Monday).
- * Betting locks reset each Monday morning in Chicago time.
- */
-export function cstWeekKey(date = new Date()) {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: CST,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    weekday: 'short',
-  }).formatToParts(date);
-  const get = (type) => parts.find((part) => part.type === type)?.value;
-  const year = Number(get('year'));
-  const month = Number(get('month'));
-  const day = Number(get('day'));
-  const weekday = get('weekday');
-  const weekdayIndex = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[weekday] ?? 1;
-  // Days since Monday (Mon=0 … Sun=6)
-  const sinceMonday = (weekdayIndex + 6) % 7;
-  const monday = new Date(Date.UTC(year, month - 1, day));
-  monday.setUTCDate(monday.getUTCDate() - sinceMonday);
-  const y = monday.getUTCFullYear();
-  const m = String(monday.getUTCMonth() + 1).padStart(2, '0');
-  const d = String(monday.getUTCDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
 }
 
 export function loadEconomy() {
@@ -1392,7 +1362,7 @@ export function isBetSkinLocked(skinId, economy = loadEconomy()) {
   return getLockedBetIds(economy).has(skinId);
 }
 
-/** Lock bet skins until next Monday CST after a betting sim starts. */
+/** Lock bet skins until the next 6:00 AM Central reset. */
 export function lockBetSkins(skinIds, economy = loadEconomy()) {
   const state = {
     ...economy,
@@ -1403,11 +1373,11 @@ export function lockBetSkins(skinIds, economy = loadEconomy()) {
   for (const id of skinIds) {
     if (id) used.add(id);
   }
-  state.weeklyBets = { weekKey: state.weeklyBets.weekKey, usedIds: [...used] };
+  state.weeklyBets = { dayKey: state.weeklyBets.dayKey, usedIds: [...used] };
   return write(state);
 }
 
-/** Remove skins from this week's bet lock so a discarded run can be picked again. */
+/** Remove skins from today's bet lock so a discarded run can be picked again. */
 export function unlockBetSkins(skinIds, economy = loadEconomy()) {
   const state = {
     ...economy,
@@ -1416,22 +1386,10 @@ export function unlockBetSkins(skinIds, economy = loadEconomy()) {
   };
   const drop = new Set(skinIds);
   state.weeklyBets = {
-    weekKey: state.weeklyBets.weekKey,
+    dayKey: state.weeklyBets.dayKey,
     usedIds: state.weeklyBets.usedIds.filter((id) => !drop.has(id)),
   };
   return write(state);
-}
-
-export function nextMondayLabel() {
-  const weekKey = cstWeekKey();
-  const [y, m, d] = weekKey.split('-').map(Number);
-  const next = new Date(Date.UTC(y, m - 1, d + 7));
-  return new Intl.DateTimeFormat('en-US', {
-    timeZone: 'UTC',
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-  }).format(next);
 }
 
 export function getMaxDailyTrailRuns(economy = loadEconomy()) {
@@ -1483,7 +1441,7 @@ export function lockTrailSkins(skinIds, economy = loadEconomy()) {
   for (const id of skinIds) {
     if (id) used.add(id);
   }
-  state.weeklyTrail = { weekKey: state.weeklyTrail.weekKey, usedIds: [...used] };
+  state.weeklyTrail = { dayKey: state.weeklyTrail.dayKey, usedIds: [...used] };
   return write(state);
 }
 

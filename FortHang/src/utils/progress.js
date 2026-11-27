@@ -67,6 +67,18 @@ export function featureUnlocks(discoveredCount) {
   };
 }
 
+const MODE_UNLOCKS = [
+  { name: 'Battle Bus Trail', needed: TRAIL_SKIN_UNLOCK },
+  { name: 'Betting', needed: BETTING_SKIN_UNLOCK },
+  { name: 'Shop', needed: SHOP_SKIN_UNLOCK },
+  { name: 'Music', needed: MUSIC_SKIN_UNLOCK },
+];
+
+/** Modes whose skin threshold was crossed between two discovery counts. */
+export function newlyUnlockedModes(previousCount, nextCount) {
+  return MODE_UNLOCKS.filter((mode) => previousCount < mode.needed && nextCount >= mode.needed);
+}
+
 export function isSeasonComplete(outfits, guessedIds) {
   return outfits.length > 0 && outfits.every((outfit) => isSkinGuessed(guessedIds, outfit));
 }
