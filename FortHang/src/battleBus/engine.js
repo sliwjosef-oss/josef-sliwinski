@@ -290,6 +290,8 @@ export async function playTrailMatch({
     dancers: new Set(),
     fortRounds: 0,
     fortressTurns: 0,
+    coverTurns: 0,
+    coverItem: null,
     enemyStunned: false,
     turretRounds: 0,
     burnDamage: 0,
@@ -598,7 +600,7 @@ export async function playTrailMatch({
   /** Living encounter members each fire a share of the squad's damage. Dead members stop shooting. */
   const enemyVolley = (enemy, { bonus = 0, range = null, attackers = null } = {}) => {
     if (S.fortressTurns > 0) {
-      log(`The Port-a-Fortress blocks their shots! (${S.fortressTurns} turn(s) left)`);
+      log(`The Port-a-Fortress blocks their shots! (${S.fortressTurns} action(s) left)`);
       return;
     }
     const team = ENEMY_TEAMS[enemy];
@@ -648,7 +650,7 @@ export async function playTrailMatch({
 
   const sniperHit = (name) => {
     if (S.fortressTurns > 0) {
-      log(`A sniper shot glances off the Port-a-Fortress. (${S.fortressTurns} turn(s) left)`);
+      log(`A sniper shot glances off the Port-a-Fortress. (${S.fortressTurns} action(s) left)`);
       return;
     }
     const s = S.squad[name];
@@ -958,6 +960,10 @@ export async function playTrailMatch({
       log("They're stunned and can't attack this round!");
       return;
     }
+    if (S.coverTurns > 0) {
+      log(`The ${S.coverItem || 'cover'} blocks their attack! (${S.coverTurns} action(s) left)`);
+      return;
+    }
     if (S.fortRounds > 0) {
       S.fortRounds -= 1;
       log(`Their attack is blocked! (${S.fortRounds} round(s) of cover left)`);
@@ -1048,7 +1054,13 @@ export async function playTrailMatch({
     } else if (d.protectTurns) {
       S.fortressTurns = d.protectTurns;
       log(
-        `${user} ${d.text} ${pickItem}! The squad is protected from damage for ${d.protectTurns} turns.`,
+        `${user} ${d.text} ${pickItem}! The squad is protected for ${d.protectTurns} actions. Each action spends one, and it comes down when the fight ends.`,
+      );
+    } else if (d.cover && (pickItem === 'Port-a-Fort' || pickItem === 'Port-a-Bunker')) {
+      S.coverTurns = d.cover;
+      S.coverItem = pickItem;
+      log(
+        `${user} ${d.text} ${pickItem}! It blocks enemy attacks for ${d.cover} actions. Each action spends one, and it comes down when the fight ends.`,
       );
     } else if (d.cover) {
       log(`${user} ${d.text} ${pickItem}!`);
@@ -1061,7 +1073,7 @@ export async function playTrailMatch({
       S.fortRounds = Math.max(S.fortRounds, 1);
       log(`${user} gets ready to deflect their next attack!`);
     }
-    if (d.cover) {
+    if (d.cover && pickItem !== 'Port-a-Fort' && pickItem !== 'Port-a-Bunker') {
       S.fortRounds = Math.max(S.fortRounds, d.cover);
       log(`The squad has cover for ${d.cover} round(s).`);
     }
@@ -1342,13 +1354,40 @@ export async function playTrailMatch({
     if (S.fortressTurns <= 0) return;
     S.fortressTurns -= 1;
     if (S.fortressTurns > 0) {
-      log(`Port-a-Fortress: ${S.fortressTurns} turn(s) of protection left.`);
+      log(`Port-a-Fortress: ${S.fortressTurns} action(s) of protection left.`);
     } else {
       log('The Port-a-Fortress falls apart.');
     }
   };
 
+  const clearFortress = () => {
+    if (S.fortressTurns <= 0) return;
+    S.fortressTurns = 0;
+    log('The Port-a-Fortress comes down.');
+  };
+
+  const tickCover = () => {
+    if (S.coverTurns <= 0) return;
+    S.coverTurns -= 1;
+    const name = S.coverItem || 'cover';
+    if (S.coverTurns > 0) {
+      log(`${name}: ${S.coverTurns} action(s) of cover left.`);
+    } else {
+      S.coverItem = null;
+      log(`The ${name} falls apart.`);
+    }
+  };
+
+  const clearCover = () => {
+    if (S.coverTurns <= 0) return;
+    const name = S.coverItem || 'cover';
+    S.coverTurns = 0;
+    S.coverItem = null;
+    log(`The ${name} comes down.`);
+  };
+
   fleeChase = async (enemy, enemyHp = null, penalty = 0, bonus = 0) => {
+    try {
     let hp = enemyHp == null ? enemyMaxHp(enemy) : enemyHp;
     let [escape, caught, [clo, chi]] = CHASE[enemy];
     escape = escape - penalty + bonus;
@@ -1371,7 +1410,7 @@ export async function playTrailMatch({
       }
       if (S.stormDistance >= 2 && Object.keys(S.squad).length) {
         if (S.fortressTurns > 0) {
-          log(`The Port-a-Fortress blocks the Storm. (${S.fortressTurns} turn(s) left)`);
+          log(`The Port-a-Fortress blocks the Storm. (${S.fortressTurns} action(s) left)`);
         } else {
           const dmg = Math.max(1, Math.floor((S.stormDamage[0] * STORM_DAMAGE_MULT) / 2));
           log(`Running through the Storm hurts! -${dmg} HP each`);
@@ -1400,6 +1439,8 @@ export async function playTrailMatch({
         log('You turn around — they were ready and get the first shots in.');
         await enemyAttacks(enemy, 10);
         if (!Object.keys(S.squad).length) return 'lost';
+        tickFortress();
+        tickCover();
         return combat(enemy, hp, true, bonus);
       }
       if (pickOpt.startsWith('Use Launch Pad')) {
@@ -1415,8 +1456,14 @@ export async function playTrailMatch({
         log('You rift away to the safe zone!');
         return 'fled';
       }
+      tickFortress();
+      tickCover();
     }
     return 'lost';
+    } finally {
+      clearFortress();
+      clearCover();
+    }
   };
 
   const bossThirdParty = async () => {
@@ -1435,6 +1482,7 @@ export async function playTrailMatch({
   };
 
   combat = async (enemy, enemyHp, showRead = false, fleeBonus = 0, countSweatWipe = true) => {
+    try {
     const maxHp = enemyMaxHp(enemy);
     let hp = Math.max(0, Math.min(maxHp, Math.floor(enemyHp)));
     S.fortRounds = 0;
@@ -1460,6 +1508,7 @@ export async function playTrailMatch({
       emitEnemyStatus(enemy, hp, maxHp, { hidden: name.includes('Type: ???') });
       showSquad();
       showInventory();
+      let deployedFortress = false;
       const pickOpt = await choose([
         'Shoot (AR - steady)',
         'Shoot (SMG - in between)',
@@ -1474,7 +1523,10 @@ export async function playTrailMatch({
         hp = Math.max(0, hp - dealt);
         dropEncounterChunks(hp, maxHp, enemy);
       } else if (pickOpt === 'Use item') {
+        const fortressBefore = S.fortressTurns;
+        const coverBefore = S.coverTurns;
         const [result, itemDmg] = await useItemInFight(enemy);
+        deployedFortress = S.fortressTurns > fortressBefore || S.coverTurns > coverBefore;
         if (result === 'win') {
           hp = 0;
           dropEncounterChunks(hp, maxHp, enemy);
@@ -1518,6 +1570,10 @@ export async function playTrailMatch({
       }
       await enemyAttacks(enemy);
       emitEnemyStatus(enemy, hp, maxHp);
+      if (Object.keys(S.squad).length && hp > 0 && !deployedFortress) {
+        tickFortress();
+        tickCover();
+      }
       if (
         enemy === 'Boss' &&
         Object.keys(S.squad).length &&
@@ -1537,6 +1593,10 @@ export async function playTrailMatch({
       return 'won';
     }
     return 'lost';
+    } finally {
+      clearFortress();
+      clearCover();
+    }
   };
 
   /** Ambushes always bring the whole living lobby squad, not a random subset. */
@@ -1752,6 +1812,7 @@ export async function playTrailMatch({
   };
 
   const combatBoth = async (left, right) => {
+    try {
     S.fortRounds = 0;
     S.boogieRounds = 0;
     S.dancers = new Set();
@@ -1767,6 +1828,7 @@ export async function playTrailMatch({
       if (right.hp > 0) options.push('Attack right squad');
       options.push('Use item', 'Flee');
       const pickOpt = await choose(options);
+      let deployedFortress = false;
       if (pickOpt === 'Flee') {
         const foe = left.hp > 0 ? left : right;
         await fleeChase(foe.enemy, foe.hp, 0.1, 0);
@@ -1781,7 +1843,10 @@ export async function playTrailMatch({
         } else {
           focus = living[0];
         }
+        const fortressBefore = S.fortressTurns;
+        const coverBefore = S.coverTurns;
         const [result, itemDmg] = await useItemInFight(focus.enemy);
+        deployedFortress = S.fortressTurns > fortressBefore || S.coverTurns > coverBefore;
         if (result === 'cancel') continue;
         if (result === 'escaped') return;
         if (result === 'win') {
@@ -1854,6 +1919,18 @@ export async function playTrailMatch({
         if (S.boogieRounds <= 0) S.dancers = new Set();
       }
       emitThirdParty(left, right);
+      if (
+        Object.keys(S.squad).length &&
+        (left.hp > 0 || right.hp > 0) &&
+        !deployedFortress
+      ) {
+        tickFortress();
+        tickCover();
+      }
+    }
+    } finally {
+      clearFortress();
+      clearCover();
     }
   };
 
@@ -2108,7 +2185,7 @@ export async function playTrailMatch({
     if (rand() < 0.3) {
       S.achievements.carExploded = true;
       if (S.fortressTurns > 0) {
-        log(`The car explodes, but the Port-a-Fortress holds. (${S.fortressTurns} turn(s) left)`);
+        log(`The car explodes, but the Port-a-Fortress holds. (${S.fortressTurns} action(s) left)`);
       } else {
         log('The car explodes! Everyone takes 100 damage!');
         for (const m of Object.keys(S.squad)) fightDamage(m, 100, 'a car explosion');
@@ -2225,7 +2302,6 @@ export async function playTrailMatch({
       stormTick();
       await removeEliminated();
       overdriveHeal();
-      tickFortress();
       afkTick();
       S.turn += 1;
       if (!Object.keys(S.squad).length) return;
@@ -2542,7 +2618,7 @@ export async function playTrailMatch({
       log('The cover keeps other squads from spotting you.');
       const dmg = Math.floor(S.stormDamage[0] * STORM_DAMAGE_MULT);
       if (dmg > 0 && S.fortressTurns > 0) {
-        log(`The Port-a-Fortress blocks the Storm on the long way. (${S.fortressTurns} turn(s) left)`);
+        log(`The Port-a-Fortress blocks the Storm on the long way. (${S.fortressTurns} action(s) left)`);
       } else if (dmg > 0) {
         log(`The Storm still rolls over the long way. -${dmg} HP to everyone (shields don't help)`);
         for (const m of Object.keys(S.squad)) stormHit(m, dmg);
@@ -2590,7 +2666,7 @@ export async function playTrailMatch({
       log('You use a Rift-To-Go and land safely inside the zone!');
     } else {
       if (S.fortressTurns > 0) {
-        log(`The Port-a-Fortress blocks the Storm. (${S.fortressTurns} turn(s) left)`);
+        log(`The Port-a-Fortress blocks the Storm. (${S.fortressTurns} action(s) left)`);
       } else {
         const base = S.stormDistance === 2 ? S.stormDamage[0] : S.stormDamage[1];
         const dmg = Math.floor(base * S.stormMult * STORM_DAMAGE_MULT);
@@ -2724,14 +2800,12 @@ export async function playTrailMatch({
       stormTick();
       await removeEliminated();
       overdriveHeal();
-      tickFortress();
       afkTick();
     } else if (squadAlive()) {
       stormShrinkCheck();
       stormTick();
       await removeEliminated();
       overdriveHeal();
-      tickFortress();
       afkTick();
     }
     if (shouldWin()) {

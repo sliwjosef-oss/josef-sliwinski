@@ -185,11 +185,11 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             <strong>2</strong> — default
           </li>
           <li>
-            <strong>3</strong> — DC, Icon, Other Collab, Marvel, Gaming Legends, Star Wars; also{' '}
+            <strong>3</strong> — DC, Icon, Other Collab Skins, Marvel, Gaming Legends, Star Wars; also{' '}
             {[...THREE_STAR_NAMES].join(', ')}
           </li>
           <li>
-            <strong>4</strong> — TV, WWE, Anime, and Cartoon Legends
+            <strong>4</strong> — TV Legends, WWE Legends, Anime Legends, and Cartoon Legends
           </li>
           <li>
             <strong>5</strong> — star skins: {[...FIVE_STAR_NAMES].join(', ')}
@@ -233,8 +233,9 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             {TOURNAMENT_WIN_POINTS}).
           </li>
           <li>
-            <strong>Reroll match</strong> — shop unlock adds a button under Finish. The first tier is 1
-            reroll per tournament (500), then 3 (1000), then 5 (2000).
+            <strong>Reroll match</strong> — shop unlock adds a button next to Finish, and it stays
+            next to Next match. The first tier is 1 reroll per tournament (500), then 3 (1000), then 5
+            (2000).
           </li>
           <li>
             <strong>Locks</strong> — skins you bet stay locked until 6:00 AM Central Time.
@@ -283,7 +284,8 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             <strong>Event images</strong> — encounters show skin icons from Anime Legends, Anime
             Originals, Cartoon Legends, TV Legends, WWE Legends, Star Wars, Marvel, DC, Icon, Gaming
             Legends, Sports, Space Explorers, Peely, Food, Toys, Robots, Animals, Aliens, Midas
-            Family, Winterfest, and Fortnightmares pools.
+            Family, Winterfest, Fortnightmares, Fishies, Joneseys, Ravens, Kitties, Team Leaders,
+            Knights, Billiard Warriors, and Forestry pools.
             {hasAchievement('sidekicks-50')
               ? ' Rare and ultra rare sidekicks can also appear together as Sidekick squads.'
               : ''}{' '}
@@ -336,7 +338,10 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             damage to the enemy squad and kills everyone on your squad except one, who is left at 1
             HP. A Stick of Truth is Mythic: while you carry it, the storm closes in around you, so
             shrinks and storm surges leave you in the zone. A rift can still throw you into the
-            storm. A Port-a-Fortress is Legendary. Throw it to block damage for 5 turns. A Boogie Bomb makes the enemy dance
+            storm. A Port-a-Fortress is Legendary. Throw it in a fight to block damage for 5 actions.
+            Each attack or other action spends one, and whatever is left comes down when the fight
+            ends. A Port-a-Fort blocks enemy attacks for 3 actions, and a Port-a-Bunker for 2. Each
+            action spends one, and whatever is left comes down when the fight ends. A Boogie Bomb makes the enemy dance
             for 2 rounds (they deal no damage); each squad member has a 10% chance to dance too.
             A Bush still makes you harder to spot, and it also blocks one sniper shot, then it's
             used up. A Kneecapper is a Leekcapper 10% of the time. Same swing. Pack on the trail
@@ -372,8 +377,8 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             <strong>Overrides</strong> — unlocked by playing 5 Trail games. A separate set of events that change the rest of the run.
             Each one starts with “Override Activated:”. Only one Override can happen in a run. Big Head mode
             doubles damage enemies take and damage your squad takes. Healing Overdrive fills your
-            squad’s HP and shields, then doubles enemy health. Every round, everyone still standing
-            gains 30 HP and 30 shield. Faster Storm eliminates players
+            squad’s HP and shields, then doubles enemy health. Each round, your squad gains 30 HP and
+            30 shield. Faster Storm eliminates players
             faster, is more likely to leave you on the edge or in the Storm, and off-screen deaths
             are more likely to say the player died in the Storm. Big Boom doubles
             fall damage, and explosions have a high chance to eliminate an enemy player.
@@ -382,8 +387,8 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             <strong>Final 10</strong> — once 10 players are left, the others stop dying on their own
             and teaming offers stop. They only go down if you attack them, or if they ambush you and
             you win the fight. Ambushes jump sharply for looting and resting. Booking it is a
-            guaranteed ambush, and anyone you run into usually shoots first. Safer route still only
-            takes the Storm tick.
+            guaranteed ambush, unless a Launch Pad flies you over it, and anyone you run into usually
+            shoots first. Safer route still only takes the Storm tick.
           </li>
         </ul>
       </section>
@@ -494,8 +499,8 @@ function DeleteAllDataConfirm({ onConfirm, onCancel }) {
       >
         <h2 id="delete-all-data-title">Are you sure?</h2>
         <p>
-          This permanently deletes everything: discovered skins, weebucks, shop unlocks, sidekicks, skin
-          levels, Betting saves, and resets daily hangman attempts and betting runs.
+          This permanently deletes everything: discovered skins, weebucks, shop unlocks, sidekicks,
+          achievements, skin levels, Betting saves, and resets daily hangman attempts and betting runs.
         </p>
         <div className="modal-actions">
           <button type="button" className="secondary-button" onClick={onCancel}>

@@ -24,6 +24,7 @@ export const FIVE_STAR_NAMES = new Set([
   'Renegade Raider',
   'Genos',
   'Bugs Bunny',
+  'Jason',
 ]);
 
 /** Exact catalogue names that always roll 3d100. */
@@ -47,7 +48,7 @@ export function getBaseDiceCount(outfit) {
     if (outfit.sidekickRarity === 'rare') return 4;
     return 2;
   }
-  if (FIVE_STAR_NAMES.has(outfit.name)) return 5;
+  if (FIVE_STAR_NAMES.has(String(outfit.name || '').trim())) return 5;
   if (THREE_STAR_NAMES.has(outfit.name)) return 3;
   const series = getCatalogueSeriesKey(outfit);
   if (ONE_DICE_SERIES.has(series)) return 1;

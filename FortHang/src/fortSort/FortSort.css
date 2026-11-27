@@ -3104,3 +3104,10 @@
 .trail-screen.is-playing .trail-choices {
   flex: none;
 }
+
+.trail-screen.is-result .trail-field-menu {
+  flex: none;
+  max-height: min(42vh, 320px);
+  overflow: auto;
+  margin: 0;
+}

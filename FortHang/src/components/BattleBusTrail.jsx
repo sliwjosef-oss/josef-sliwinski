@@ -885,6 +885,8 @@ export default function BattleBusTrail({
           xpAwards: [],
         });
         setScreen('result');
+        setEventVisual(null);
+        setFieldMenu(null);
         noteTrailResult(match);
         return;
       }
@@ -925,6 +927,8 @@ export default function BattleBusTrail({
         squadXp,
         levelsAfter: xpResult.levels,
       });
+      setEventVisual(null);
+      setFieldMenu(null);
       setScreen('result');
     } catch (error) {
       if (error?.code === 'forfeited' || forfeitedRef.current) {
@@ -1089,9 +1093,11 @@ export default function BattleBusTrail({
           </div>
           <SquadStatusBar members={headerMembers} />
         </header>
-        <EventVisualPanel visual={eventVisual} discoveredIds={encounterKnownIds} />
-        {fieldMenu ? (
-          <div className="trail-field-menu" role="dialog" aria-label="Pack">
+        {screen === 'play' ? (
+          <EventVisualPanel visual={eventVisual} discoveredIds={encounterKnownIds} />
+        ) : null}
+        {fieldMenu && (screen === 'play' || screen === 'result') ? (
+          <div className="trail-field-menu" role="dialog" aria-label={screen === 'result' ? 'Results' : 'Pack'}>
             <div className="trail-field-tabs">
               <button
                 type="button"
