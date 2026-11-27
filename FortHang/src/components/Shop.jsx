@@ -120,6 +120,9 @@ const BETTING_UNLOCK_ORDER = [
   'boostDicePlus',
   'diceRollTier1',
   'diceRollTier2',
+  'rerollMatchTier1',
+  'rerollMatchTier2',
+  'rerollMatchTier3',
 ];
 
 const SHOP_TABS = [
@@ -130,13 +133,17 @@ const SHOP_TABS = [
   { id: 'sidekicks', label: 'Sidekick rolls' },
 ];
 
-export default function Shop({ economy, sidekicks, onEconomyChange, onBack }) {
+export default function Shop({ economy, sidekicks, onEconomyChange, onBack, musicUnlocked = false }) {
   const [tab, setTab] = useState('attempts');
   const [rollResults, setRollResults] = useState(null);
   const [, setPreviewRevision] = useState(0);
   const upgrades = useMemo(() => countPermanentShopUpgrades(economy), [economy]);
 
   useEffect(() => subscribeMenuMusic(() => setPreviewRevision((current) => current + 1)), []);
+
+  useEffect(() => {
+    if (!musicUnlocked && tab === 'music') setTab('attempts');
+  }, [musicUnlocked, tab]);
 
   useEffect(() => {
     if (tab !== 'music') stopMusicPreview();
@@ -218,7 +225,7 @@ export default function Shop({ economy, sidekicks, onEconomyChange, onBack }) {
       </header>
 
       <nav className="shop-tabs" aria-label="Shop sections">
-        {SHOP_TABS.map((entry) => (
+        {SHOP_TABS.filter((entry) => entry.id !== 'music' || musicUnlocked).map((entry) => (
           <button
             key={entry.id}
             type="button"

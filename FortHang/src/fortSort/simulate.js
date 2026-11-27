@@ -23,6 +23,7 @@ export const FIVE_STAR_NAMES = new Set([
   'Midas',
   'Renegade Raider',
   'Genos',
+  'Bugs Bunny',
 ]);
 
 /** Exact catalogue names that always roll 3d100. */
@@ -56,13 +57,25 @@ export function getDiceCount(outfit, bonusById = null) {
   return base + (Number(bonusById[outfit.id]) || 0);
 }
 
+function rollD100() {
+  return 1 + Math.floor(Math.random() * 100);
+}
+
+/** Roll 1–100. Results under the level floor are discarded and rolled again. */
+function rollDie(minRoll) {
+  const floor = Math.min(100, Math.max(1, Number(minRoll) || 1));
+  let value = rollD100();
+  let guard = 0;
+  while (value < floor && guard < 1000) {
+    value = rollD100();
+    guard += 1;
+  }
+  return value;
+}
+
 function rollOnce(diceCount, minRoll = 1) {
   const floor = Math.min(100, Math.max(1, Number(minRoll) || 1));
-  const span = 100 - floor + 1;
-  const rolls = Array.from(
-    { length: Math.max(1, diceCount) },
-    () => floor + Math.floor(Math.random() * span),
-  );
+  const rolls = Array.from({ length: Math.max(1, diceCount) }, () => rollDie(floor));
   return { rolls, best: Math.max(...rolls), dice: diceCount, minRoll: floor };
 }
 

@@ -240,6 +240,7 @@ function App() {
           economy={economy}
           sidekicks={sidekicks}
           onEconomyChange={setEconomy}
+          musicUnlocked={unlocks.music}
           onBack={() => setView(VIEWS.HANGMAN)}
         />
       ) : null}

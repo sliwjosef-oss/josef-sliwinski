@@ -118,8 +118,23 @@
   text-transform: uppercase;
 }
 
+.mode-feature.is-hard {
+  border-color: rgba(248, 113, 113, 0.9);
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgba(248, 113, 113, 0.28), transparent 55%),
+    linear-gradient(165deg, rgba(68, 16, 16, 0.95), rgba(15, 23, 42, 0.96));
+}
+
+.mode-feature.is-hard .mode-feature-kicker {
+  color: #fca5a5;
+}
+
 .mode-feature.is-current {
   box-shadow: 0 0 0 2px rgba(245, 197, 66, 0.35), 0 12px 28px rgba(0, 0, 0, 0.28);
+}
+
+.mode-feature.is-hard.is-current {
+  box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.4), 0 12px 28px rgba(0, 0, 0, 0.28);
 }
 
 .mode-side-button.is-current {
@@ -301,6 +316,18 @@
 .bet-mark.is-bet {
   color: #dbeafe;
   background: rgba(59, 130, 246, 0.45);
+}
+
+.bet-mark.is-rival {
+  color: #fee2e2;
+  background: rgba(220, 38, 38, 0.55);
+}
+
+.roll-result-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
 }
 
 .roll-result,
@@ -725,6 +752,19 @@
   justify-content: center;
 }
 
+.fort-sort-select-grid .skin-dice.is-wrapped {
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  line-height: 1.15;
+}
+
+.fort-sort-select-grid .skin-dice-row {
+  color: #fbbf24;
+  font-size: inherit;
+  letter-spacing: 0.04em;
+}
+
 .results-list {
   padding: 0;
   list-style: none;
@@ -828,6 +868,12 @@
   border-color: rgba(244, 114, 182, 0.55);
   background: rgba(74, 4, 78, 0.55);
   color: #fce7f3;
+}
+
+.dice-chip.is-hard {
+  border-color: rgba(248, 113, 113, 0.7);
+  background: rgba(127, 29, 29, 0.55);
+  color: #fecaca;
 }
 
 .dice-matchup-stats {
@@ -2027,6 +2073,11 @@
 .bet-status-panel.is-bet {
   border-color: rgba(96, 165, 250, 0.7);
   background: rgba(15, 28, 48, 0.55);
+}
+
+.bet-status-panel.is-rival {
+  border-color: rgba(248, 113, 113, 0.75);
+  background: rgba(48, 15, 18, 0.55);
 }
 
 .bet-status-title {

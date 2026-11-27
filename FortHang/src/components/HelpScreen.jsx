@@ -13,6 +13,11 @@ import {
   DAILY_LOGIN_BONUS,
   DAILY_TRAIL_RUNS_TIER1,
   DAILY_TRAIL_RUNS_TIER2,
+  HARD_FIELD_BONUS_DICE,
+  HARD_MODE_PAYOUT_MULT,
+  HARD_RIVAL_BONUS_DICE,
+  HARD_RIVAL_MIN_ROLL,
+  HARD_RIVAL_PAYOUT_MULT,
   STAR_BET_BONUS_DICE,
   SUPER_BET_ROUND_BONUS,
   TOURNAMENT_WIN_POINTS,
@@ -119,16 +124,18 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           </li>
           <li>
             <strong>Betting upgrades</strong> — permanently unlock better Betting tools and
-            payouts (more slots, stronger dice, a faster dice roller, higher Top 8 / Top 64 / tournament
-            rewards, Simulate all, Select random, seeding, extra lives, and more Betting runs).
+            payouts (more slots, stronger dice, a faster dice roller, match rerolls, higher Top 8 / Top 64 / tournament
+            rewards, Select random, seeding, extra lives, and more Betting runs). Simulate all appears
+            after every other betting upgrade is owned.
           </li>
           <li>
             <strong>Battle Bus Trail upgrades</strong> — daily runs, payouts, damage resists, For Fun
             mode, boss loot, and Trail events. Each item shows its own price.
           </li>
           <li>
-            <strong>Music</strong> — Between The Rows, Under Broken Skin, and Perfect Despair each
-            cost 2000 weebucks. Preview plays 30 seconds. Concrete Pressure, Break the Perimeter,
+            <strong>Music</strong> — the tab appears once Music is unlocked on the main menu. Between
+            The Rows, Under Broken Skin, and Perfect Despair each cost 2000 weebucks. Preview plays 30
+            seconds. Concrete Pressure, Break the Perimeter,
             Candy in a Plastic Wrap, Beneath the Spires, and Heart Like A Piston are already in the
             lobby list.
           </li>
@@ -159,6 +166,13 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             <strong>Betting</strong> — every discovered skin enters a simulated double-elim. You pick
             which skins to bet on.
           </li>
+          <li>
+            <strong>Hard Mode</strong> — a betting run where the rest of the field rolls{' '}
+            {HARD_FIELD_BONUS_DICE} extra dice. One rival bet is chosen per super bet. Rivals roll{' '}
+            {HARD_RIVAL_BONUS_DICE} extra dice instead, and reroll anything under {HARD_RIVAL_MIN_ROLL}.
+            Round payouts are ×{HARD_MODE_PAYOUT_MULT}, or ×{HARD_RIVAL_PAYOUT_MULT} when your bet or
+            super bet beats a rival.
+          </li>
         </ul>
         <p>Dice counts, before any bet bonus:</p>
         <ul>
@@ -186,8 +200,9 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
           weebucks on every round payout, 2× XP) and up to {BASE_BOOST_BETS} bet{' '}
           {BASE_BOOST_BETS === 1 ? 'skin' : 'skins'} (+{BOOST_BET_BONUS_DICE} dice). Shop upgrades can
           raise those caps and dice bonuses. Placement XP is 1st 200, 2nd–4th 100, 5th–7th 50, and 25
-          otherwise. Levels permanently add dice (level 2: +1, level 4: +2, level 5: +3) and raise
-          roll floors (level 1: no 1–5, level 3: no 1–10, level 5: no 1–20), even for non-bets.
+          otherwise. Levels permanently add dice (level 2: +1, level 4: +2, level 5: +3) and reroll
+          anything under the floor (level 1: reroll 1–5, level 3: reroll 1–10, level 5: reroll 1–20),
+          even for non-bets.
           Base payout is {BET_WIN_POINTS} weebucks per bet win. Winning the tournament pays{' '}
           {TOURNAMENT_WIN_POINTS} weebucks. Bets lock until 6:00 AM Central Time. Betting
           runs start at {BASE_DAILY_BET_RUNS} and can be raised in the Shop to {DAILY_BET_RUNS_TIER1},
@@ -206,6 +221,10 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             <strong>Base payout</strong> — {BET_WIN_POINTS} weebucks per bet-skin win. Shop upgrades
             raise Top 8 and Top 64 wins, and the tournament-win bonus (starts at{' '}
             {TOURNAMENT_WIN_POINTS}).
+          </li>
+          <li>
+            <strong>Reroll match</strong> — shop unlock adds a button under Finish. The first tier is 1
+            reroll per tournament (500), then 3 (1000), then 5 (2000).
           </li>
           <li>
             <strong>Locks</strong> — skins you bet stay locked until 6:00 AM Central Time.
@@ -392,16 +411,16 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             <strong>Level 5</strong> — +3 dice total
           </li>
         </ul>
-        <p>Higher levels also raise a skin’s minimum d100 roll in Simulate / Betting:</p>
+        <p>Higher levels also set a floor on each d100 in Simulate / Betting. A roll under that floor is discarded and rolled again:</p>
         <ul>
           <li>
-            <strong>Level 1+</strong> — rolls below 6 are raised to 6
+            <strong>Level 1+</strong> — reroll 1–5
           </li>
           <li>
-            <strong>Level 3+</strong> — rolls below 11 are raised to 11
+            <strong>Level 3+</strong> — reroll 1–10
           </li>
           <li>
-            <strong>Level 5</strong> — rolls below 21 are raised to 21
+            <strong>Level 5</strong> — reroll 1–20
           </li>
         </ul>
         <p>Battle Bus Trail bonuses also scale with skin level:</p>

@@ -47,7 +47,13 @@ import {
   getBoostBetBonusDice,
   getDailyBetRunLimit,
   getDailyBetRunsRemaining,
+  HARD_FIELD_BONUS_DICE,
+  HARD_MODE_PAYOUT_MULT,
+  HARD_RIVAL_BONUS_DICE,
+  HARD_RIVAL_MIN_ROLL,
+  HARD_RIVAL_PAYOUT_MULT,
   getLockedBetIds,
+  getMatchRerolls,
   getMaxBoostBets,
   getMaxStarBets,
   getStarBetBonusDice,
@@ -93,6 +99,31 @@ const MAIN_MODE = {
   blurb: 'Pick a super bet and your bets, then run the tournament for weebucks.',
 };
 
+const HARD_MODE = {
+  id: 'hard',
+  label: 'Hard Mode',
+  blurb:
+    'Other skins roll 2 extra dice. Rival bets match your super bets, roll 4 extra dice, and reroll anything under 10. Round payouts are ×2, or ×5 when your bet beats a rival.',
+};
+
+function isBettingMode(mode) {
+  return mode === 'betting' || mode === 'hard';
+}
+
+function pickRivalBetIds(allIds, starBetIds, boostBetIds) {
+  const taken = new Set([...starBetIds, ...boostBetIds]);
+  const pool = shuffle(allIds.filter((id) => !taken.has(id)));
+  return pool.slice(0, starBetIds.length);
+}
+
+function hardModePayoutMultiplier(tournament, win, rolls) {
+  if (!tournament?.hardMode) return 1;
+  const roll = (rolls ?? []).find((item) => item.matchId === win?.matchId);
+  const loserId = roll?.participants?.[roll.winnerSlot === 0 ? 1 : 0];
+  if (loserId && (tournament.rivalBetIds ?? []).includes(loserId)) return HARD_RIVAL_PAYOUT_MULT;
+  return HARD_MODE_PAYOUT_MULT;
+}
+
 const SIDE_MODES = [
   { id: 'rank', label: 'Ranking', blurb: 'Order skins from favorite to least.' },
   { id: 'bracket', label: 'Bracket', blurb: 'Choose each winner yourself.' },
@@ -119,7 +150,14 @@ function FortSortBar({ onOpenArchive, onBack, onOpenModes, modesActive = false }
   );
 }
 
-function buildBonusById(starBetIds, boostBetIds, economy, skinLevels, entrantIds = []) {
+function buildBonusById(
+  starBetIds,
+  boostBetIds,
+  economy,
+  skinLevels,
+  entrantIds = [],
+  hard = null,
+) {
   const bonus = {};
   for (const id of entrantIds) {
     const levelDice = getLevelBonusDice(getSkinLevel(skinLevels, id));
@@ -130,6 +168,15 @@ function buildBonusById(starBetIds, boostBetIds, economy, skinLevels, entrantIds
     const boostBonus = getBoostBetBonusDice(economy);
     for (const id of starBetIds) bonus[id] = (bonus[id] || 0) + starBonus;
     for (const id of boostBetIds) bonus[id] = (bonus[id] || 0) + boostBonus;
+  }
+  if (hard?.hardMode) {
+    const stars = new Set(starBetIds);
+    const boosts = new Set(boostBetIds);
+    const rivals = new Set(hard.rivalBetIds ?? []);
+    for (const id of entrantIds) {
+      if (stars.has(id) || boosts.has(id)) continue;
+      bonus[id] = (bonus[id] || 0) + (rivals.has(id) ? HARD_RIVAL_BONUS_DICE : HARD_FIELD_BONUS_DICE);
+    }
   }
   return Object.keys(bonus).length ? bonus : null;
 }
@@ -160,49 +207,50 @@ function BettingStatusPanel({ tournament, bracketState, standings, outfitsById }
     [tournament.starBetIds, tournament.boostBetIds],
   );
   const starSet = useMemo(() => new Set(tournament.starBetIds ?? []), [tournament.starBetIds]);
+  const rivalIds = useMemo(() => tournament.rivalBetIds ?? [], [tournament.rivalBetIds]);
 
-  const rows = useMemo(() => {
-    return betIds.map((id) => {
-      const outfit = outfitsById.get(id);
-      const losses = countLosses(tournament.bracket, bracketState.outcomes, id);
-      const place = standings?.placeById?.get(id) ?? null;
-      const isChampion = bracketState.champion === id;
-      const isRunnerUp = bracketState.runnerUp === id;
-      const eliminated = losses >= 2 || isRunnerUp || (bracketState.done && !isChampion);
-      let statusLabel = 'In winners';
-      let lane = 'winners';
-      if (isChampion) {
-        statusLabel = 'Champion · 1st';
-        lane = 'champion';
-      } else if (eliminated) {
-        statusLabel =
-          bracketState.done && place != null
-            ? `Eliminated · ${formatPlace(place)}`
-            : 'Eliminated';
-        lane = 'eliminated';
-      } else if (losses >= 1) {
-        statusLabel = 'In losers';
-        lane = 'losers';
-      }
-      const hasExtraLife = !!tournament.extraLifeById?.[id];
-      return {
-        id,
-        outfit,
-        statusLabel,
-        lane,
-        isStar: starSet.has(id),
-        hasExtraLife,
-      };
-    });
-  }, [
-    betIds,
-    bracketState,
-    outfitsById,
-    standings,
-    starSet,
-    tournament.bracket,
-    tournament.extraLifeById,
-  ]);
+  const describeRow = (id) => {
+    const outfit = outfitsById.get(id);
+    const losses = countLosses(tournament.bracket, bracketState.outcomes, id);
+    const place = standings?.placeById?.get(id) ?? null;
+    const isChampion = bracketState.champion === id;
+    const isRunnerUp = bracketState.runnerUp === id;
+    const eliminated = losses >= 2 || isRunnerUp || (bracketState.done && !isChampion);
+    let statusLabel = 'In winners';
+    let lane = 'winners';
+    if (isChampion) {
+      statusLabel = 'Champion · 1st';
+      lane = 'champion';
+    } else if (eliminated) {
+      statusLabel =
+        bracketState.done && place != null ? `Eliminated · ${formatPlace(place)}` : 'Eliminated';
+      lane = 'eliminated';
+    } else if (losses >= 1) {
+      statusLabel = 'In losers';
+      lane = 'losers';
+    }
+    return {
+      id,
+      outfit,
+      statusLabel,
+      lane,
+      isStar: starSet.has(id),
+      isRival: rivalIds.includes(id),
+      hasExtraLife: !!tournament.extraLifeById?.[id],
+    };
+  };
+
+  const rows = useMemo(
+    () => betIds.map(describeRow),
+    // describeRow closes over the same bracket state the list depends on.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [betIds, bracketState, outfitsById, standings, starSet, rivalIds, tournament.bracket, tournament.extraLifeById],
+  );
+  const rivalRows = useMemo(
+    () => rivalIds.map(describeRow),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [rivalIds, bracketState, outfitsById, standings, starSet, tournament.bracket, tournament.extraLifeById],
+  );
 
   const detail = detailId
     ? (() => {
@@ -264,6 +312,7 @@ function BettingStatusPanel({ tournament, bracketState, standings, outfitsById }
                   {row.hasExtraLife ? ' 💖' : ''}
                 </strong>
                 <span>{row.statusLabel}</span>
+                {row.isRival ? <span className="bet-status-tier">Rival</span> : null}
                 {row.hasExtraLife ? <span className="bet-status-tier">Extra life</span> : null}
               </div>
             </button>
@@ -285,6 +334,12 @@ function BettingStatusPanel({ tournament, bracketState, standings, outfitsById }
         <h2 className="bet-status-title">Bet skins status</h2>
         {renderCards(rows.filter((row) => !row.isStar))}
       </section>
+      {tournament.hardMode ? (
+        <section className="bet-status-panel is-rival">
+          <h2 className="bet-status-title">Rival bets</h2>
+          {renderCards(rivalRows)}
+        </section>
+      ) : null}
     </>
   );
 }
@@ -317,12 +372,23 @@ function SkinIcon({ outfit, className = '' }) {
   );
 }
 
-function DiceBadge({ outfit, bonus = 0 }) {
+function DiceBadge({ outfit, bonus = 0, rowSize = 0 }) {
   if (!outfit) return null;
   const dice = getDiceCount(outfit) + (Number(bonus) || 0);
+  const shown = Math.min(dice, 16);
+  const stars = '★'.repeat(shown);
+  const title = `${dice} × d100 — keep the highest`;
+  if (rowSize > 0 && shown > rowSize) {
+    return (
+      <p className="skin-dice is-wrapped" title={title}>
+        <span className="skin-dice-row">{'★'.repeat(rowSize)}</span>
+        <span className="skin-dice-row">{stars.slice(rowSize)}</span>
+      </p>
+    );
+  }
   return (
-    <p className="skin-dice" title={`${dice} × d100 — keep the highest`}>
-      {'★'.repeat(Math.min(dice, 16))}
+    <p className="skin-dice" title={title}>
+      {stars}
     </p>
   );
 }
@@ -351,9 +417,10 @@ function SkinCard({ outfit, onPick, placeLabel, showDice = false, bonusDice = 0,
   );
 }
 
-function BetMark({ id, starIds, boostIds }) {
+function BetMark({ id, starIds, boostIds, rivalIds }) {
   if (starIds?.has(id)) return <span className="bet-mark is-super">Super bet</span>;
   if (boostIds?.has(id)) return <span className="bet-mark is-bet">Bet</span>;
+  if (rivalIds?.has(id)) return <span className="bet-mark is-rival">Rival</span>;
   return null;
 }
 
@@ -387,7 +454,17 @@ function canFinishEarly(roll, revealed) {
   return false;
 }
 
-function RollResult({ roll, outfitsById, starIds, boostIds, onNext, dieMs = 2000 }) {
+function RollResult({
+  roll,
+  outfitsById,
+  starIds,
+  boostIds,
+  rivalIds,
+  onNext,
+  onReroll = null,
+  rerollsLeft = 0,
+  dieMs = 2000,
+}) {
   const steps = useMemo(() => revealOrder(roll), [roll]);
   const [shown, setShown] = useState(0);
   const finished = shown >= steps.length;
@@ -410,7 +487,7 @@ function RollResult({ roll, outfitsById, starIds, boostIds, onNext, dieMs = 2000
         <>
           <h2>{winner?.name ?? 'Winner'} won the round</h2>
           <SkinIcon outfit={winner} className="roll-winner-image" />
-          <BetMark id={winnerId} starIds={starIds} boostIds={boostIds} />
+          <BetMark id={winnerId} starIds={starIds} boostIds={boostIds} rivalIds={rivalIds} />
         </>
       ) : (
         <h2>Rolling...</h2>
@@ -430,7 +507,7 @@ function RollResult({ roll, outfitsById, starIds, boostIds, onNext, dieMs = 2000
               {sideIndex === 1 ? <span className="versus">vs</span> : null}
               <div className={`suspense-side ${won ? 'is-winner' : ''}`}>
                 <strong>{outfit?.name ?? '—'}</strong>
-                <BetMark id={id} starIds={starIds} boostIds={boostIds} />
+                <BetMark id={id} starIds={starIds} boostIds={boostIds} rivalIds={rivalIds} />
                 <span className="sim-roll-dice">
                   {side.rolls.map((value, index) => {
                     const isShown = revealed.has(`${sideIndex}:${index}`);
@@ -458,30 +535,47 @@ function RollResult({ roll, outfitsById, starIds, boostIds, onNext, dieMs = 2000
         <p className="hint">Extra life saved {outfitsById.get(roll.extraLifeSavedId)?.name ?? 'a skin'}</p>
       ) : null}
       {finished && roll.attempts > 1 ? <p className="hint">{roll.attempts} rolls to break the tie</p> : null}
-      {finished ? (
-        <button type="button" className="primary-button" onClick={onNext}>
-          Next match
-        </button>
-      ) : (
-        <button
-          type="button"
-          className="ghost-button"
-          onClick={() => setShown(steps.length)}
-          disabled={!finishReady}
-          title={
-            finishReady
-              ? 'One side is already beaten — skip the rest of the reveal'
-              : 'Finish unlocks once one side has all dice shown and cannot beat the other side'
-          }
-        >
-          Finish
-        </button>
-      )}
+      <div className="roll-result-actions">
+        {finished ? (
+          <button type="button" className="primary-button" onClick={onNext}>
+            Next match
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="ghost-button"
+            onClick={() => setShown(steps.length)}
+            disabled={!finishReady}
+            title={
+              finishReady
+                ? 'One side is already beaten — skip the rest of the reveal'
+                : 'Finish unlocks once one side has all dice shown and cannot beat the other side'
+            }
+          >
+            Finish
+          </button>
+        )}
+        {onReroll ? (
+          <button
+            type="button"
+            className="ghost-button"
+            onClick={onReroll}
+            disabled={rerollsLeft <= 0}
+            title={
+              rerollsLeft > 0
+                ? 'Throw out this match and roll it again'
+                : 'No rerolls left this tournament'
+            }
+          >
+            Reroll match ({rerollsLeft} left)
+          </button>
+        ) : null}
+      </div>
     </section>
   );
 }
 
-function RoundResults({ rolls, outfitsById, starIds, boostIds, openRollId, onToggle, onNext }) {
+function RoundResults({ rolls, outfitsById, starIds, boostIds, rivalIds, openRollId, onToggle, onNext }) {
   const [shown, setShown] = useState(1);
   const latestRef = useRef(null);
   const finished = shown >= rolls.length;
@@ -522,7 +616,7 @@ function RoundResults({ rolls, outfitsById, starIds, boostIds, openRollId, onTog
                         <SkinIcon outfit={outfit} className="round-skin-icon" />
                       </span>
                       <span className="round-name">{outfit?.name ?? '—'}</span>
-                      <BetMark id={id} starIds={starIds} boostIds={boostIds} />
+                      <BetMark id={id} starIds={starIds} boostIds={boostIds} rivalIds={rivalIds} />
                     </span>
                   </span>
                 );
@@ -655,7 +749,8 @@ function SelectScreen({
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const starSet = useMemo(() => new Set(starBetIds), [starBetIds]);
   const boostSet = useMemo(() => new Set(boostBetIds), [boostBetIds]);
-  const isBetting = mode === 'betting';
+  const isBetting = isBettingMode(mode);
+  const isHard = mode === 'hard';
   const betCount = starBetIds.length + boostBetIds.length;
   const [betTier, setBetTier] = useState('star'); // star | boost
   const [selectSort, setSelectSort] = useState(SELECT_SORT.NUMBER);
@@ -740,6 +835,10 @@ function SelectScreen({
   const startLabel = (() => {
     if (mode === 'rank') return `Start ranking ${selectedIds.length} skins`;
     if (mode === 'simulate') return `Simulate bracket with ${selectedIds.length} skins`;
+    if (isHard) {
+      const rivals = starBetIds.length;
+      return `Start hard mode (${discovered.length} skins · ${starBetIds.length} super · ${boostBetIds.length} bets · ${rivals} rival${rivals === 1 ? '' : 's'})`;
+    }
     if (mode === 'betting') {
       return `Start betting sim (${discovered.length} skins · ${starBetIds.length} super · ${boostBetIds.length} bets)`;
     }
@@ -747,7 +846,7 @@ function SelectScreen({
   })();
 
   const canStart =
-    mode === 'betting'
+    isBetting
       ? discovered.length >= 2 && betCount > 0 && betRunsRemaining > 0
       : selectedIds.length >= 2;
 
@@ -759,7 +858,9 @@ function SelectScreen({
     const isBoost = isBetting && boostSet.has(outfit.id);
     const level = owned ? getSkinLevel(skinLevels, outfit.id) : 0;
     const bonus =
-      (isStar ? starBonus : isBoost ? boostBonus : 0) + getLevelBonusDice(level);
+      (isStar ? starBonus : isBoost ? boostBonus : 0) +
+      getLevelBonusDice(level) +
+      (isHard && !isStar && !isBoost ? HARD_FIELD_BONUS_DICE : 0);
     return (
       <button
         key={outfit.id}
@@ -781,9 +882,9 @@ function SelectScreen({
           <SkinIcon outfit={outfit} className="catalogue-image" />
         </div>
         <p className="catalogue-name">{owned ? outfit.name : '???'}</p>
-        {owned ? <p className="skin-level-badge">{level}</p> : null}
-        {owned && (mode === 'simulate' || mode === 'betting') ? (
-          <DiceBadge outfit={outfit} bonus={bonus} />
+        {owned ? <p className="skin-level-badge">{isBetting ? `Lvl. ${level}` : level}</p> : null}
+        {owned && (mode === 'simulate' || isBetting) ? (
+          <DiceBadge outfit={outfit} bonus={bonus} rowSize={isBetting ? 6 : 0} />
         ) : null}
         <span className="fort-sort-check" aria-hidden="true">
           {isBetting
@@ -824,7 +925,7 @@ function SelectScreen({
       <header className={`catalogue-header ${isBetting ? 'betting-header' : ''}`}>
         {isBetting ? (
           <div className="betting-header-row">
-            <h1>Betting</h1>
+            <h1>{isHard ? 'Hard Mode' : 'Betting'}</h1>
             <div className="betting-header-stats">
               <span>Weebucks: {economy.points}</span>
               <span>
@@ -840,10 +941,12 @@ function SelectScreen({
             ? 'Pick discovered skins, then rank them favorite to least favorite.'
             : mode === 'simulate'
               ? 'Pick discovered skins for a dice-simulated double-elim bracket.'
-              : mode === 'betting'
-                ? 'Every discovered skin enters. Pick your super bet and your bets, then start.'
-                : 'Pick discovered skins, then run a double-elimination bracket.'}{' '}
-          {mode === 'betting' ? 'Rules are in Help.' : 'Only discovered skins can enter.'}
+              : isHard
+                ? 'Every discovered skin enters. Other skins roll 2 extra dice. One rival is chosen per super bet, with 4 extra dice and a floor of 10. Round payouts are ×2, or ×5 when your bet beats a rival.'
+                : mode === 'betting'
+                  ? 'Every discovered skin enters. Pick your super bet and your bets, then start.'
+                  : 'Pick discovered skins, then run a double-elimination bracket.'}{' '}
+          {isBetting ? 'Rules are in Help.' : 'Only discovered skins can enter.'}
         </p>
       </header>
 
@@ -1082,13 +1185,13 @@ export default function FortSort({
 
   useEffect(() => {
     saveSortMode(mode);
-    if (mode === 'betting') {
+    if (isBettingMode(mode)) {
       setSelectedIds(discovered.map((outfit) => outfit.id));
     }
   }, [mode, discovered]);
 
   useEffect(() => {
-    if (mode !== 'betting') saveSelectedIds(selectedIds);
+    if (!isBettingMode(mode)) saveSelectedIds(selectedIds);
   }, [selectedIds, mode]);
 
   // Resume active runs if their skins are still discovered.
@@ -1110,8 +1213,9 @@ export default function FortSort({
     const savedSim = loadSimBracketProgress();
     const resumeSim =
       savedSim?.entrants.every((id) => discoveredIds.has(id)) &&
-      ((mode === 'betting' && savedSim.betting) || (mode === 'simulate' && !savedSim.betting));
+      ((isBettingMode(mode) && savedSim.betting) || (mode === 'simulate' && !savedSim.betting));
     if (resumeSim) {
+      if (savedSim.hardMode) setMode('hard');
       setTournament({
         ...savedSim,
         simulated: true,
@@ -1156,7 +1260,7 @@ export default function FortSort({
       !roundOnScreen;
     const inBettingBracket =
       screen === 'play' &&
-      mode === 'betting' &&
+      isBettingMode(mode) &&
       !archiveReadOnly &&
       !!tournament?.betting &&
       !!bracketState &&
@@ -1182,7 +1286,7 @@ export default function FortSort({
     lastRoll,
     roundRolls,
   ]);
-  const isSimMode = mode === 'simulate' || mode === 'betting' || !!tournament?.simulated;
+  const isSimMode = mode === 'simulate' || isBettingMode(mode) || !!tournament?.simulated;
   const bonusById = useMemo(() => {
     if (!tournament?.simulated) return null;
     return buildBonusById(
@@ -1191,13 +1295,18 @@ export default function FortSort({
       tournament.betting ? economy : null,
       skinLevels,
       tournament.entrants ?? [],
+      tournament.hardMode
+        ? { hardMode: true, rivalBetIds: tournament.rivalBetIds ?? [] }
+        : null,
     );
   }, [tournament, economy, skinLevels]);
   const minRollById = useMemo(() => {
     if (!tournament?.simulated) return null;
+    const rivals = new Set(tournament.hardMode ? tournament.rivalBetIds ?? [] : []);
     const map = {};
     for (const id of tournament.entrants ?? []) {
-      const min = getMinRollForLevel(getSkinLevel(skinLevels, id));
+      let min = getMinRollForLevel(getSkinLevel(skinLevels, id));
+      if (rivals.has(id)) min = Math.max(min, HARD_RIVAL_MIN_ROLL);
       if (min > 1) map[id] = min;
     }
     return Object.keys(map).length ? map : null;
@@ -1227,7 +1336,7 @@ export default function FortSort({
       setRankProgress(progress);
       saveRankProgress(progress);
       setTournament(null);
-    } else if (mode === 'betting') {
+    } else if (isBettingMode(mode)) {
       const entrants = discovered.map((outfit) => outfit.id);
       if (entrants.length < 2) return;
       if (!canStartBettingRun(economy)) {
@@ -1247,6 +1356,7 @@ export default function FortSort({
       }
       const lockedEconomy = lockBetSkins([...stars, ...boosts], spent.economy);
       onEconomyChange(lockedEconomy);
+      const hardMode = mode === 'hard';
       const orderedEntrants = hasBetSeedingUnlock(lockedEconomy)
         ? seedBettingEntrants(entrants, stars, boosts)
         : shuffle(entrants);
@@ -1258,9 +1368,12 @@ export default function FortSort({
         archiveId: null,
         simulated: true,
         betting: true,
+        hardMode,
+        rivalBetIds: hardMode ? pickRivalBetIds(entrants, stars, boosts) : [],
         starBetIds: stars,
         boostBetIds: boosts,
         pointsEarned: 0,
+        rerollsUsed: 0,
         championBonusPaid: false,
         xpAwarded: false,
         extraLifeById: hasSuperBetExtraLifeUnlock(lockedEconomy)
@@ -1286,6 +1399,7 @@ export default function FortSort({
         simulated,
         betting: false,
         pointsEarned: 0,
+        rerollsUsed: 0,
         championBonusPaid: false,
         xpAwarded: false,
         extraLifeById: {},
@@ -1298,7 +1412,7 @@ export default function FortSort({
       setPageIndex(0);
       setFollowPage(true);
     }
-    if (mode === 'betting') {
+    if (isBettingMode(mode)) {
       setMenuMusicBlocked('betting', true);
       playBetMusic();
     }
@@ -1342,27 +1456,29 @@ export default function FortSort({
     setFollowPage(true);
   };
 
-  const applySimResult = (result, nextExtraLifeById = null) => {
-    if (!tournament || !result) return;
+  const applySimResult = (result, nextExtraLifeById = null, source = null) => {
+    const run = source?.tournament ?? tournament;
+    const economyState = source?.economy ?? economy;
+    const levelState = source?.skinLevels ?? skinLevels;
+    if (!run || !result) return;
     let pointsGain = 0;
-    let championBonusPaid = !!tournament.championBonusPaid;
-    let xpAwarded = !!tournament.xpAwarded;
+    let championBonusPaid = !!run.championBonusPaid;
+    let xpAwarded = !!run.xpAwarded;
     const extraLifeById =
-      nextExtraLifeById != null
-        ? { ...nextExtraLifeById }
-        : { ...(tournament.extraLifeById ?? {}) };
-    if (tournament.betting) {
+      nextExtraLifeById != null ? { ...nextExtraLifeById } : { ...(run.extraLifeById ?? {}) };
+    if (run.betting) {
       for (const win of result.wins ?? []) {
         const winnerId = typeof win === 'string' ? win : win?.winnerId;
         const matchId = typeof win === 'string' ? null : win?.matchId;
         if (!winnerId || !betIdSet.has(winnerId)) continue;
-        const phase = matchId ? matchPhase(tournament.bracket, matchId) : '';
-        pointsGain += getBetWinPointsForPhase(phase, economy, {
-          superBet: superBetIdSet.has(winnerId),
-        });
+        const phase = matchId ? matchPhase(run.bracket, matchId) : '';
+        pointsGain +=
+          getBetWinPointsForPhase(phase, economyState, {
+            superBet: superBetIdSet.has(winnerId),
+          }) * hardModePayoutMultiplier(run, win, result.rolls);
       }
-      const wasDone = !!resolveBracket(tournament.bracket, Object.fromEntries(tournament.history)).done;
-      const nextState = resolveBracket(tournament.bracket, Object.fromEntries(result.history));
+      const wasDone = !!resolveBracket(run.bracket, Object.fromEntries(run.history)).done;
+      const nextState = resolveBracket(run.bracket, Object.fromEntries(result.history));
       if (
         !wasDone &&
         nextState.done &&
@@ -1370,23 +1486,19 @@ export default function FortSort({
         betIdSet.has(nextState.champion) &&
         !championBonusPaid
       ) {
-        pointsGain += getTournamentWinPoints(economy, {
+        pointsGain += getTournamentWinPoints(economyState, {
           superBet: superBetIdSet.has(nextState.champion),
         });
         championBonusPaid = true;
       }
       if (!wasDone && nextState.done && !xpAwarded) {
-        const finalStandings = computeStandings(
-          tournament.bracket,
-          nextState.outcomes,
-          nextState,
-        );
+        const finalStandings = computeStandings(run.bracket, nextState.outcomes, nextState);
         const awards = [...betIdSet].map((id) => ({
           id,
           place: finalStandings.placeById.get(id) ?? 999,
           superBet: superBetIdSet.has(id),
         }));
-        const xpResult = awardPlacementXp(skinLevels, awards);
+        const xpResult = awardPlacementXp(levelState, awards);
         onSkinLevelsChange?.(xpResult.levels);
         const totalXp = xpResult.gained.reduce((sum, entry) => sum + entry.amount, 0);
         if (totalXp > 0) {
@@ -1395,12 +1507,13 @@ export default function FortSort({
         xpAwarded = true;
       }
     }
-    if (pointsGain > 0) onEconomyChange(addPoints(pointsGain, economy));
+    const nextEconomy = pointsGain > 0 ? addPoints(pointsGain, economyState) : economyState;
+    if (nextEconomy !== economy) onEconomyChange(nextEconomy);
     const next = {
-      ...tournament,
+      ...run,
       history: result.history,
-      rolls: [...(tournament.rolls ?? []), ...result.rolls],
-      pointsEarned: (tournament.pointsEarned ?? 0) + pointsGain,
+      rolls: [...(run.rolls ?? []), ...result.rolls],
+      pointsEarned: (run.pointsEarned ?? 0) + pointsGain,
       championBonusPaid,
       xpAwarded,
       extraLifeById,
@@ -1432,6 +1545,105 @@ export default function FortSort({
         wins: [{ winnerId: step.winnerId, matchId: step.matchId }],
       },
       lives,
+    );
+    setMatchView('roll');
+    setOpenRollId(null);
+  };
+
+  const rerollCurrentMatch = () => {
+    if (!tournament || archiveReadOnly || !tournament.simulated) return;
+    const limit = getMatchRerolls(economy);
+    const used = Math.max(0, Number(tournament.rerollsUsed) || 0);
+    if (limit <= 0 || used >= limit) return;
+    const rolls = tournament.rolls ?? [];
+    const last = rolls[rolls.length - 1];
+    if (!last || !tournament.history.length) return;
+
+    const history = tournament.history.slice(0, -1);
+    let pointsEarned = tournament.pointsEarned ?? 0;
+    let championBonusPaid = !!tournament.championBonusPaid;
+    let xpAwarded = !!tournament.xpAwarded;
+    let economyState = economy;
+    let levelState = skinLevels;
+    let refund = 0;
+
+    if (tournament.betting) {
+      const winnerId = last.participants?.[last.winnerSlot];
+      if (winnerId && betIdSet.has(winnerId)) {
+        const phase = matchPhase(tournament.bracket, last.matchId);
+        refund +=
+          getBetWinPointsForPhase(phase, economy, {
+            superBet: superBetIdSet.has(winnerId),
+          }) * hardModePayoutMultiplier(tournament, { matchId: last.matchId }, [last]);
+      }
+      const before = resolveBracket(tournament.bracket, Object.fromEntries(history));
+      const after = resolveBracket(tournament.bracket, Object.fromEntries(tournament.history));
+      if (!before.done && after.done) {
+        if (championBonusPaid && after.champion && betIdSet.has(after.champion)) {
+          refund += getTournamentWinPoints(economy, {
+            superBet: superBetIdSet.has(after.champion),
+          });
+          championBonusPaid = false;
+        }
+        if (xpAwarded && standings?.placeById) {
+          const stars = new Set(tournament.starBetIds ?? []);
+          const nextLevels = { ...skinLevels };
+          for (const id of betIdSet) {
+            const place = standings.placeById.get(id);
+            if (place == null) continue;
+            const amount = placementXp(place, stars.has(id));
+            const xp = Math.max(0, getSkinXp(nextLevels, id) - amount);
+            nextLevels[id] = { xp, level: levelFromXp(xp) };
+          }
+          saveSkinLevels(nextLevels);
+          levelState = nextLevels;
+          xpAwarded = false;
+        }
+      }
+    }
+
+    if (refund > 0) {
+      pointsEarned = Math.max(0, pointsEarned - refund);
+      economyState = addPoints(-refund, economy);
+    }
+
+    const lives = { ...(tournament.extraLifeById ?? {}) };
+    if (last.extraLifeSavedId) lives[last.extraLifeSavedId] = true;
+
+    const base = {
+      ...tournament,
+      history,
+      rolls: rolls.slice(0, -1),
+      pointsEarned,
+      championBonusPaid,
+      xpAwarded,
+      extraLifeById: { ...lives },
+      rerollsUsed: used + 1,
+    };
+
+    const step = simulateNextMatch(
+      base.bracket,
+      base.history,
+      outfitsById,
+      bonusById,
+      minRollById,
+      lives,
+    );
+    if (levelState !== skinLevels) onSkinLevelsChange?.(levelState);
+    if (!step) {
+      if (economyState !== economy) onEconomyChange(economyState);
+      setTournament(base);
+      persistTournament(base);
+      return;
+    }
+    applySimResult(
+      {
+        history: [...base.history, [step.matchId, step.winnerSlot]],
+        rolls: [step.roll],
+        wins: [{ winnerId: step.winnerId, matchId: step.matchId }],
+      },
+      lives,
+      { tournament: base, economy: economyState, skinLevels: levelState },
     );
     setMatchView('roll');
     setOpenRollId(null);
@@ -1564,6 +1776,8 @@ export default function FortSort({
         betting: !!tournament.betting,
         starBetIds: tournament.starBetIds ?? [],
         boostBetIds: tournament.boostBetIds ?? [],
+        hardMode: !!tournament.hardMode,
+        rivalBetIds: tournament.rivalBetIds ?? [],
         pointsEarned: tournament.pointsEarned ?? 0,
         championId: bracketState.champion,
         runnerUpId: bracketState.runnerUp,
@@ -1583,7 +1797,7 @@ export default function FortSort({
   useEffect(() => {
     if (
       screen === 'play' &&
-      (mode === 'bracket' || mode === 'simulate' || mode === 'betting') &&
+      (mode === 'bracket' || mode === 'simulate' || isBettingMode(mode)) &&
       bracketState?.done &&
       !archiveReadOnly &&
       tournament &&
@@ -1601,7 +1815,7 @@ export default function FortSort({
       if (saved?.entrants.every((id) => discoveredIds.has(id))) {
         setTournament({
           ...saved,
-          simulated: !!(saved.simulated || mode === 'simulate' || mode === 'betting'),
+          simulated: !!(saved.simulated || mode === 'simulate' || isBettingMode(mode)),
           bracket: createBracket(saved.entrants, saved.version ?? 4),
         });
         setScreen('play');
@@ -1613,17 +1827,17 @@ export default function FortSort({
       return;
     }
     const label =
-      mode === 'rank' ? 'ranking' : mode === 'simulate' || mode === 'betting' ? 'simulation' : 'bracket';
+      mode === 'rank' ? 'ranking' : mode === 'simulate' || isBettingMode(mode) ? 'simulation' : 'bracket';
     if (!confirm(`Start over? This clears your current ${label}. Saved tournaments are kept.`)) {
       return;
     }
-    if ((mode === 'bracket' || mode === 'simulate' || mode === 'betting') && bracketState?.done) {
+    if ((mode === 'bracket' || mode === 'simulate' || isBettingMode(mode)) && bracketState?.done) {
       saveFinishedTournament(true);
     }
     if (mode === 'rank') {
       clearRankProgress();
       setRankProgress(null);
-    } else if (mode === 'simulate' || mode === 'betting') {
+    } else if (mode === 'simulate' || isBettingMode(mode)) {
       clearSimBracketProgress();
       setTournament(null);
     } else {
@@ -1637,13 +1851,13 @@ export default function FortSort({
   };
 
   const playAgain = () => {
-    if ((mode === 'bracket' || mode === 'simulate' || mode === 'betting') && bracketState?.done) {
+    if ((mode === 'bracket' || mode === 'simulate' || isBettingMode(mode)) && bracketState?.done) {
       saveFinishedTournament(true);
     }
     if (mode === 'rank') {
       clearRankProgress();
       setRankProgress(null);
-    } else if (mode === 'simulate' || mode === 'betting') {
+    } else if (mode === 'simulate' || isBettingMode(mode)) {
       clearSimBracketProgress();
       setTournament(null);
     } else {
@@ -1688,7 +1902,7 @@ export default function FortSort({
       onSkinLevelsChange?.(nextLevels);
     }
 
-    if (tournament.simulated || mode === 'simulate' || mode === 'betting') clearSimBracketProgress();
+    if (tournament.simulated || mode === 'simulate' || isBettingMode(mode)) clearSimBracketProgress();
     else clearBracketProgress();
     setTournament(null);
     setRoundRolls([]);
@@ -1715,6 +1929,8 @@ export default function FortSort({
       archiveId: entry.id,
       simulated: !!entry.simulated || !!entry.betting,
       betting: !!entry.betting,
+      hardMode: !!entry.hardMode,
+      rivalBetIds: entry.rivalBetIds ?? [],
       starBetIds: entry.starBetIds ?? [],
       boostBetIds: entry.boostBetIds ?? [],
       pointsEarned: entry.pointsEarned ?? 0,
@@ -1722,7 +1938,7 @@ export default function FortSort({
       xpAwarded: true,
       bracket: createBracket(entry.entrants, entry.version ?? 4),
     });
-    setMode(entry.betting ? 'betting' : entry.simulated ? 'simulate' : 'bracket');
+    setMode(entry.hardMode ? 'hard' : entry.betting ? 'betting' : entry.simulated ? 'simulate' : 'bracket');
     setScreen('play');
     setShowFullResults(false);
     setPlayerRunId(null);
@@ -1782,7 +1998,7 @@ export default function FortSort({
                 <div className="archive-row-meta">
                   <strong>
                     {outfitsById.get(entry.championId)?.name ?? 'Tournament'} · {entry.entrants.length} skins
-                    {entry.betting ? ' · Betting' : entry.simulated ? ' · Simulated' : ''}
+                    {entry.hardMode ? ' · Hard Mode' : entry.betting ? ' · Betting' : entry.simulated ? ' · Simulated' : ''}
                     {entry.pointsEarned ? ` · +${entry.pointsEarned} weebucks` : ''}
                   </strong>
                   <span className="hint">{new Date(entry.savedAt).toLocaleString()}</span>
@@ -1832,6 +2048,19 @@ export default function FortSort({
               <span className="mode-feature-title">{MAIN_MODE.label}</span>
               <span className="mode-feature-blurb">{MAIN_MODE.blurb}</span>
               {mode === MAIN_MODE.id ? <span className="mode-current">Current</span> : null}
+            </button>
+            <button
+              type="button"
+              className={`mode-feature is-hard ${mode === HARD_MODE.id ? 'is-current' : ''}`}
+              onClick={() => {
+                setMode(HARD_MODE.id);
+                setScreen('select');
+              }}
+            >
+              <span className="mode-feature-kicker">Betting mode</span>
+              <span className="mode-feature-title">{HARD_MODE.label}</span>
+              <span className="mode-feature-blurb">{HARD_MODE.blurb}</span>
+              {mode === HARD_MODE.id ? <span className="mode-current">Current</span> : null}
             </button>
             <p className="mode-side-label">Side modes</p>
             <div className="mode-side-list">
@@ -1978,7 +2207,7 @@ export default function FortSort({
   }
 
   // Bracket / simulate / betting play
-  if ((mode === 'bracket' || mode === 'simulate' || mode === 'betting') && tournament && bracketState) {
+  if ((mode === 'bracket' || mode === 'simulate' || isBettingMode(mode)) && tournament && bracketState) {
     const { bracket } = tournament;
     const currentPage = bracketState.current
       ? bracket.pageOf.get(bracketState.current.id) ?? pageIndex
@@ -2170,12 +2399,17 @@ export default function FortSort({
         <div className="match-tab-panel" hidden={playTab !== 'match'}>
         {matchView === 'roll' && lastRoll ? (
           <RollResult
-            key={lastRoll.matchId}
+            key={`${lastRoll.matchId}-${tournament.rerollsUsed ?? 0}`}
             roll={lastRoll}
             outfitsById={outfitsById}
             starIds={new Set(tournament.starBetIds ?? [])}
             boostIds={new Set(tournament.boostBetIds ?? [])}
+            rivalIds={new Set(tournament.rivalBetIds ?? [])}
             dieMs={getDiceRollMs(economy)}
+            onReroll={
+              !archiveReadOnly && getMatchRerolls(economy) > 0 ? rerollCurrentMatch : null
+            }
+            rerollsLeft={Math.max(0, getMatchRerolls(economy) - (tournament.rerollsUsed ?? 0))}
             onNext={() => {
               setMatchView('vs');
               setWatchPending(peekWatchKind());
@@ -2188,6 +2422,7 @@ export default function FortSort({
             outfitsById={outfitsById}
             starIds={new Set(tournament.starBetIds ?? [])}
             boostIds={new Set(tournament.boostBetIds ?? [])}
+            rivalIds={new Set(tournament.rivalBetIds ?? [])}
             openRollId={openRollId}
             onToggle={(matchId) => setOpenRollId((current) => (current === matchId ? null : matchId))}
             onNext={() => {
@@ -2335,7 +2570,11 @@ export default function FortSort({
                 <span className="dice-chip">
                   {pageLabel(bracket.pages[currentPage] ?? page)}
                 </span>
-                {tournament.betting ? <span className="dice-chip is-bet">Betting</span> : null}
+                {tournament.hardMode ? (
+                  <span className="dice-chip is-hard">Hard Mode</span>
+                ) : tournament.betting ? (
+                  <span className="dice-chip is-bet">Betting</span>
+                ) : null}
               </div>
               <div className="dice-matchup-stats">
                 <span>
@@ -2358,6 +2597,7 @@ export default function FortSort({
                         id={currentOutcome?.participants[0]}
                         starIds={new Set(tournament.starBetIds ?? [])}
                         boostIds={new Set(tournament.boostBetIds ?? [])}
+                        rivalIds={new Set(tournament.rivalBetIds ?? [])}
                       />
                     </span>
                     <span className="versus dice-versus" aria-hidden="true">
@@ -2369,6 +2609,7 @@ export default function FortSort({
                         id={currentOutcome?.participants[1]}
                         starIds={new Set(tournament.starBetIds ?? [])}
                         boostIds={new Set(tournament.boostBetIds ?? [])}
+                        rivalIds={new Set(tournament.rivalBetIds ?? [])}
                       />
                     </span>
                   </div>

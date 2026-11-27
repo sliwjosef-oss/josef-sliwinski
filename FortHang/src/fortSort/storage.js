@@ -5,7 +5,7 @@ const MODE_KEY = 'fort-sort-mode-v1';
 const ARCHIVE_KEY = 'fort-sort-archive-v1';
 const SELECTED_KEY = 'fort-sort-selected-v1';
 
-const VALID_MODES = new Set(['rank', 'bracket', 'simulate', 'betting']);
+const VALID_MODES = new Set(['rank', 'bracket', 'simulate', 'betting', 'hard']);
 
 function readJson(key) {
   try {
@@ -74,6 +74,9 @@ function normalizeBracketProgress(saved, simulated) {
     betting: !!saved.betting,
     starBetIds: Array.isArray(saved.starBetIds) ? saved.starBetIds : [],
     boostBetIds: Array.isArray(saved.boostBetIds) ? saved.boostBetIds : [],
+    hardMode: !!saved.hardMode,
+    rivalBetIds: Array.isArray(saved.rivalBetIds) ? saved.rivalBetIds : [],
+    rerollsUsed: Math.max(0, Number(saved.rerollsUsed) || 0),
     pointsEarned: Number(saved.pointsEarned) || 0,
     championBonusPaid: !!saved.championBonusPaid,
     xpAwarded: !!saved.xpAwarded,
@@ -117,6 +120,9 @@ export function saveSimBracketProgress(tournament) {
     betting: !!tournament.betting,
     starBetIds: tournament.starBetIds ?? [],
     boostBetIds: tournament.boostBetIds ?? [],
+    hardMode: !!tournament.hardMode,
+    rivalBetIds: tournament.rivalBetIds ?? [],
+    rerollsUsed: tournament.rerollsUsed ?? 0,
     pointsEarned: tournament.pointsEarned ?? 0,
     championBonusPaid: !!tournament.championBonusPaid,
     xpAwarded: !!tournament.xpAwarded,

@@ -67,11 +67,27 @@ export const MAX_STAR_BETS = STAR_BETS_TIER2;
 export const MAX_BOOST_BETS = BOOST_BETS_TIER2;
 export const STAR_BET_BONUS_DICE = 4;
 export const BOOST_BET_BONUS_DICE = 2;
+/** Hard Mode: extra dice for every skin that is not a bet or super bet. */
+export const HARD_FIELD_BONUS_DICE = 2;
+/** Hard Mode: extra dice for rival bets. Replaces the field bonus. */
+export const HARD_RIVAL_BONUS_DICE = 4;
+/** Hard Mode: rival bets reroll anything under this. */
+export const HARD_RIVAL_MIN_ROLL = 10;
+export const HARD_MODE_PAYOUT_MULT = 2;
+export const HARD_RIVAL_PAYOUT_MULT = 5;
+export const MATCH_REROLLS_TIER1 = 1;
+export const MATCH_REROLLS_TIER2 = 3;
+export const MATCH_REROLLS_TIER3 = 5;
 export const STAR_BET_BONUS_DICE_UPGRADED = 5;
 export const BOOST_BET_BONUS_DICE_UPGRADED = 3;
 
 export const SHOP_UNLOCKS = {
-  simulateAll: { id: 'simulateAll', cost: 5000, label: 'Unlock Simulate all', blurb: 'Unlock the Simulate all button in Betting.' },
+  simulateAll: {
+    id: 'simulateAll',
+    cost: 5000,
+    label: 'Unlock Simulate all',
+    blurb: 'Unlock the Simulate all button in Betting. Appears after every other betting upgrade is owned.',
+  },
   top8Tier1: {
     id: 'top8Tier1',
     cost: 50,
@@ -220,6 +236,26 @@ export const SHOP_UNLOCKS = {
     label: 'Dice roller → 0.5 seconds',
     blurb: 'Dice rolls take 0.5 seconds instead of 1.',
     requires: 'diceRollTier1',
+  },
+  rerollMatchTier1: {
+    id: 'rerollMatchTier1',
+    cost: 500,
+    label: 'Reroll match → 1',
+    blurb: 'Adds a Reroll match button under Finish. 1 reroll per tournament.',
+  },
+  rerollMatchTier2: {
+    id: 'rerollMatchTier2',
+    cost: 1000,
+    label: 'Reroll match → 3',
+    blurb: 'Raise match rerolls from 1 to 3 per tournament.',
+    requires: 'rerollMatchTier1',
+  },
+  rerollMatchTier3: {
+    id: 'rerollMatchTier3',
+    cost: 2000,
+    label: 'Reroll match → 5',
+    blurb: 'Raise match rerolls from 3 to 5 per tournament.',
+    requires: 'rerollMatchTier2',
   },
 };
 
@@ -434,6 +470,7 @@ function defaultUnlocks() {
     superBetExtraLife: false,
     betSeeding: false,
     diceRollMs: 2000,
+    matchRerolls: 0,
     trailBossItems: [],
     trailEvents: [],
     trailStormResist: 0,
@@ -559,6 +596,11 @@ function normalizeUnlocks(unlocks) {
     superBetExtraLife: !!unlocks.superBetExtraLife,
     betSeeding: !!unlocks.betSeeding,
     diceRollMs: unlocks.diceRollMs === 500 || unlocks.diceRollMs === 1000 ? unlocks.diceRollMs : 2000,
+    matchRerolls: [MATCH_REROLLS_TIER1, MATCH_REROLLS_TIER2, MATCH_REROLLS_TIER3].includes(
+      unlocks.matchRerolls,
+    )
+      ? unlocks.matchRerolls
+      : 0,
     trailBossItems: Array.isArray(unlocks.trailBossItems)
       ? unlocks.trailBossItems.filter((name) => typeof name === 'string')
       : [],
@@ -752,10 +794,29 @@ export function getDiceRollMs(economy = loadEconomy()) {
   return normalizeUnlocks(economy.unlocks).diceRollMs;
 }
 
+/** Rerolls of the current dice match allowed in one tournament. 0, 1, 3, or 5. */
+export function getMatchRerolls(economy = loadEconomy()) {
+  return normalizeUnlocks(economy.unlocks).matchRerolls;
+}
+
+function otherBettingUnlocksOwned(economy) {
+  return Object.keys(SHOP_UNLOCKS)
+    .filter((id) => id !== 'simulateAll')
+    .every((id) => isShopUnlockOwned(id, economy));
+}
+
 export function buyShopUnlock(unlockId, economy = loadEconomy()) {
   const state = withFreshMeta(economy);
   const item = Object.values(SHOP_UNLOCKS).find((entry) => entry.id === unlockId);
   if (!item) return { ok: false, reason: 'Unknown shop item.', economy: state };
+
+  if (unlockId === 'simulateAll' && !otherBettingUnlocksOwned(state)) {
+    return {
+      ok: false,
+      reason: 'Buy every other betting upgrade before Simulate all.',
+      economy: state,
+    };
+  }
 
   if (item.requires === 'top8Tier1' && state.unlocks.top8Reward < TOP8_REWARD_TIER1) {
     return {
@@ -811,6 +872,12 @@ export function buyShopUnlock(unlockId, economy = loadEconomy()) {
   if (item.requires === 'diceRollTier1' && state.unlocks.diceRollMs > 1000) {
     return { ok: false, reason: 'Buy Dice roller → 1 second first.', economy: state };
   }
+  if (item.requires === 'rerollMatchTier1' && state.unlocks.matchRerolls < MATCH_REROLLS_TIER1) {
+    return { ok: false, reason: 'Buy Reroll match → 1 first.', economy: state };
+  }
+  if (item.requires === 'rerollMatchTier2' && state.unlocks.matchRerolls < MATCH_REROLLS_TIER2) {
+    return { ok: false, reason: 'Buy Reroll match → 3 first.', economy: state };
+  }
 
   const already =
     (unlockId === 'simulateAll' && state.unlocks.simulateAll) ||
@@ -836,7 +903,10 @@ export function buyShopUnlock(unlockId, economy = loadEconomy()) {
     (unlockId === 'betRunsTier1' && state.unlocks.dailyBetRuns >= DAILY_BET_RUNS_TIER1) ||
     (unlockId === 'betRunsTier2' && state.unlocks.dailyBetRuns >= DAILY_BET_RUNS_TIER2) ||
     (unlockId === 'diceRollTier1' && state.unlocks.diceRollMs <= 1000) ||
-    (unlockId === 'diceRollTier2' && state.unlocks.diceRollMs <= 500);
+    (unlockId === 'diceRollTier2' && state.unlocks.diceRollMs <= 500) ||
+    (unlockId === 'rerollMatchTier1' && state.unlocks.matchRerolls >= MATCH_REROLLS_TIER1) ||
+    (unlockId === 'rerollMatchTier2' && state.unlocks.matchRerolls >= MATCH_REROLLS_TIER2) ||
+    (unlockId === 'rerollMatchTier3' && state.unlocks.matchRerolls >= MATCH_REROLLS_TIER3);
 
   if (already) return { ok: false, reason: 'Already owned.', economy: state };
   if (state.points < item.cost) {
@@ -870,6 +940,9 @@ export function buyShopUnlock(unlockId, economy = loadEconomy()) {
   if (unlockId === 'betRunsTier2') state.unlocks.dailyBetRuns = DAILY_BET_RUNS_TIER2;
   if (unlockId === 'diceRollTier1') state.unlocks.diceRollMs = 1000;
   if (unlockId === 'diceRollTier2') state.unlocks.diceRollMs = 500;
+  if (unlockId === 'rerollMatchTier1') state.unlocks.matchRerolls = MATCH_REROLLS_TIER1;
+  if (unlockId === 'rerollMatchTier2') state.unlocks.matchRerolls = MATCH_REROLLS_TIER2;
+  if (unlockId === 'rerollMatchTier3') state.unlocks.matchRerolls = MATCH_REROLLS_TIER3;
 
   return { ok: true, economy: write(state) };
 }
@@ -1163,6 +1236,9 @@ export function isShopUnlockOwned(unlockId, economy = loadEconomy()) {
   if (unlockId === 'betRunsTier2') return unlocks.dailyBetRuns >= DAILY_BET_RUNS_TIER2;
   if (unlockId === 'diceRollTier1') return unlocks.diceRollMs <= 1000;
   if (unlockId === 'diceRollTier2') return unlocks.diceRollMs <= 500;
+  if (unlockId === 'rerollMatchTier1') return unlocks.matchRerolls >= MATCH_REROLLS_TIER1;
+  if (unlockId === 'rerollMatchTier2') return unlocks.matchRerolls >= MATCH_REROLLS_TIER2;
+  if (unlockId === 'rerollMatchTier3') return unlocks.matchRerolls >= MATCH_REROLLS_TIER3;
   return false;
 }
 
@@ -1186,6 +1262,7 @@ export function countPermanentShopUpgrades(economy = loadEconomy()) {
 export function isShopUnlockAvailable(unlockId, economy = loadEconomy()) {
   const unlocks = normalizeUnlocks(economy.unlocks);
   if (isShopUnlockOwned(unlockId, economy)) return false;
+  if (unlockId === 'simulateAll') return otherBettingUnlocksOwned(economy);
   if (unlockId === 'top8Tier2') return unlocks.top8Reward >= TOP8_REWARD_TIER1;
   if (unlockId === 'top8Tier3') return unlocks.top8Reward >= TOP8_REWARD_TIER2;
   if (unlockId === 'top64Tier2') return unlocks.top64Reward >= TOP64_REWARD_TIER1;
@@ -1197,6 +1274,8 @@ export function isShopUnlockAvailable(unlockId, economy = loadEconomy()) {
   if (unlockId === 'boostSlotsTier2') return unlocks.boostSlots >= BOOST_BETS_TIER1;
   if (unlockId === 'betRunsTier2') return unlocks.dailyBetRuns >= DAILY_BET_RUNS_TIER1;
   if (unlockId === 'diceRollTier2') return unlocks.diceRollMs <= 1000;
+  if (unlockId === 'rerollMatchTier2') return unlocks.matchRerolls >= MATCH_REROLLS_TIER1;
+  if (unlockId === 'rerollMatchTier3') return unlocks.matchRerolls >= MATCH_REROLLS_TIER2;
   return true;
 }
 
