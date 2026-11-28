@@ -19,7 +19,7 @@ import {
   isTrailShopUnlockOwned,
   rollRandomSidekick,
 } from '../utils/economy';
-import { MENU_TRACKS, getPreviewTrackId, startMusicPreview, stopMusicPreview, subscribeMenuMusic } from '../audio/menuMusic';
+import { MENU_TRACKS, getPreviewSecondsLeft, getPreviewTrackId, startMusicPreview, stopMusicPreview, subscribeMenuMusic } from '../audio/menuMusic';
 import { getSidekickIconSrc } from '../utils/sidekicks';
 
 function rarityLabel(rarity) {
@@ -360,7 +360,7 @@ export default function Shop({ economy, sidekicks, onEconomyChange, onBack, musi
                         className="secondary-button"
                         onClick={() => startMusicPreview(track.id)}
                       >
-                        {previewing ? 'Stop preview' : 'Preview'}
+                        {previewing ? `Stop preview (${getPreviewSecondsLeft()}s)` : 'Preview'}
                       </button>
                       {owned ? (
                         <button type="button" className="ghost-button" disabled>

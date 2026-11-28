@@ -44,6 +44,8 @@ export const SERIES_GROUPS = [
   { key: 'no-sweat-summer', label: 'No Sweat Summer' },
   { key: 'in-the-ocean', label: 'In the Ocean' },
   { key: 'fortnite-to-the-future', label: 'Fortnite to the Future' },
+  { key: 'outlaws', label: 'Outlaws' },
+  { key: 'leading-beauties', label: 'Leading Beauties' },
   { key: 'goofing-around', label: 'Goofing Around' },
   { key: 'ready-to-heist', label: 'Ready to Heist' },
   { key: 'imagined-order', label: 'Imagined Order' },
@@ -59,7 +61,9 @@ export const SERIES_GROUPS = [
   { key: 'high-stakes-club', label: 'High Stakes Club' },
   { key: 'ruby-and-opal', label: 'Ruby & Opal' },
   { key: 'greek-gods', label: 'Norse & Greek Gods' },
+  { key: 'wastelanders', label: 'Wastelanders' },
   { key: 'save-the-world', label: 'Save the World' },
+  { key: 'og-soldiers', label: 'OG Soldiers' },
   { key: 'other', label: 'Other' },
 ];
 
@@ -147,6 +151,11 @@ const CARTOON_OUTFIT_NAMES = new Set([
   'Shaggy Rogers',
   'Beavis',
   'Butt-Head',
+  'Alastor',
+  'Princess Charlie Morningstar',
+  'Vagatha',
+  'Pumpkin King',
+  'Death (Puss in Boots)',
   'Finn the Human',
   'Jake the Dog',
   'Princess Bubblegum',
@@ -171,9 +180,6 @@ const CARTOON_OUTFIT_NAMES = new Set([
   'Samurai Jack',
   'Stan Smith',
   'Francine Smith',
-  'Alastor',
-  'Princess Charlie Morningstar',
-  'Vagatha',
   'Scott Pilgrim',
   'Ramona Flowers',
 ]);
@@ -239,12 +245,12 @@ const ANIME_OUTFIT_NAMES = new Set([
   'Noelle',
   'Yuno',
   'Monkey D. Luffy',
-  'Nami',
-  'Usopp',
   'Roronoa Zoro',
+  'Nami',
   'Sanji',
-  'Buggy',
+  'Usopp',
   'Portgas D. Ace',
+  'Buggy',
   'Ms. All Sunday',
 ]);
 
@@ -330,6 +336,7 @@ const TV_OUTFIT_NAMES = new Set([
   'Michonne',
   'El Chapulín Colorado',
   'Predator',
+  'Dek',
   'Chief Hopper',
   'Demogorgon',
   'Sofia',
@@ -341,16 +348,15 @@ const TV_OUTFIT_NAMES = new Set([
   'Freddy Krueger',
   'Jack the Clown',
   'Lady Liberty',
-  'Nikki',
   'Beetlejuice',
   'HamiKuma',
-  'Dek',
+  'Nikki',
 ]);
 
 const OTHER_COLLAB_SKINS_OUTFIT_NAMES = new Set([
-  'The Slender Man',
   'Tung Tung Tung Sahur',
   'Ballerina Cappuccina',
+  'The Slender Man',
   'Plungerman',
   'Gildedguy',
   'Guggimon',
@@ -566,6 +572,7 @@ const ANIME_ORIGINALS_OUTFIT_NAMES = new Set([
   'Ready Penny',
   'Ricochet Rox',
   'Charlotte-Sensei',
+  'Gilded Charlotte-Sensei',
 ]);
 
 const WWE_OUTFIT_NAMES = new Set([
@@ -601,6 +608,8 @@ const NANNERS_OUTFIT_NAMES = new Set([
 const JONESEYS_OUTFIT_NAMES = new Set([
   'Ranger',
   'Captain Jones',
+  'Buccaneer Brigand Jones',
+  'Gilded Buccaneer Jones',
   'Vengeance Jones',
   'Championship Jonesy',
   'Jones Unchained',
@@ -618,7 +627,6 @@ const JONESEYS_OUTFIT_NAMES = new Set([
   'Guernsey',
   'Codename E.L.F.',
   'Lt. Evergreen',
-  'Buccaneer Brigand Jones',
 ]);
 
 const BRITERS_AND_BOMBERS_OUTFIT_NAMES = new Set([
@@ -695,6 +703,7 @@ const KITTIES_OUTFIT_NAMES = new Set([
   'Nyangelica',
   'Meg',
   'Metalhead Meow Skulls',
+  'Sugar',
   'K1ttyW1ns',
   'Catrin Glitch',
   'Nyanja',
@@ -715,6 +724,7 @@ const TEAM_LEADERS_OUTFIT_NAMES = new Set([
   'P.A.N.D.A Team Leader',
   'Fireworks Team Leader',
   'Cuddle Team Leader',
+  'Kawaii Team Leader',
   'Ragsy',
   'Mecha Cuddle Master',
   'Mecha Team Shadow',
@@ -726,7 +736,6 @@ const TEAM_LEADERS_OUTFIT_NAMES = new Set([
   'Mecha Strike Commander',
   'Syd',
   'Raven Team Syd',
-  'Kawaii Team Leader',
 ]);
 
 const KNIGHTS_OUTFIT_NAMES = new Set([
@@ -820,6 +829,8 @@ const FOOD_OUTFIT_NAMES = new Set([
   'Bone Boss',
   'Nash Nori',
   'Nightshade',
+  'Maki Master',
+  'Sushi Master',
   'Gutbomb',
   'Dee',
 ]);
@@ -841,11 +852,9 @@ const TOYS_OUTFIT_NAMES = new Set([
   'Dummy',
   'Dummy Supreme',
   'Summer Dummy',
-  'Wastelander Dummy',
   'Glacial Dummy',
   'The Ron-troller',
   'Ruck',
-  'Signal',
   'Megg',
   'Webster',
   'Nitrojerry',
@@ -997,9 +1006,13 @@ const ICON_OUTFIT_NAMES = new Set([
   'Champion Lachlan',
   'Champion Loserfruit',
   'Champion Bugha',
-  'Solid Gold Rugahand',
-  'Solid Gold Lil Uzi Vert',
+  'Inoxtag',
   'Solid Gold Miku',
+  'Solid Gold Lil Uzi Vert',
+  'Solid Gold Rugahand',
+  'Pink Star Lil Uzi Vert',
+  'Rocky Rugahand',
+  'Solid Gold A$AP Rocky',
   'Solid Gold Kasane Teto',
 ]);
 
@@ -1012,6 +1025,161 @@ const THE_UNSEEN_OUTFIT_NAMES = new Set([
   'Styx',
   'Triarch Nox',
   'Nightburn Highwire',
+]);
+
+const WASTELANDER_SETS = new Set([
+  'Storm Scavenger',
+  'Wasteland Warriors',
+  'Outbreak',
+  'Storm Fusion',
+  'Dawning Apocalypse',
+  'Badlands Scavenger',
+  'Wasteland Overdrive',
+  'Mayhem Marauder',
+  'Hazard Platoon',
+  'Nitro Ignition',
+  'Hunt of the Leviathan',
+  'Wasteland Radio',
+  'Crash King',
+  'Ultrafast Firebrand',
+  'The Bronze Barrel',
+]);
+
+const WASTELANDERS_OUTFIT_NAMES = new Set([
+  'X-Lord',
+  'Rust Lord',
+  'Roast Lord',
+  'Renegade Raider',
+  'Oxide',
+  'Mayhem',
+  'Ruckus',
+  'Hazard Agent',
+  'Toxic Trooper',
+  'Dominator',
+  'Devastator',
+  'Areta the Vengeful',
+  'Fallow the Fallen',
+  'Thana the Pale',
+  'Osric the Conqueror',
+  'Rust',
+  'Ringmaster Scarr',
+  'The Operator',
+  'Centurion',
+  'The Machinist',
+  'Megalo Don',
+  'Signal',
+  'Wastelander Dummy',
+  'Cinder',
+  'Saskia',
+]);
+
+const OG_SOLDIER_SETS = new Set([
+  'Origins',
+  'Recruit Redux',
+  'Advanced Forces',
+  'Banner Brigade',
+  'Squad Origins',
+  'Second Drop',
+  'Support Squadron',
+  'Counterattack',
+]);
+
+const OG_SOLDIERS_OUTFIT_NAMES = new Set([
+  'Stealth Reflex',
+  'Recon Ranger',
+  'Lt. Logo',
+  'Banner Trooper',
+  'Branded Brawler',
+  'Branded Brigadier',
+  'Marked Marauder',
+  'Sgt. Sigil',
+  'Signature Sniper',
+  'Symbol Stalwart',
+  'Instinct',
+  'Reflex',
+  'Field Surgeon',
+  'Triage Trooper',
+  'Sledgehammer',
+  'Battlehawk',
+  'Squad Leader',
+  'Trailblazer',
+  'Hawk Classic',
+  'Headhunter Prime',
+  'Original Renegade',
+  'Rookie Spitfire',
+  'Vanguard Banshee',
+  'Vintage Ramirez',
+  'Wildstreak One',
+  'Fixer',
+  'Captain Carlos',
+  'Emmy Elite',
+  'General Banshee',
+  'Heavy Hitter Hector',
+  'Mercenary Mansu',
+  'Ramirez Redux',
+  'Taskforce Rio',
+  "'Mato Marauder",
+  'Dusty Daredevil',
+  'Fearless Flusher',
+  'Lucky Leader',
+  'Pleasant Patroller',
+  'Recline Raider',
+  'Risky Raider',
+  'Salty Striker',
+  'Tilted Trooper',
+  'Wailing Warrior',
+  'Agency Ace',
+  'Convergence Captain',
+  'Craggy Champion',
+  'Frenzied Fighter',
+  'Holly Hero',
+  'Misty Mercenary',
+  'Sandy Scout',
+  'Slurp Soldier',
+  'Spire Spy',
+  'Stealthy Surveyor',
+  'Blue Striker',
+  'Highrise Assault Trooper',
+  'Recon Scout',
+  'Survival Specialist',
+  'Cloaked Star',
+  'Summit Striker',
+  'Carbon Commando',
+  'Street Striker',
+  'Desert Dominator',
+  'Munitions Major',
+  'Honor Guard',
+  'Cobalt',
+  'Firewalker',
+  'Garrison',
+  'Armadillo',
+  'Enforcer',
+  'Scorpion',
+  'Wingman',
+  'Steelsight',
+  'Radiant Striker',
+  'Brilliant Striker',
+  'Crimson Scout',
+  'Jungle Scout',
+  'Tower Recon Specialist',
+  'First strike Specialist',
+  'Aerial Assault Trooper',
+  'Assault Trooper',
+  'Commando ',
+  'Munitions Expert',
+  'Recon Expert',
+  'Recon Specialist',
+  'Scout',
+  'Trooper',
+  'Cloud Striker',
+  'GHOST Enforcer',
+  'SHADOW Enforcer',
+  'Red Jade',
+  'Sakura Red Jade',
+  'Perfect Shadow',
+  'Cloaked Shadow',
+  'Swamp Stalker',
+  'Toxic Tagger',
 ]);
 
 const SAVE_THE_WORLD_OUTFIT_NAMES = new Set([
@@ -1032,6 +1200,16 @@ const SAVE_THE_WORLD_OUTFIT_NAMES = new Set([
   'Razor',
   'Kurohomura',
 ]);
+
+function isWastelandersOutfit(outfit) {
+  if (WASTELANDERS_OUTFIT_NAMES.has(outfit.name)) return true;
+  return WASTELANDER_SETS.has(outfit.setName ?? '');
+}
+
+function isOgSoldiersOutfit(outfit) {
+  if (OG_SOLDIERS_OUTFIT_NAMES.has(outfit.name)) return true;
+  return OG_SOLDIER_SETS.has(outfit.setName ?? '');
+}
 
 const GAMING_LEGENDS_OUTFIT_NAMES = new Set([
   'Walter Irons',
@@ -1065,10 +1243,8 @@ const DANCERS_AND_DJS_OUTFIT_NAMES = new Set([
   'Sparkle Diva',
   'Disco Diva',
   'PJ',
-  'Hana Park',
   'Champion PJ',
   'Stage Slayer',
-  'Venus Hart',
   'Heatwave PJ',
   'Mullet Marauder',
   'Aerobic Assassin',
@@ -1082,7 +1258,6 @@ const WINTERFEST_OUTFIT_NAMES = new Set([
   'Snowfoot',
   'Trog',
   'Tinseltoes',
-  'Glimmer',
   'Grimbles',
   'Red-nosed Ranger',
   'Sugarplum',
@@ -1123,7 +1298,6 @@ const WINTERFEST_OUTFIT_NAMES = new Set([
   'Frost Squad',
   'Jolly Jammer',
   'Snow Patroller',
-  'Gala Glimmer',
 ]);
 
 const FORTNIGHTMARES_OUTFIT_NAMES = new Set([
@@ -1152,7 +1326,6 @@ const FORTNIGHTMARES_OUTFIT_NAMES = new Set([
   'Chrome Punk',
   "Jack O'Sassin",
   'Phantom Guff',
-  'Pumpkin King',
   'Rotten Penny',
   'The Mothman',
   "All-Hallow's Steve",
@@ -1177,10 +1350,8 @@ const FORTNIGHTMARES_OUTFIT_NAMES = new Set([
   'Grimey',
   'Deimos',
   'Grave Feather',
-  'Miasma',
   'Monarcha',
   'Nurse Lenore',
-  'Sugar',
 ]);
 
 const ROBOTS_OUTFIT_NAMES = new Set([
@@ -1233,6 +1404,7 @@ const THE_FINAL_RECKONING_OUTFIT_NAMES = new Set([
   'Chaos Explorer',
   'Chaos Director',
   'Chaos Champion',
+  'Miasma',
 ]);
 
 const EASTER_VALENTINES_OUTFIT_NAMES = new Set([
@@ -1264,9 +1436,10 @@ const EASTER_VALENTINES_OUTFIT_NAMES = new Set([
   'Bunnymoon',
   'Glumbunny',
   'Darkheart',
+  'Akari',
 ]);
 
-const EASTER_VALENTINES_SETS = new Set(['Bunny Power 5']);
+const EASTER_VALENTINES_SETS = new Set(['Bunny Power 5', 'The Pink Bandit']);
 
 const FORESTRY_OUTFIT_NAMES = new Set([
   'Prickly Patroller',
@@ -1292,6 +1465,7 @@ const ANIMALS_OUTFIT_NAMES = new Set([
   'Volpez',
   'Drakon Steel Hybrid',
   'Oscar',
+  'Privateer Oscar',
   'Budge',
   'Sgt. Drake',
   'Tex Flamingo',
@@ -1333,7 +1507,6 @@ const ANIMALS_OUTFIT_NAMES = new Set([
   'Champion Drake',
   'Karasu',
   'J.B. Chimpanski',
-  'Moisty Merman',
   'Cluck',
   'Dolph',
   'Wendell',
@@ -1341,7 +1514,6 @@ const ANIMALS_OUTFIT_NAMES = new Set([
   'Kozaru',
   'Pond Guardian Froggory',
   'Bigfoot',
-  'Privateer Oscar',
 ]);
 
 const SPORTS_SETS = new Set(['Goalbound', 'Fearless Fairway', 'Let Them Know', 'Triple Threat', 'Dead Ball']);
@@ -1355,6 +1527,7 @@ const SPORTS_OUTFIT_NAMES = new Set([
   'Fastball',
   'Slugger',
   'Match Point',
+  'Volley Girl',
 ]);
 
 const FIRE_AND_ICE_OUTFIT_NAMES = new Set([
@@ -1373,7 +1546,6 @@ const FIRE_AND_ICE_OUTFIT_NAMES = new Set([
   'Frost Broker',
   'Incinerator Kuno',
   'Molten Ragnarok',
-  'Roast Lord',
   'Ice Crystal',
   'Permafrost Raider',
   'Frigid Foregoer',
@@ -1451,7 +1623,7 @@ const STUDENTS_AND_SORCERY_OUTFIT_NAMES = new Set([
   'Breezabelle',
 ]);
 
-const STUDENTS_AND_SORCERY_SETS = new Set(['Academy Champions']);
+const STUDENTS_AND_SORCERY_SETS = new Set(['Academy Champions', 'Eternal Arcana']);
 
 const SUPERHERO_ORIGINALS_OUTFIT_NAMES = new Set([
   'Valor',
@@ -1510,6 +1682,9 @@ const IN_THE_OCEAN_OUTFIT_NAMES = new Set([
   'Cozy Chomps',
   'Bryne',
   'Mave',
+  'Moisty Merman',
+  'Sea Wolf',
+  'Daring Duelist',
 ]);
 
 const FORTNITE_TO_THE_FUTURE_OUTFIT_NAMES = new Set([
@@ -1522,6 +1697,69 @@ const FORTNITE_TO_THE_FUTURE_OUTFIT_NAMES = new Set([
   'Demi',
   'Dragonheart Demi',
   'Adira',
+  'Focus',
+  'Golden Focus',
+  'Champion Focus',
+  'Neo Versa',
+  'Ether',
+  'Versa',
+  'B.R.U.T.E. Navigator',
+  'B.R.U.T.E. Gunner',
+  'Hypernova',
+  'Tech Ops',
+]);
+
+const FORTNITE_TO_THE_FUTURE_SETS = new Set([
+  'Neochaser',
+  'B.R.U.T.E. Squad',
+  'Tech Ops',
+]);
+
+const OUTLAW_SETS = new Set([
+  'Original Outlaws',
+  'Muertos',
+  'Día de Muertos',
+  'Rest In Peace',
+  'Bounty Hunter',
+  'Pineapple Bandit',
+  'Good Luck Gunslinger',
+  'Lone Shadow',
+  'Western Wilds',
+]);
+
+const OUTLAWS_OUTFIT_NAMES = new Set([
+  'Deadfire',
+  'Tess',
+  'Desperado',
+  'Deadeye',
+  'Vega',
+  'Dante',
+  'Rosa',
+  'Remembrance Salvador',
+  'Salvador',
+  'Zina',
+  'Hesper King',
+  'Renegade Shadow',
+]);
+
+function isOutlawsOutfit(outfit) {
+  if (OUTLAWS_OUTFIT_NAMES.has(outfit.name)) return true;
+  // Keep Society Calamity / Wild Farmers Western Wilds skins in their existing groups.
+  if (outfit.name === 'Calamity' || outfit.name === 'Frontier' || outfit.name === 'Rio Grande') {
+    return false;
+  }
+  return OUTLAW_SETS.has(outfit.setName ?? '');
+}
+
+const LEADING_BEAUTIES_OUTFIT_NAMES = new Set([
+  'Venus Hart',
+  'Cat Holloway',
+  'Antonia',
+  'Dylan',
+  'Carletta',
+  'Glimmer',
+  'Gala Glimmer',
+  'Hana Park',
 ]);
 
 const READY_TO_HEIST_OUTFIT_NAMES = new Set([
@@ -1539,7 +1777,6 @@ const READY_TO_HEIST_OUTFIT_NAMES = new Set([
   'Loveless',
   'Nolan Chance',
   'Paxton Price',
-  'Antonia',
   'Piper Pace',
   'Alias',
   'Caper',
@@ -1557,7 +1794,29 @@ const READY_TO_HEIST_OUTFIT_NAMES = new Set([
   'Doublecross',
   'The Reaper',
   'Grace Crowne',
+  'Breacher',
+  'Firelock',
+  'Flashbang',
+  'Guerilla',
+  'Hangfire',
+  'Impact',
+  'Siege',
+  'Tactician',
+  'Warfare',
+  'Wrecker',
+  'Bracer',
+  'Verge',
+  'Knockout',
+  'Deadfall',
+  'Snakepit',
+  'Vice',
   'Captain X',
+]);
+
+const READY_TO_HEIST_SETS = new Set([
+  'Skratch Company',
+  'Modern Mercenary',
+  'Siege Strike',
 ]);
 
 const IMAGINED_ORDER_OUTFIT_NAMES = new Set([
@@ -1599,19 +1858,27 @@ const AEROSOL_AND_AURAS_OUTFIT_NAMES = new Set([
   'Saura',
   'Treasured Aura',
   'Championship Aura',
+  'Color Crush',
+  'Dyed Breeze',
+  'Sunburst Dawn',
+  'Swirl Girl',
+  'Wavy Warrior',
 ]);
+
+const AEROSOL_AND_AURAS_SETS = new Set(['Get Far Out']);
 
 const THE_UNDERGROUND_OUTFIT_NAMES = new Set([
   'Hope',
   'Heroic Hope',
   'Shadow Blade Hope',
   'Rival Hope',
+  'Treasure Hunter Hope',
+  'Gilded Hunter Hope',
   'Nisha',
   'Starr Oakley',
   'Blair',
   'Kavel',
   'Sonor',
-  'Treasure Hunter Hope',
 ]);
 
 const GOOFING_AROUND_OUTFIT_NAMES = new Set([
@@ -1687,6 +1954,7 @@ const DEMON_WARRIORS_OUTFIT_NAMES = new Set([
   'Champion Kor',
   'Torment',
   'Nemia',
+  'Class President Nemia',
   'Midnight Thorn',
   'Desdemona',
   'Underworld Desdemona',
@@ -1695,7 +1963,6 @@ const DEMON_WARRIORS_OUTFIT_NAMES = new Set([
   'Mal',
   'Raijū',
   'Malcore',
-  'Class President Nemia',
 ]);
 
 function isGoofingAroundOutfit(outfit) {
@@ -1771,11 +2038,28 @@ export function getCatalogueSeriesKey(outfit) {
   if (isSuperheroOriginalsOutfit(outfit)) return 'superhero-originals';
   if (NO_SWEAT_SUMMER_OUTFIT_NAMES.has(outfit.name)) return 'no-sweat-summer';
   if (IN_THE_OCEAN_OUTFIT_NAMES.has(outfit.name)) return 'in-the-ocean';
-  if (FORTNITE_TO_THE_FUTURE_OUTFIT_NAMES.has(outfit.name)) return 'fortnite-to-the-future';
+  if (
+    FORTNITE_TO_THE_FUTURE_OUTFIT_NAMES.has(outfit.name) ||
+    FORTNITE_TO_THE_FUTURE_SETS.has(outfit.setName ?? '')
+  ) {
+    return 'fortnite-to-the-future';
+  }
+  if (isOutlawsOutfit(outfit)) return 'outlaws';
+  if (LEADING_BEAUTIES_OUTFIT_NAMES.has(outfit.name)) return 'leading-beauties';
   if (isGoofingAroundOutfit(outfit)) return 'goofing-around';
-  if (READY_TO_HEIST_OUTFIT_NAMES.has(outfit.name)) return 'ready-to-heist';
+  if (
+    READY_TO_HEIST_OUTFIT_NAMES.has(outfit.name) ||
+    READY_TO_HEIST_SETS.has(outfit.setName ?? '')
+  ) {
+    return 'ready-to-heist';
+  }
   if (IMAGINED_ORDER_OUTFIT_NAMES.has(outfit.name)) return 'imagined-order';
-  if (AEROSOL_AND_AURAS_OUTFIT_NAMES.has(outfit.name)) return 'aerosol-and-auras';
+  if (
+    AEROSOL_AND_AURAS_OUTFIT_NAMES.has(outfit.name) ||
+    AEROSOL_AND_AURAS_SETS.has(outfit.setName ?? '')
+  ) {
+    return 'aerosol-and-auras';
+  }
   if (THE_UNDERGROUND_OUTFIT_NAMES.has(outfit.name)) return 'the-underground';
   if (THE_SOCIETY_OUTFIT_NAMES.has(outfit.name)) return 'the-society';
   if (OXR_OUTFIT_NAMES.has(outfit.name)) return 'oxr';
@@ -1787,7 +2071,9 @@ export function getCatalogueSeriesKey(outfit) {
   if (RUBY_AND_OPAL_OUTFIT_NAMES.has(outfit.name)) return 'ruby-and-opal';
   if (GREEK_GODS_OUTFIT_NAMES.has(outfit.name)) return 'greek-gods';
   if (THE_UNSEEN_OUTFIT_NAMES.has(outfit.name)) return 'the-unseen';
+  if (isWastelandersOutfit(outfit)) return 'wastelanders';
   if (SAVE_THE_WORLD_OUTFIT_NAMES.has(outfit.name)) return 'save-the-world';
+  if (isOgSoldiersOutfit(outfit)) return 'og-soldiers';
 
   const raw = String(outfit.series ?? '').trim().toLowerCase();
   if (!raw) return 'other';

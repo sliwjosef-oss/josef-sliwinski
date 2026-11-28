@@ -85,7 +85,7 @@ function App() {
 
   useEffect(() => {
     Promise.all([
-      fetch(`${import.meta.env.BASE_URL}outfits.json?v=2853`, { cache: 'no-store' }).then((res) => {
+      fetch(`${import.meta.env.BASE_URL}outfits.json?v=2860`, { cache: 'no-store' }).then((res) => {
         if (!res.ok) throw new Error('Failed to load outfit data');
         return res.json();
       }),

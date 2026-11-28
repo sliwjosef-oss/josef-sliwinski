@@ -693,7 +693,13 @@ const CST = 'America/Chicago';
 export const MUSIC_TRACK_COST = 2000;
 
 /** Lobby songs sold in the Shop. Free songs stay available without a purchase. */
-export const MUSIC_SHOP_IDS = ['between-the-rows', 'under-broken-skin', 'perfect-despair'];
+export const MUSIC_SHOP_IDS = [
+  'season-ends-tonight',
+  'under-broken-skin',
+  'a-blade-of-frozen-fire',
+  'heartbeat-in-the-arcade',
+  'perfect-despair',
+];
 
 function read() {
   try {
@@ -705,7 +711,9 @@ function read() {
       ? parsed.ownedSidekickIds.filter((id) => typeof id === 'string')
       : [],
     ownedMusicIds: Array.isArray(parsed.ownedMusicIds)
-      ? parsed.ownedMusicIds.filter((id) => MUSIC_SHOP_IDS.includes(id))
+      ? parsed.ownedMusicIds
+          .map((id) => (id === 'between-the-rows' ? 'season-ends-tonight' : id))
+          .filter((id) => typeof id === 'string' && MUSIC_SHOP_IDS.includes(id))
       : [],
       daily: normalizeDaily(parsed.daily),
       dailyBetRuns: normalizeDailyBetRuns(parsed.dailyBetRuns),

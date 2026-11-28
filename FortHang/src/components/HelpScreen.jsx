@@ -134,10 +134,12 @@ export default function HelpScreen({ onBack, onDeleteAllData }) {
             mode, boss loot, and Trail events. Each item shows its own price.
           </li>
           <li>
-            <strong>Music</strong> — the tab appears once Music is unlocked on the main menu. Between
-            The Rows, Under Broken Skin, and Perfect Despair each cost 2000 weebucks. Preview plays 30
-            seconds. Concrete Pressure and Break the Perimeter are already in the lobby list. Other
-            songs are unlocked through Achievements.
+            <strong>Music</strong> — the tab appears once Music is unlocked on the main menu. Season
+            Ends Tonight, Under Broken Skin, A Blade of Frozen Fire, Heartbeat in the Arcade, and
+            Perfect Despair each cost 2000 weebucks. Preview starts 20 seconds into the song, fades in,
+            and plays for 30 seconds. Concrete Pressure and
+            Break the Perimeter are already in the lobby list. Other songs are unlocked through
+            Achievements.
           </li>
         </ul>
         <p>Many upgrades unlock in tiers — buy the earlier one before the next appears as Available.</p>

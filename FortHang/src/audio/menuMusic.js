@@ -15,14 +15,24 @@ export const MENU_TRACKS = [
     file: 'Break_the_Perimeter.mp3',
   },
   {
-    id: 'between-the-rows',
-    label: 'Between The Rows',
-    file: 'Between_The_Rows.mp3',
+    id: 'season-ends-tonight',
+    label: 'Season Ends Tonight',
+    file: 'Season_Ends_Tonight.mp3',
   },
   {
     id: 'under-broken-skin',
     label: 'Under Broken Skin',
     file: 'Under_Broken_Skin.mp3',
+  },
+  {
+    id: 'a-blade-of-frozen-fire',
+    label: 'A Blade of Frozen Fire',
+    file: 'A_Blade_of_Frozen_Fire.mp3',
+  },
+  {
+    id: 'heartbeat-in-the-arcade',
+    label: 'Heartbeat in the Arcade',
+    file: 'Heartbeat_in_the_Arcade.mp3',
   },
   {
     id: 'candy-in-a-plastic-wrap',
@@ -91,7 +101,8 @@ const MAX_RETRIES = 8;
 function readStoredTrackId() {
   try {
     const stored = localStorage.getItem(TRACK_STORAGE_KEY);
-    if (MENU_TRACKS.some((track) => track.id === stored)) return stored;
+    const id = stored === 'between-the-rows' ? 'season-ends-tonight' : stored;
+    if (MENU_TRACKS.some((track) => track.id === id)) return id;
   } catch {
     /* ignore private-mode storage failures */
   }
@@ -109,12 +120,20 @@ function readStoredMuted() {
 let trackId = readStoredTrackId();
 let muted = readStoredMuted();
 const ownedMusicIds = new Set();
+const PREVIEW_SECONDS = 30;
+const PREVIEW_START_SECONDS = 20;
+const PREVIEW_VOLUME = 0.55;
+const PREVIEW_FADE_MS = 1600;
+
 let previewAudio = null;
 let previewTimer = null;
+let previewTick = null;
 let previewTrackId = null;
+let previewFadeFrame = null;
+let previewEndTime = PREVIEW_SECONDS;
+let previewDeadline = 0;
 
 const FREE_TRACK_IDS = ['concrete-pressure', 'break-the-perimeter'];
-const PREVIEW_SECONDS = 30;
 
 function canPlayTrack(id) {
   return FREE_TRACK_IDS.includes(id) || ownedMusicIds.has(id) || unlockedMusicIds().includes(id);
@@ -126,6 +145,12 @@ export function getSelectableTracks() {
 
 export function getPreviewTrackId() {
   return previewTrackId;
+}
+
+export function getPreviewSecondsLeft() {
+  if (!previewTrackId) return 0;
+  if (!previewDeadline) return PREVIEW_SECONDS;
+  return Math.max(0, Math.ceil((previewDeadline - Date.now()) / 1000));
 }
 
 /** Keep lobby playback aligned with songs the player has unlocked. */
@@ -316,16 +341,77 @@ export function setMenuMusicBlocked(reason, blocked) {
   });
 }
 
-function haltPreviewAudio() {
+function stopPreviewFade() {
+  if (previewFadeFrame != null) {
+    window.cancelAnimationFrame(previewFadeFrame);
+    previewFadeFrame = null;
+  }
+}
+
+function fadePreviewIn(element) {
+  stopPreviewFade();
+  element.volume = 0;
+  const started = performance.now();
+  const step = (now) => {
+    if (previewAudio !== element) return;
+    const progress = Math.min(1, (now - started) / PREVIEW_FADE_MS);
+    element.volume = PREVIEW_VOLUME * progress;
+    if (progress < 1) previewFadeFrame = window.requestAnimationFrame(step);
+    else previewFadeFrame = null;
+  };
+  previewFadeFrame = window.requestAnimationFrame(step);
+}
+
+function cuePreviewStart(element) {
+  const duration = element.duration;
+  const start = Number.isFinite(duration) && duration > PREVIEW_START_SECONDS + 1
+    ? PREVIEW_START_SECONDS
+    : 0;
+  previewEndTime = start + PREVIEW_SECONDS;
+  try {
+    element.currentTime = start;
+  } catch {
+    /* Some browsers reject a seek before the media is seekable. */
+  }
+}
+
+function clearPreviewClock() {
   if (previewTimer) {
     window.clearTimeout(previewTimer);
     previewTimer = null;
   }
+  if (previewTick) {
+    window.clearInterval(previewTick);
+    previewTick = null;
+  }
+  previewDeadline = 0;
+}
+
+function startPreviewClock() {
+  clearPreviewClock();
+  previewDeadline = Date.now() + PREVIEW_SECONDS * 1000;
+  previewTick = window.setInterval(() => {
+    if (!previewTrackId) {
+      clearPreviewClock();
+      return;
+    }
+    notify();
+  }, 250);
+  previewTimer = window.setTimeout(() => stopMusicPreview(), PREVIEW_SECONDS * 1000);
+  notify();
+}
+
+function haltPreviewAudio() {
+  stopPreviewFade();
+  clearPreviewClock();
   previewTrackId = null;
   if (previewAudio) {
     previewAudio.onended = null;
     previewAudio.ontimeupdate = null;
+    previewAudio.onloadedmetadata = null;
+    previewAudio.onseeked = null;
     releasePageAudio(previewAudio);
+    previewAudio.volume = 0;
     previewAudio.currentTime = 0;
   }
 }
@@ -337,7 +423,7 @@ export function stopMusicPreview() {
   notify();
 }
 
-/** Play a shop song for 30 seconds without unlocking it. Starts over if tapped again. */
+/** Play 30 seconds of a shop song, starting 20 seconds in, and fade the volume up. */
 export function startMusicPreview(id) {
   const track = MENU_TRACKS.find((entry) => entry.id === id);
   if (!track) return;
@@ -349,18 +435,42 @@ export function startMusicPreview(id) {
   if (!previewAudio) {
     previewAudio = bindPageAudio(new Audio());
     previewAudio.loop = false;
-    previewAudio.volume = 0.55;
   }
   previewTrackId = id;
+  previewEndTime = PREVIEW_START_SECONDS + PREVIEW_SECONDS;
+  previewAudio.volume = 0;
   previewAudio.src = trackUrl(id);
-  previewAudio.currentTime = 0;
+  let started = false;
+  const begin = () => {
+    if (started || previewTrackId !== id || !previewAudio) return;
+    started = true;
+    cuePreviewStart(previewAudio);
+    const playFromCue = () => {
+      if (previewTrackId !== id || !previewAudio) return;
+      const pending = previewAudio.play();
+      const startFade = () => {
+        if (previewTrackId === id && previewAudio) fadePreviewIn(previewAudio);
+      };
+      if (pending?.then) pending.then(startFade).catch(() => {});
+      else startFade();
+      startPreviewClock();
+    };
+    const start = previewEndTime - PREVIEW_SECONDS;
+    if (start > 0 && Math.abs(previewAudio.currentTime - start) > 0.4) {
+      previewAudio.onseeked = () => {
+        if (previewAudio) previewAudio.onseeked = null;
+        playFromCue();
+      };
+      return;
+    }
+    playFromCue();
+  };
+  previewAudio.onloadedmetadata = begin;
   previewAudio.ontimeupdate = () => {
-    if (previewAudio && previewAudio.currentTime >= PREVIEW_SECONDS) stopMusicPreview();
+    if (previewAudio && previewAudio.currentTime >= previewEndTime) stopMusicPreview();
   };
   previewAudio.onended = () => stopMusicPreview();
   setMenuMusicBlocked('preview', true);
-  const pending = previewAudio.play();
-  if (pending?.catch) pending.catch(() => {});
-  previewTimer = window.setTimeout(() => stopMusicPreview(), PREVIEW_SECONDS * 1000);
+  if (previewAudio.readyState >= 1) begin();
   notify();
 }

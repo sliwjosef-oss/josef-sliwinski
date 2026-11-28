@@ -223,9 +223,10 @@ export const BOSS_SERIES_KEYS = [
 ];
 
 /**
- * Fortnite.gg item art: https://fortnite.gg/img/weapons/{file}
- * Filenames come from each weapon page's hero image. Items with no page
- * (Kamehameha, the bending styles) keep the labeled card.
+ * Item art. A filename is served from https://fortnite.gg/img/weapons/{file}
+ * and comes from that weapon page's hero image. A full URL is a Fortnite Wiki
+ * item icon, used when Fortnite.gg has no weapon page.
+ * Buggy Bomb uses the Special Buggy Ball icon. That is Buggy's explosive on Fortnite.gg.
  */
 export const FORTNITE_GG_ITEM_ICONS = {
   Medkit: 't-icon-medkit-l.2x.webp',
@@ -243,6 +244,21 @@ export const FORTNITE_GG_ITEM_ICONS = {
   Bush: 't-t-icon-br-sm-athena-bush-01-l.2x.webp',
   'Port-a-Bunker': 't-t-icon-br-portashack-l.2x.webp',
   'Port-a-Fort': 't-icon-br-sm-tower-grenade-l.2x.webp',
+  'Port-a-Fortress': 't-icon-br-sk-legendary-tower-grenade-l.2x.webp',
+  'Shield Keg': 't-t-icon-br-shieldsprinkleritem-l.2x.webp',
+  'Buggy Bomb': 't_icon_br_explosive_cannonball_purpledrool_l.2x.webp',
+  'Stick of Truth':
+    'https://static.wikia.nocookie.net/fortnite/images/d/d0/Stick_of_Truth_-_Item_-_Fortnite.png/revision/latest?cb=20260109182600',
+  Firebending:
+    'https://static.wikia.nocookie.net/fortnite/images/7/70/Firebending_-_Item_-_Fortnite.png/revision/latest?cb=20240410172633',
+  Waterbending:
+    'https://static.wikia.nocookie.net/fortnite/images/8/82/Waterbending_-_Item_-_Fortnite.png/revision/latest?cb=20240326112051',
+  Earthbending:
+    'https://static.wikia.nocookie.net/fortnite/images/a/aa/Earthbending_-_Item_-_Fortnite.png/revision/latest?cb=20240410172654',
+  Airbending:
+    'https://static.wikia.nocookie.net/fortnite/images/7/7b/Airbending_-_Item_-_Fortnite.png/revision/latest?cb=20240410172614',
+  Kamehameha:
+    'https://static.wikia.nocookie.net/fortnite/images/2/23/Kamehameha_-_Item_-_Fortnite.png/revision/latest?cb=20220816104122',
   'Infinity Blade': 't-icon-weapons-blade-athena-l.2x.webp',
   'Mythic Goldfish': 't-t-icon-br-bucketnicegadget-l.2x.webp',
   'Sith Apprentice Lightsaber': 't-t-icon-br-sharp-plottwist-red-l.2x.webp',
@@ -290,6 +306,7 @@ export const FORTNITE_GG_WEAPON_SLUGS = {
 export function getFortniteGgIconUrls(itemName) {
   const file = FORTNITE_GG_ITEM_ICONS[itemName];
   if (!file) return [];
+  if (/^https?:\/\//i.test(file)) return [file];
   const full = `https://fortnite.gg/img/weapons/${file}`;
   const smaller = full.replace('.2x.webp', '.webp');
   return full === smaller ? [full] : [full, smaller];
